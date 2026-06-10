@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DUFC Team Randomizer - Sân 7</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --line: #334155;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --blue: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #020617, #111827);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .sub { color: var(--muted); margin-bottom: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 18px;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    textarea, input, select, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: #020617;
+      color: var(--text);
+      font-size: 14px;
+    }
+    textarea { min-height: 280px; resize: vertical; line-height: 1.45; }
+    button {
+      cursor: pointer;
+      background: #0284c7;
+      border: none;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    button:hover { filter: brightness(1.12); }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+    .teams {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .team-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .team-title h2 { margin: 0; font-size: 22px; }
+    .score {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .formation {
+      display: grid;
+      grid-template-rows: repeat(4, auto);
+      gap: 10px;
+      background: #052e16;
+      border: 1px solid #166534;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 430px;
+    }
+    .line {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      min-height: 72px;
+      align-items: center;
+    }
+    .player {
+      min-width: 92px;
+      max-width: 130px;
+      padding: 8px;
+      border-radius: 12px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .player .name { font-weight: 700; font-size: 13px; }
+    .player .pos { color: var(--blue); font-size: 12px; margin-top: 3px; }
+    .player .fit { font-size: 11px; margin-top: 4px; color: var(--muted); }
+    .bench {
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .bench h3 { margin: 0 0 8px; font-size: 16px; }
+    .bench-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      border: 1px solid var(--line);
+      background: #020617;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .metric {
+      background: #020617;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .metric b { display: block; font-size: 18px; margin-bottom: 4px; }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .error {
+      margin-top: 12px;
+      color: #fecaca;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.35);
+      padding: 10px;
+      border-radius: 10px;
+      display: none;
+    }
+    @media (max-width: 1000px) {
+      .grid, .teams { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>DUFC Team Randomizer - Sân 7</h1>
+    <div class="sub">Random chia 2 đội, ưu tiên đủ GK / DEF / MID / FWD, tự xếp đội hình 1-2-2-1 và danh sách dự bị.</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Danh sách cầu thủ</h2>
+        <textarea id="input"></textarea>
+
+        <div class="btn-row">
+          <button onclick="randomize()">Random chia đội</button>
+          <button onclick="loadExample()">Load mẫu</button>
+        </div>
+
+        <button onclick="copyResult()">Copy kết quả text</button>
+
+        <div class="hint">
+          Format mỗi dòng:<br>
+          <b>Tên, vị trí chính, vị trí phụ</b><br><br>
+          Vị trí hợp lệ: <b>GK, DEF, MID, FWD</b><br>
+          Ví dụ: <b>Thắng, MID, DEF/FWD</b><br><br>
+          Sân 7: mỗi đội đá <b>6 người + 1 GK</b>. Nếu đông hơn 14 người, app sẽ tự đưa phần còn lại vào dự bị.
+        </div>
+
+        <div id="error" class="error"></div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Kết quả</h2>
+          <div class="summary">
+            <div class="metric"><b id="totalPlayers">0</b><span>Tổng cầu thủ</span></div>
+            <div class="metric"><b id="teamSize">0 - 0</b><span>Số người 2 đội</span></div>
+            <div class="metric"><b id="bestScore">0</b><span>Điểm cân bằng</span></div>
+            <div class="metric"><b id="attempts">0</b><span>Số lần thử</span></div>
+          </div>
+
+          <div class="teams">
+            <div>
+              <div class="team-title">
+                <h2>Đội A</h2>
+                <div class="score" id="scoreA"></div>
+              </div>
+              <div id="formationA" class="formation"></div>
+              <div class="bench">
+                <h3>Dự bị</h3>
+                <div id="benchA" class="bench-list"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="team-title">
+                <h2>Đội B</h2>
+                <div class="score" id="scoreB"></div>
+              </div>
+              <div id="formationB" class="formation"></div>
+              <div class="bench">
+                <h3>Dự bị</h3>
+                <div id="benchB" class="bench-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <pre id="textResult" style="display:none"></pre>
+  </div>
+
+<script>
+const POSITIONS = ["GK", "DEF", "MID", "FWD"];
+const STARTING_SHAPE = ["GK", "DEF", "DEF", "MID", "MID", "FWD", "FWD"]; // sân 7: 1 GK + 6 cầu thủ
+
+function loadExample() {
+  document.getElementById("input").value = `Thắng, MID, DEF/FWD
+Hải, GK, DEF
+Long, DEF, MID
+Minh, DEF, GK
+Tuấn, MID, FWD
+Nam, FWD, MID
+Khoa, DEF, MID
+Hưng, MID, DEF
+Dũng, GK, MID
+Phúc, FWD, MID
+Quang, DEF, FWD
+An, MID, DEF
+Bảo, FWD, MID
+Tín, DEF, MID
+Lâm, MID, FWD
+Sơn, DEF, GK`;
+}
+
+function parsePlayers() {
+  const raw = document.getElementById("input").value.trim();
+  if (!raw) return [];
+
+  return raw.split("\n").map((line, idx) => {
+    const parts = line.split(",").map(x => x.trim()).filter(Boolean);
+    if (parts.length < 2) throw new Error(`Dòng ${idx + 1} thiếu dữ liệu. Format: Tên, vị trí chính, vị trí phụ`);
+
+    const name = parts[0];
+    const main = parts[1].toUpperCase();
+    const secondaryRaw = parts[2] ? parts[2].toUpperCase() : "";
+    const secondary = secondaryRaw
+      .split(/[\/|;]/)
+      .map(x => x.trim())
+      .filter(x => POSITIONS.includes(x));
+
+    if (!POSITIONS.includes(main)) throw new Error(`Dòng ${idx + 1}: vị trí chính không hợp lệ: ${main}`);
+
+    return {
+      id: idx + "_" + name,
+      name,
+      main,
+      secondary,
+      skill: main === "GK" ? 1 : 1
+    };
+  });
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function canPlay(player, pos) {
+  if (player.main === pos) return 2;
+  if (player.secondary.includes(pos)) return 1;
+  return 0;
+}
+
+function buildLineup(team) {
+  const available = [...team];
+  const starters = [];
+  let score = 0;
+
+  for (const need of STARTING_SHAPE) {
+    let bestIndex = -1;
+    let bestFit = -1;
+
+    for (let i = 0; i < available.length; i++) {
+      const fit = canPlay(available[i], need);
+      const noise = Math.random() * 0.01;
+      if (fit + noise > bestFit) {
+        bestFit = fit + noise;
+        bestIndex = i;
+      }
+    }
+
+    if (bestIndex >= 0 && bestFit >= 1) {
+      const p = available.splice(bestIndex, 1)[0];
+      starters.push({ ...p, assigned: need, fit: Math.floor(bestFit) });
+      score += Math.floor(bestFit) === 2 ? 10 : 6;
+    } else if (available.length > 0) {
+      const p = available.shift();
+      starters.push({ ...p, assigned: need, fit: 0 });
+      score -= 12;
+    } else {
+      starters.push({ name: "Thiếu người", main: "-", secondary: [], assigned: need, fit: -1 });
+      score -= 30;
+    }
+  }
+
+  const bench = available;
+  return { starters, bench, score };
+}
+
+function evaluateSplit(teamA, teamB) {
+  const lineupA = buildLineup(teamA);
+  const lineupB = buildLineup(teamB);
+
+  const mainCountA = countMainPositions(teamA);
+  const mainCountB = countMainPositions(teamB);
+
+  let score = lineupA.score + lineupB.score;
+
+  // Phạt lệch vị trí giữa hai đội
+  for (const pos of POSITIONS) {
+    score -= Math.abs((mainCountA[pos] || 0) - (mainCountB[pos] || 0)) * 4;
+  }
+
+  // Phạt lệch quân số
+  score -= Math.abs(teamA.length - teamB.length) * 8;
+
+  // Thưởng mỗi đội có GK thật
+  if (teamA.some(p => p.main === "GK")) score += 15; else score -= 25;
+  if (teamB.some(p => p.main === "GK")) score += 15; else score -= 25;
+
+  return { teamA, teamB, lineupA, lineupB, score };
+}
+
+function countMainPositions(team) {
+  const c = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+  team.forEach(p => c[p.main]++);
+  return c;
+}
+
+function randomSplit(players) {
+  const shuffled = shuffle(players);
+  const half = Math.ceil(shuffled.length / 2);
+  return [shuffled.slice(0, half), shuffled.slice(half)];
+}
+
+function randomize() {
+  const error = document.getElementById("error");
+  error.style.display = "none";
+  error.textContent = "";
+
+  try {
+    const players = parsePlayers();
+    if (players.length < 14) {
+      throw new Error("Nên có tối thiểu 14 người để chia đủ 2 đội sân 7.");
+    }
+
+    const ATTEMPTS = 5000;
+    let best = null;
+
+    for (let i = 0; i < ATTEMPTS; i++) {
+      const [a, b] = randomSplit(players);
+      const result = evaluateSplit(a, b);
+      if (!best || result.score > best.score) best = result;
+    }
+
+    render(best, players.length, ATTEMPTS);
+  } catch (e) {
+    error.textContent = e.message;
+    error.style.display = "block";
+  }
+}
+
+function playerCard(p) {
+  const fitText = p.fit === 2 ? "đúng sở trường" : p.fit === 1 ? "vị trí phụ" : p.fit === 0 ? "trái vị trí" : "";
+  return `<div class="player">
+    <div class="name">${escapeHtml(p.name)}</div>
+    <div class="pos">${p.assigned}</div>
+    <div class="fit">${fitText}</div>
+  </div>`;
+}
+
+function renderFormation(elId, lineup) {
+  const gk = lineup.starters.filter(p => p.assigned === "GK");
+  const def = lineup.starters.filter(p => p.assigned === "DEF");
+  const mid = lineup.starters.filter(p => p.assigned === "MID");
+  const fwd = lineup.starters.filter(p => p.assigned === "FWD");
+
+  document.getElementById(elId).innerHTML = `
+    <div class="line">${fwd.map(playerCard).join("")}</div>
+    <div class="line">${mid.map(playerCard).join("")}</div>
+    <div class="line">${def.map(playerCard).join("")}</div>
+    <div class="line">${gk.map(playerCard).join("")}</div>
+  `;
+}
+
+function renderBench(elId, bench) {
+  document.getElementById(elId).innerHTML = bench.length
+    ? bench.map(p => `<div class="tag">${escapeHtml(p.name)} - ${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}</div>`).join("")
+    : `<div class="tag">Không có dự bị</div>`;
+}
+
+function render(best, total, attempts) {
+  renderFormation("formationA", best.lineupA);
+  renderFormation("formationB", best.lineupB);
+  renderBench("benchA", best.lineupA.bench);
+  renderBench("benchB", best.lineupB.bench);
+
+  document.getElementById("totalPlayers").textContent = total;
+  document.getElementById("teamSize").textContent = `${best.teamA.length} - ${best.teamB.length}`;
+  document.getElementById("bestScore").textContent = best.score;
+  document.getElementById("attempts").textContent = attempts;
+
+  document.getElementById("scoreA").textContent = `Lineup score: ${best.lineupA.score}`;
+  document.getElementById("scoreB").textContent = `Lineup score: ${best.lineupB.score}`;
+
+  document.getElementById("textResult").textContent = makeTextResult(best);
+}
+
+function makeTextResult(best) {
+  function line(title, lineup) {
+    const starters = lineup.starters.map(p => `${p.assigned}: ${p.name}`).join("\n");
+    const bench = lineup.bench.length
+      ? lineup.bench.map(p => `${p.name} (${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""})`).join(", ")
+      : "Không có";
+    return `${title}\nĐội hình ra sân:\n${starters}\nDự bị: ${bench}`;
+  }
+  return `${line("ĐỘI A", best.lineupA)}\n\n${line("ĐỘI B", best.lineupB)}`;
+}
+
+function copyResult() {
+  const text = document.getElementById("textResult").textContent;
+  if (!text) {
+    alert("Chưa có kết quả để copy.");
+    return;
+  }
+  navigator.clipboard.writeText(text);
+  alert("Đã copy kết quả.");
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+loadExample();
+</script>
+</body>
+</html>
