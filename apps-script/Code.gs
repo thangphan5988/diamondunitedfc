@@ -18,7 +18,7 @@
 const SPREADSHEET_ID = "1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU";
 const TARGET_GID = 228928781;
 const ROSTER_GID = 545791527;
-const APP_VERSION = "v1.16.0";
+const APP_VERSION = "v1.18.0";
 
 const MATCH_SUMMARY_SHEET = "Match Summary";
 const RATING_LOG_SHEET = "Rating Log";
@@ -152,11 +152,14 @@ function doGet(e) {
         case "get_pending_match":
           return jsonResponse(getPendingMatch_(params));
         case "get_latest_lineup":
-          return jsonResponse(getLatestLineup_(params));
+        case "get_latest_result":
+          return jsonResponse(getLatestResult_(params));
         case "admin_validate_session":
           return jsonResponse(adminValidateSession_(params));
         case "admin_list_users":
           return jsonResponse(adminListUsers_(params));
+        case "get_player_stats":
+          return jsonResponse(getPlayerStats_(params));
         default:
           return jsonResponse({ ok: false, error: "Invalid action: " + action });
       }
@@ -172,7 +175,7 @@ function doGet(e) {
     spreadsheet_id: SPREADSHEET_ID,
     target_gid: TARGET_GID,
     mode: "replace_same_match_date_pending_only",
-    actions: ["save_match_history", "save_match_result", "cancel_match", "admin_login", "admin_logout", "admin_save_user", "admin_delete_user", "get_match_list", "get_match_detail", "get_pending_match", "get_latest_lineup", "admin_validate_session", "admin_list_users"],
+    actions: ["save_match_history", "save_match_result", "cancel_match", "admin_login", "admin_logout", "admin_save_user", "admin_delete_user", "get_match_list", "get_match_detail", "get_pending_match", "get_latest_lineup", "get_latest_result", "get_player_stats", "admin_validate_session", "admin_list_users"],
     updated_at: "2026-06-10"
   });
 }
@@ -1333,7 +1336,50 @@ function adminDeleteUser_(payload) {
   return { ok: true, version: APP_VERSION, username: username };
 }
 
-function getLatestLineup_(params) {
+function getPlayerStats_(params) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const historySheet = getSheetByGid_(ss, TARGET_GID);
+  if (!historySheet) {
+    return { ok: false, error: "Target sheet gid not found: " + TARGET_GID };
+  }
+
+  ensureMatchHistoryHeaders_(historySheet);
+  const headers = getMatchHistoryHeaderRow_(historySheet);
+  const hMap = headerIndexMap_(headers);
+  const data = historySheet.getDataRange().getValues();
+  const totals = {};
+
+  for (let r = 1; r < data.length; r++) {
+    const status = String(data[r][hMap.status] || "").trim().toLowerCase();
+    if (status !== "completed") continue;
+
+    const displayName = String(data[r][hMap.player_name] || "").trim();
+    if (!displayName) continue;
+
+    const key = normalizeName_(displayName);
+    if (!totals[key]) {
+      totals[key] = { player_name: displayName, goals: 0, assists: 0 };
+    }
+
+    if (hMap.goals !== undefined) {
+      totals[key].goals += clampStatCount_(data[r][hMap.goals]);
+    }
+    if (hMap.assists !== undefined) {
+      totals[key].assists += clampStatCount_(data[r][hMap.assists]);
+    }
+  }
+
+  const stats = Object.keys(totals).map(function(k) { return totals[k]; });
+  stats.sort(function(a, b) {
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    return String(a.player_name).localeCompare(String(b.player_name), "vi");
+  });
+
+  return { ok: true, version: APP_VERSION, stats: stats };
+}
+
+function getLatestResult_(params) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const summarySheet = getOrCreateSheet_(ss, MATCH_SUMMARY_SHEET, MATCH_SUMMARY_HEADERS);
   const summaryHeaders = ensureSheetHeaders_(summarySheet, MATCH_SUMMARY_HEADERS);
@@ -1345,14 +1391,16 @@ function getLatestLineup_(params) {
     const matchId = String(data[r][sMap.match_id] || "").trim();
     if (!matchId) continue;
     const status = String(data[r][sMap.status] || "").trim().toLowerCase();
-    if (status === "cancelled") continue;
+    if (status !== "completed") continue;
+    const savedAt = String(data[r][sMap.result_saved_at] || "");
     const createdAt = String(data[r][sMap.created_at] || "");
-    const item = { match_id: matchId, created_at: createdAt, status: status };
+    const sortKey = savedAt || createdAt;
+    const item = { match_id: matchId, sort_key: sortKey };
     if (!best) {
       best = item;
       continue;
     }
-    if (createdAt > best.created_at) best = item;
+    if (sortKey > best.sort_key) best = item;
   }
 
   if (!best) {
