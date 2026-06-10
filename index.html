@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DIAMOND UNITED FC - SÂN 7</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root{
       --bg:#07111f;--card:#0f172a;--line:#243244;--text:#e5e7eb;--muted:#94a3b8;
@@ -18,6 +19,7 @@
     .sub{color:var(--muted);margin-bottom:16px}
     .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
     .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    #exportArea{background:#0f172a}
     input,button,select{width:100%;border-radius:12px;border:1px solid var(--line);background:#020617;color:var(--text);padding:11px 12px;font-size:14px}
     button{background:#0284c7;border:0;font-weight:800;cursor:pointer;margin-top:10px}
     button:hover{filter:brightness(1.12)}
@@ -65,6 +67,19 @@
       background:rgba(2,6,23,.88);border:1px solid rgba(255,255,255,.3);
       box-shadow:0 10px 24px rgba(0,0,0,.36);backdrop-filter:blur(4px)
     }
+
+    .cardPlayer.redTeam{
+      border:3px solid #ef4444;
+      box-shadow:
+        0 0 0 1px rgba(239,68,68,.55),
+        0 10px 24px rgba(239,68,68,.28);
+    }
+    .cardPlayer.yellowTeam{
+      border:3px solid #facc15;
+      box-shadow:
+        0 0 0 1px rgba(250,204,21,.55),
+        0 10px 24px rgba(250,204,21,.28);
+    }
     .cardPlayer img{width:39px;height:39px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.45)}
     .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
@@ -89,7 +104,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>DUFC Randomizer - Sân 7</h1>
+  <h1>DIAMOND UNITED FC - SÂN 7</h1>
   
   <div class="grid">
     <div class="card">
@@ -110,13 +125,13 @@
       <button class="secondary" onclick="selectAll(true)">Chọn tất cả</button>
       <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
       <button class="gold" onclick="startRandom()">Random chia đội</button>
-      <button onclick="copyResult()">Copy kết quả</button>
+      <button onclick="exportImage()">Xuất hình ảnh đội hình</button>
       
       <div id="error" class="error"></div>
       <div id="players" class="players"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="exportArea">
       <div class="summary">
         <div class="metric"><b id="total">0</b><span>Tổng đã load</span></div>
         <div class="metric"><b id="selected">0</b><span>Tham gia hôm nay</span></div>
@@ -126,7 +141,7 @@
 
       <div class="teams">
         <div>
-          <div class="teamHead"><h2>Đội A</h2><span id="scoreA" class="meta"></span></div>
+          <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A (Áo Đỏ)</h2><span id="scoreA" class="meta"></span></div>
           <div class="pitch" id="pitchA">
             <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
             <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
@@ -135,7 +150,7 @@
         </div>
 
         <div>
-          <div class="teamHead"><h2>Đội B</h2><span id="scoreB" class="meta"></span></div>
+          <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B (Áo Vàng)</h2><span id="scoreB" class="meta"></span></div>
           <div class="pitch" id="pitchB">
             <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
             <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
@@ -312,13 +327,57 @@ function evalSplit(a,b){
   return {teamA:a,teamB:b,lineupA:la,lineupB:lb,score:Math.round(s)};
 }
 function sumRating(t){return t.reduce((s,p)=>s+(p.rating||5),0)}
-function randomBest(list){
-  let best=null;
-  for(let i=0;i<9000;i++){
-    const sh=shuffle(list), half=Math.ceil(sh.length/2);
-    const res=evalSplit(sh.slice(0,half),sh.slice(half));
-    if(!best || res.score>best.score) best=res;
+function hasPlayer(team, targetName){
+  const target = normalizeName(targetName);
+  return team.some(p => normalizeName(p.name) === target);
+}
+
+function normalizeName(name){
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function violatesHiddenRule(teamA, teamB){
+  const aHasMinh = hasPlayer(teamA, "Minh Phat");
+  const aHasThang = hasPlayer(teamA, "Thang Phan");
+  const bHasMinh = hasPlayer(teamB, "Minh Phat");
+  const bHasThang = hasPlayer(teamB, "Thang Phan");
+
+  // Luật ẩn: nếu cả 2 người cùng tham gia, bắt buộc mỗi người 1 đội.
+  if((aHasMinh || bHasMinh) && (aHasThang || bHasThang)){
+    return (aHasMinh && aHasThang) || (bHasMinh && bHasThang);
   }
+  return false;
+}
+
+function randomBest(list){
+  let best = null;
+
+  for(let i = 0; i < 12000; i++){
+    const sh = shuffle(list);
+    const half = Math.ceil(sh.length / 2);
+    const teamA = sh.slice(0, half);
+    const teamB = sh.slice(half);
+
+    if(violatesHiddenRule(teamA, teamB)) continue;
+
+    const res = evalSplit(teamA, teamB);
+    if(!best || res.score > best.score) best = res;
+  }
+
+  // Fallback cực hiếm: nếu không tìm được do danh sách quá ít/lệch, vẫn trả kết quả tốt nhất không áp luật.
+  if(!best){
+    for(let i = 0; i < 3000; i++){
+      const sh = shuffle(list);
+      const half = Math.ceil(sh.length / 2);
+      const res = evalSplit(sh.slice(0, half), sh.slice(half));
+      if(!best || res.score > best.score) best = res;
+    }
+  }
+
   return best;
 }
 
@@ -357,24 +416,24 @@ async function revealBothLineups(lineupA, lineupB){
 
   for(let i = 0; i < max; i++){
     if(lineupA.starters[i]){
-      await addPlayerToPitch("pitchA", lineupA.starters[i], indexA, formationA);
+      await addPlayerToPitch("pitchA", lineupA.starters[i], indexA, formationA, "redTeam");
       await wait(760);
     }
 
     if(lineupB.starters[i]){
-      await addPlayerToPitch("pitchB", lineupB.starters[i], indexB, formationB);
+      await addPlayerToPitch("pitchB", lineupB.starters[i], indexB, formationB, "yellowTeam");
       await wait(920);
     }
   }
 }
 
-async function addPlayerToPitch(pitchId, p, indexByPos, formation){
+async function addPlayerToPitch(pitchId, p, indexByPos, formation, teamClass){
   const [x,y] = getPosCoord(p.assigned, indexByPos, formation);
   const el = document.createElement("div");
   el.className = "slot";
   el.style.left = x + "%";
   el.style.top = y + "%";
-  el.innerHTML = cardHtml(p);
+  el.innerHTML = cardHtml(p, teamClass);
   document.getElementById(pitchId).appendChild(el);
   await wait(80);
   el.classList.add("show");
@@ -386,9 +445,9 @@ function getPosCoord(assigned, indexByPos, formation){
   const arr = FORMATION_COORDS[formation][assigned];
   return arr[Math.min(idx, arr.length - 1)];
 }
-function cardHtml(p){
+function cardHtml(p, teamClass){
   const ft=p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí";
-  return `<div class="cardPlayer"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${ft}</div></div>`;
+  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${ft}</div></div>`;
 }
 function setBench(id,bench){
   document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
@@ -411,12 +470,40 @@ function textResult(r){
   function block(title,l){
     return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}: ${p.name}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
   }
-  return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("ĐỘI A",r.lineupA)+"\n\n"+block("ĐỘI B",r.lineupB);
+  return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("🔴 ĐỘI A (ÁO ĐỎ)",r.lineupA)+"\n\n"+block("🟡 ĐỘI B (ÁO VÀNG)",r.lineupB);
 }
-function copyResult(){
-  const t=document.getElementById("textResult").textContent;
-  if(!t){alert("Chưa có kết quả.");return}
-  navigator.clipboard.writeText(t); alert("Đã copy kết quả.");
+async function exportImage(){
+  if(!lastResult){
+    alert("Chưa có kết quả để xuất hình.");
+    return;
+  }
+
+  const area = document.getElementById("exportArea");
+
+  // Tạm show textResult để ảnh có thêm danh sách text dự phòng nếu cần.
+  const text = document.getElementById("textResult");
+  const oldDisplay = text.style.display;
+  text.style.display = "none";
+
+  try{
+    const canvas = await html2canvas(area, {
+      backgroundColor: "#0f172a",
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+
+    const link = document.createElement("a");
+    const now = new Date();
+    const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    link.download = `diamond-united-fc-san-7-${stamp}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }catch(e){
+    alert("Không xuất được hình. Nếu avatar dùng ảnh ngoài domain, hãy đổi avatar sang ảnh trong folder avatars/ của GitHub.");
+  }finally{
+    text.style.display = oldDisplay;
+  }
 }
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
 function showError(msg){const e=document.getElementById("error");e.textContent=msg;e.style.display="block"}
