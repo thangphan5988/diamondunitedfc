@@ -153,7 +153,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.10.4</div>
+  <div class="buildVersion">Build v1.11.1</div>
   
   <div class="grid">
     <div class="card">
@@ -400,6 +400,10 @@ function setFormation(team, value){
   document.getElementById("textResult").textContent = textResult(lastResult);
 }
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Y7XC0m8kMsP0USO6Agpl3GNWFzYE4vyQ/gviz/tq?tqx=out:csv&gid=545791527";
+
+// Dán Apps Script Web App URL vào đây sau khi deploy.
+// Ví dụ: https://script.google.com/macros/s/AKfycb.../exec
+const MATCH_HISTORY_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwJtI0nf8uRm5NN3_KGjyKtk-tOhjJ-tfTY-WtFWYxzwvrvZKFfuHxQC7zDS5sR5AL/exec";
 
 async function loadDefaultRoster(){
   clearError();
@@ -1359,6 +1363,9 @@ async function exportImage(){
     document.body.appendChild(link);
     link.click();
     link.remove();
+
+    // Sau khi xuất hình ảnh đội hình xong, lưu danh sách 2 đội vào Google Sheet.
+    await saveMatchHistoryToSheet(filename);
   }catch(e){
     console.error(e);
     alert("Không xuất được hình. Mình đã sửa bản này để tránh lỗi avatar/CORS; nếu vẫn lỗi, thử refresh trang rồi random lại.");
@@ -1421,6 +1428,95 @@ function fallbackAvatarDataURL(text){
   </svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
+
+async function saveMatchHistoryToSheet(imageFilename){
+  if(!lastResult) return;
+
+  if(!MATCH_HISTORY_WEB_APP_URL){
+    console.warn("MATCH_HISTORY_WEB_APP_URL chưa được cấu hình, bỏ qua lưu lịch sử trận.");
+    return;
+  }
+
+  const now = new Date();
+  const matchId = `dufc-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}${String(now.getSeconds()).padStart(2,"0")}`;
+
+  const rows = [];
+
+  function addTeamRows(teamName, shirt, lineup, formation){
+    lineup.starters.forEach((p, index) => {
+      rows.push({
+        match_id: matchId,
+        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        created_at: now.toISOString(),
+        team: teamName,
+        shirt,
+        formation,
+        player_name: p.name,
+        rating: Number(p.rating) || 5,
+        starter: true,
+        lineup_order: index + 1,
+        assigned_position: p.assigned || "",
+        assigned_side: p.assignedSide || "",
+        main_position: p.main || "",
+        secondary_positions: (p.secondary || []).join("/"),
+        preferred_side: Array.isArray(p.side) ? p.side.join("/") : (p.side || ""),
+        fit_label: p.fit === 2 ? "main_position" : p.fit === 1 ? "secondary_position" : "wrong_position",
+        captain: !!p.captain,
+        image_filename: imageFilename || ""
+      });
+    });
+
+    lineup.bench.forEach((p, index) => {
+      rows.push({
+        match_id: matchId,
+        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        created_at: now.toISOString(),
+        team: teamName,
+        shirt,
+        formation,
+        player_name: p.name,
+        rating: Number(p.rating) || 5,
+        starter: false,
+        lineup_order: index + 1,
+        assigned_position: "BENCH",
+        assigned_side: "",
+        main_position: p.main || "",
+        secondary_positions: (p.secondary || []).join("/"),
+        preferred_side: Array.isArray(p.side) ? p.side.join("/") : (p.side || ""),
+        fit_label: "bench",
+        captain: false,
+        image_filename: imageFilename || ""
+      });
+    });
+  }
+
+  addTeamRows("A", "Áo Đỏ", lastResult.lineupA, formationA);
+  addTeamRows("B", "Áo Vàng", lastResult.lineupB, formationB);
+
+  try{
+    const res = await fetch(MATCH_HISTORY_WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify({
+        action: "save_match_history",
+        spreadsheet_id: "1Y7XC0m8kMsP0USO6Agpl3GNWFzYE4vyQ",
+        sheet_gid: "228928781",
+        match_id: matchId,
+        rows
+      })
+    });
+
+    document.getElementById("ocrStatus").innerHTML =
+      `Đã xuất ảnh và gửi lưu lịch sử trận <b>${matchId}</b>.`;
+  }catch(e){
+    console.error(e);
+    document.getElementById("ocrStatus").innerHTML =
+      `Đã xuất ảnh, nhưng chưa lưu được lịch sử trận. Kiểm tra Apps Script URL.`;
+  }
+}
+
+
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
 function showError(msg){const e=document.getElementById("error");e.textContent=msg;e.style.display="block"}
 function clearError(){const e=document.getElementById("error");e.textContent="";e.style.display="none"}
