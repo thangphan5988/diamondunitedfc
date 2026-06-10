@@ -18,10 +18,10 @@ Duy Nguyễn,DEF,DEF,8,avatars/duy-nguyen.png
 Hoang,DEF,FWD,6,avatars/hoang.png
 Huy,MID,DEF/FWD,9,avatars/huy.png
 Huỳnh Trần Quốc Việt,FWD,MID,10,avatars/huynh-tran-quoc-viet.png
-Kem,DEF,MID,7,avatars/kem.png
+Kem,DEF,MID/GK,7,avatars/kem.png
 Khuu Anh Tài,GK,GK,8,avatars/khuu-anh-tai.png
 Lê Phước,DEF,DEF,7,avatars/le-phuoc.png
-Long,DEF,FWD,8,avatars/long.png
+Long,DEF,FWD/GK,8,avatars/long.png
 Nghia Tran,FWD,MID/FWD,9,avatars/nghia-tran.png
 Nguyễn Minh Việt,GK,GK,9,avatars/nguyen-minh-viet.png
 Phúc,FWD,DEF,6,avatars/phuc.png
@@ -29,4 +29,4 @@ Phước C2,FWD,DEF/MID,8,avatars/phuoc-c2.png
 Thanh Tan,DEF,DEF,6,avatars/thanh-tan.png
 Tường Bằng,MID,DEF/FWD,10,avatars/tuong-bang.png
 Vũ Tuấn,DEF,FWD,5,avatars/vu-tuan.png
-Xuân Điệp,DEF,MID,6,avatars/xuan-iep.png
+Xuân Điệp,DEF,MID/GK,6,avatars/xuan-iep.png
