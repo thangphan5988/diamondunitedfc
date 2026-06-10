@@ -6,6 +6,7 @@
   <title>DIAMOND UNITED FC - SÂN 7</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root{
       --bg:#07111f;--card:#0f172a;--line:#243244;--text:#e5e7eb;--muted:#94a3b8;
@@ -15,7 +16,7 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
     .wrap{max-width:1440px;margin:auto;padding:22px}
-    h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:12px;margin-bottom:12px}
+    h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:12px;margin-bottom:12px}.ocrStatus{font-size:12px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
     .sub{color:var(--muted);margin-bottom:16px}
     .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
     .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
@@ -106,12 +107,15 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.1.0</div>
+  <div class="buildVersion">Build v1.2.0</div>
   
   <div class="grid">
     <div class="card">
       <h2>1. Danh sách thành viên</h2>
       <input id="searchBox" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
+      <input id="screenshotInput" type="file" accept="image/*" onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
+      <button class="secondary" onclick="clearTodaySelection()">Bỏ chọn hôm nay</button>
+      <div id="ocrStatus" class="ocrStatus"></div>
       <select id="formationSelectA" onchange="setFormation('A', this.value)">
         <option value="3-2-1">Đội A: Sơ đồ 3-2-1</option>
         <option value="3-1-2">Đội A: Sơ đồ 3-1-2</option>
@@ -294,6 +298,83 @@ function renderPlayerPicker(){
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }
+
+function cleanDetectedText(text){
+  return String(text || "")
+    .replace(/DC\s*[-–—]\s*/gi, " ")
+    .replace(/Bạn/gi, " Thang Phan ")
+    .replace(/[^\p{L}\p{N}\s\-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function nameMatchScore(ocrText, playerName){
+  const text = normalizeName(cleanDetectedText(ocrText));
+  const name = normalizeName(playerName);
+
+  if(!name) return false;
+  if(text.includes(name)) return true;
+
+  // Match mềm: tách token tên, yêu cầu đa số token xuất hiện.
+  const tokens = name.split(/\s+/).filter(t => t.length >= 2);
+  if(tokens.length <= 1) return tokens.some(t => text.includes(t));
+
+  const matched = tokens.filter(t => text.includes(t)).length;
+  return matched >= Math.max(1, Math.ceil(tokens.length * 0.75));
+}
+
+async function detectPlayersFromScreenshot(evt){
+  clearError();
+  const status = document.getElementById("ocrStatus");
+  const file = evt.target.files[0];
+  if(!file) return;
+
+  if(!players.length){
+    showError("Danh sách thành viên chưa load xong. Chờ vài giây rồi thử lại.");
+    return;
+  }
+
+  try{
+    status.textContent = "Đang đọc screenshot...";
+    const result = await Tesseract.recognize(file, "vie+eng", {
+      logger: m => {
+        if(m.status === "recognizing text"){
+          status.textContent = `Đang detect danh sách... ${Math.round((m.progress || 0) * 100)}%`;
+        }
+      }
+    });
+
+    const rawText = result?.data?.text || "";
+    const detected = [];
+
+    players.forEach(p => {
+      if(nameMatchScore(rawText, p.name)) detected.push(p.name);
+    });
+
+    players.forEach(p => {
+      p.selected = detected.includes(p.name);
+    });
+
+    renderPlayerPicker();
+    updateStats();
+
+    if(detected.length){
+      status.innerHTML = `Đã detect <b>${detected.length}</b> cầu thủ: ${detected.map(escapeHtml).join(", ")}`;
+    }else{
+      status.textContent = "Chưa detect được tên nào. Thử crop ảnh rõ hơn hoặc zoom danh sách lớn hơn.";
+    }
+  }catch(e){
+    status.textContent = "";
+    showError("Không detect được screenshot. Kiểm tra mạng vì OCR cần tải thư viện/language từ CDN.");
+  }
+}
+
+function clearTodaySelection(){
+  players.forEach(p => p.selected = false);
+  renderPlayerPicker();
+  updateStats();
+}
+
 function selectAll(v){players.forEach(p=>p.selected=v);renderPlayerPicker();updateStats();}
 
 function fit(p,pos){ if(p.main===pos)return 2; if(p.secondary.includes(pos))return 1; return 0; }
