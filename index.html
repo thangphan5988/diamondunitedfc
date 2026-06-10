@@ -3,173 +3,410 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DUFC Team Randomizer - Sân 7</title>
+  <title>DUFC Randomizer - Sân 7</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    :root{--bg:#020617;--card:#0f172a;--card2:#111827;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;--blue:#38bdf8;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444}
-    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#1e293b,#020617 55%);color:var(--text)}
-    .wrap{max-width:1380px;margin:0 auto;padding:22px} h1{margin:0 0 8px;font-size:30px}.sub{color:var(--muted);margin-bottom:18px;line-height:1.45}
-    .grid{display:grid;grid-template-columns:410px 1fr;gap:16px}.card{background:rgba(15,23,42,.94);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.28)}
-    h2{margin:0 0 12px;font-size:20px} h3{margin:0 0 8px;font-size:16px}.small{font-size:13px;color:var(--muted);line-height:1.5}
-    input[type=file]{width:100%;border:1px dashed #475569;border-radius:12px;padding:14px;background:#020617;color:var(--text)}
-    button{width:100%;border:0;border-radius:12px;padding:12px;background:#0284c7;color:white;font-weight:800;cursor:pointer;margin-top:10px;font-size:14px} button:hover{filter:brightness(1.1)} button.secondary{background:#334155}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .toolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}.toolbar button{margin:0;padding:9px;font-size:12px;background:#1e293b}
-    .players{max-height:480px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:12px}.pitem{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid rgba(51,65,85,.65)}.pitem:last-child{border-bottom:0}.pname{font-weight:700}.ppos{font-size:12px;color:var(--muted);margin-top:2px}.rating{font-size:12px;color:#fde68a}.status{margin-top:10px;padding:10px;border-radius:12px;background:#020617;border:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.45}.error{color:#fecaca;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12)}
-    .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}.metric{background:#020617;border:1px solid var(--line);border-radius:14px;padding:10px}.metric b{display:block;font-size:20px}.metric span{font-size:12px;color:var(--muted)}
-    .teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}.team-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.team-head h2{margin:0}.score{font-size:13px;color:var(--muted)}
-    .pitch{position:relative;overflow:hidden;background:linear-gradient(180deg,#166534,#14532d);border:1px solid #15803d;border-radius:18px;min-height:560px;padding:16px}.pitch:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0,rgba(255,255,255,.035) 70px,transparent 70px,transparent 140px);pointer-events:none}.line{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:10px;min-height:100px}.line.fwd{margin-top:4px}.line.gk{margin-top:8px}
-    .slot{width:118px;min-height:72px;border:1px dashed rgba(255,255,255,.28);border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.22)}
-    .player{width:110px;min-height:68px;border-radius:14px;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.22);padding:8px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.25);opacity:0;transform:translateY(-16px) scale(.92);transition:all .38s ease}.player.show{opacity:1;transform:translateY(0) scale(1)}.player .name{font-weight:800;font-size:13px}.player .pos{color:var(--blue);font-size:12px;margin-top:3px}.player .fit{font-size:11px;color:var(--muted);margin-top:4px}.fit.good{color:#86efac}.fit.ok{color:#fde68a}.fit.bad{color:#fecaca}
-    .bench{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.bench-list{display:flex;flex-wrap:wrap;gap:8px}.tag{border:1px solid var(--line);background:#020617;border-radius:999px;padding:7px 10px;font-size:12px;color:var(--text)}
-    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.82);display:none;align-items:center;justify-content:center;z-index:30}.count{font-size:120px;font-weight:900;color:white;text-shadow:0 0 35px rgba(56,189,248,.9);animation:pulse .7s ease}@keyframes pulse{from{transform:scale(.45);opacity:.2}to{transform:scale(1);opacity:1}}
-    .empty{color:rgba(255,255,255,.55);font-size:12px}.copy{margin-top:12px}.note{margin-top:10px;color:#cbd5e1;font-size:13px;line-height:1.45}
-    @media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+    :root{
+      --bg:#07111f;--card:#0f172a;--line:#243244;--text:#e5e7eb;--muted:#94a3b8;
+      --green:#16a34a;--green2:#0f7a35;--white:rgba(255,255,255,.85);--blue:#38bdf8;
+      --red:#ef4444;--yellow:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
+    .wrap{max-width:1440px;margin:auto;padding:22px}
+    h1{margin:0 0 6px;font-size:30px}
+    .sub{color:var(--muted);margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+    .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    input,button,select{width:100%;border-radius:12px;border:1px solid var(--line);background:#020617;color:var(--text);padding:11px 12px;font-size:14px}
+    button{background:#0284c7;border:0;font-weight:800;cursor:pointer;margin-top:10px}
+    button:hover{filter:brightness(1.12)}
+    button.secondary{background:#334155}
+    button.gold{background:#b45309}
+    .hint{font-size:13px;color:var(--muted);line-height:1.45;margin-top:10px}
+    .players{max-height:390px;overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:14px}
+    .row{display:grid;grid-template-columns:32px 42px 1fr auto;gap:9px;align-items:center;padding:9px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .row:last-child{border-bottom:0}
+    .row img,.miniAvatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e293b;border:1px solid rgba(255,255,255,.2)}
+    .name{font-weight:800}
+    .meta{font-size:12px;color:var(--muted)}
+    .badge{font-size:11px;border:1px solid var(--line);padding:4px 6px;border-radius:999px;color:#cbd5e1}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .metric{background:#020617;border:1px solid var(--line);border-radius:14px;padding:10px}
+    .metric b{font-size:20px;display:block}.metric span{font-size:12px;color:var(--muted)}
+    .teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .teamHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .teamHead h2{margin:0;font-size:22px}
+    .pitch{
+      position:relative;height:650px;border-radius:22px;overflow:hidden;
+      background:
+        linear-gradient(90deg,rgba(255,255,255,.035) 50%,rgba(0,0,0,.04) 50%),
+        linear-gradient(#13803c,#08732f);
+      background-size:110px 100%,100% 100%;
+      border:4px solid rgba(255,255,255,.8);
+      box-shadow:inset 0 0 0 2px rgba(0,0,0,.2),0 8px 20px rgba(0,0,0,.35)
+    }
+    .pitch:before{
+      content:"";position:absolute;inset:22px;border:2px solid var(--white);border-radius:12px;pointer-events:none
+    }
+    .halfLine{position:absolute;left:22px;right:22px;top:50%;height:2px;background:var(--white)}
+    .centerCircle{position:absolute;left:50%;top:50%;width:112px;height:112px;transform:translate(-50%,-50%);border:2px solid var(--white);border-radius:50%}
+    .centerDot{position:absolute;left:50%;top:50%;width:8px;height:8px;transform:translate(-50%,-50%);background:var(--white);border-radius:50%}
+    .boxTop,.boxBottom{position:absolute;left:50%;width:190px;height:78px;transform:translateX(-50%);border:2px solid var(--white)}
+    .boxTop{top:22px;border-top:0}.boxBottom{bottom:22px;border-bottom:0}
+    .goalTop,.goalBottom{position:absolute;left:50%;width:92px;height:24px;transform:translateX(-50%);border:2px solid var(--white)}
+    .goalTop{top:0;border-top:0}.goalBottom{bottom:0;border-bottom:0}
+    .spotTop,.spotBottom{position:absolute;left:50%;width:7px;height:7px;transform:translateX(-50%);background:var(--white);border-radius:50%}
+    .spotTop{top:82px}.spotBottom{bottom:82px}
+    .slot{position:absolute;transform:translate(-50%,-50%);transition:all .45s cubic-bezier(.2,.8,.2,1);opacity:0}
+    .slot.show{opacity:1}
+    .cardPlayer{
+      width:83px;min-height:83px;border-radius:13px;padding:6px;text-align:center;
+      background:rgba(2,6,23,.88);border:1px solid rgba(255,255,255,.3);
+      box-shadow:0 10px 24px rgba(0,0,0,.36);backdrop-filter:blur(4px)
+    }
+    .cardPlayer img{width:39px;height:39px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.45)}
+    .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
+    .cardPlayer .fit{font-size:9px;color:#cbd5e1;margin-top:3px}
+    .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+    .bench h3{margin:0 0 8px;font-size:15px}
+    .benchList{display:flex;flex-wrap:wrap;gap:8px}
+    .benchItem{display:flex;align-items:center;gap:6px;background:#020617;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:12px}
+    .benchItem img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+    .overlay{
+      position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column
+    }
+    .overlay.show{display:flex}
+    .count{font-size:108px;font-weight:1000;line-height:1;animation:pulse .8s infinite}
+    .rolling{margin-top:20px;height:88px;display:flex;align-items:center;gap:12px;font-size:28px;font-weight:900}
+    .rolling img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff}
+    @keyframes pulse{0%{transform:scale(.94);opacity:.7}50%{transform:scale(1.06);opacity:1}100%{transform:scale(.94);opacity:.7}}
+    .error{display:none;margin-top:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:10px;border-radius:12px}
+    pre{white-space:pre-wrap;background:#020617;border:1px solid var(--line);border-radius:12px;padding:10px;color:#cbd5e1;display:none}
+    @media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.pitch{height:620px}.summary{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
-<div class="overlay" id="overlay"><div class="count" id="count">3</div></div>
 <div class="wrap">
-  <h1>DUFC Team Randomizer - Sân 7</h1>
-  <div class="sub">Import Excel danh sách cầu thủ chung → tick cầu thủ tham gia hôm nay → random chia 2 đội cân bằng vị trí → tự xếp đội hình <b>GK + 3-2-1</b> và dự bị.</div>
+  <h1>DUFC Randomizer - Sân 7</h1>
+  <div class="sub">Import Excel → chọn cầu thủ hôm nay → chọn sơ đồ riêng từng đội → random hồi hộp → bốc từng cầu thủ vào sân.</div>
   <div class="grid">
     <div class="card">
-      <h2>1. Load danh sách cầu thủ</h2>
-      <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(event)">
-      <div class="note">Excel cần sheet <b>Players</b> với cột: Name, MainPosition, SecondaryPositions, Rating, Active, Note.</div>
-      <div class="toolbar">
-        <button onclick="selectAll()">Chọn tất cả</button>
-        <button onclick="selectActive()">Chọn Active</button>
-        <button onclick="clearSelected()">Bỏ chọn</button>
+      <h2>1. Load danh sách</h2>
+      <input id="file" type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+      <select id="formationSelectA" onchange="setFormation('A', this.value)">
+        <option value="3-2-1">Đội A: Sơ đồ 3-2-1</option>
+        <option value="3-1-2">Đội A: Sơ đồ 3-1-2</option>
+        <option value="2-3-1">Đội A: Sơ đồ 2-3-1</option>
+        <option value="2-2-2">Đội A: Sơ đồ 2-2-2</option>
+      </select>
+      <select id="formationSelectB" onchange="setFormation('B', this.value)">
+        <option value="3-2-1">Đội B: Sơ đồ 3-2-1</option>
+        <option value="3-1-2">Đội B: Sơ đồ 3-1-2</option>
+        <option value="2-3-1">Đội B: Sơ đồ 2-3-1</option>
+        <option value="2-2-2">Đội B: Sơ đồ 2-2-2</option>
+      </select>
+      <button class="secondary" onclick="selectAll(true)">Chọn tất cả</button>
+      <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
+      <button class="gold" onclick="startRandom()">Random chia đội</button>
+      <button onclick="copyResult()">Copy kết quả</button>
+      <div class="hint">
+        Excel cần sheet đầu tiên có cột: <b>name, main_position, secondary_positions, rating, avatar</b>.<br>
+        Avatar: nhập URL ảnh vào cột <b>avatar</b>. Nếu bỏ trống, app tự hiện avatar mặc định.
       </div>
-      <div id="playerList" class="players"></div>
-      <div id="status" class="status">Chưa load Excel.</div>
-      <div class="row">
-        <button onclick="randomizeWithEffect()">Random chia đội</button>
-        <button class="secondary" onclick="copyResult()">Copy kết quả</button>
-      </div>
+      <div id="error" class="error"></div>
+      <div id="players" class="players"></div>
     </div>
 
     <div class="card">
-      <h2>2. Kết quả chia đội</h2>
       <div class="summary">
-        <div class="metric"><b id="totalPlayers">0</b><span>Cầu thủ đã chọn</span></div>
-        <div class="metric"><b id="teamSize">0 - 0</b><span>Quân số</span></div>
-        <div class="metric"><b id="bestScore">0</b><span>Điểm cân bằng</span></div>
-        <div class="metric"><b id="ratingScore">0 - 0</b><span>Tổng rating</span></div>
-        <div class="metric"><b id="attempts">0</b><span>Lần thử</span></div>
+        <div class="metric"><b id="total">0</b><span>Tổng đã load</span></div>
+        <div class="metric"><b id="selected">0</b><span>Tham gia hôm nay</span></div>
+        <div class="metric"><b id="sizes">0 - 0</b><span>Quân số 2 đội</span></div>
+        <div class="metric"><b id="score">0</b><span>Điểm cân bằng</span></div>
       </div>
+
       <div class="teams">
-        <div><div class="team-head"><h2>Đội A</h2><div id="scoreA" class="score"></div></div><div id="formationA" class="pitch"></div><div class="bench"><h3>Dự bị</h3><div id="benchA" class="bench-list"></div></div></div>
-        <div><div class="team-head"><h2>Đội B</h2><div id="scoreB" class="score"></div></div><div id="formationB" class="pitch"></div><div class="bench"><h3>Dự bị</h3><div id="benchB" class="bench-list"></div></div></div>
+        <div>
+          <div class="teamHead"><h2>Đội A</h2><span id="scoreA" class="meta"></span></div>
+          <div class="pitch" id="pitchA">
+            <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
+            <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
+          </div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchA" class="benchList"></div></div>
+        </div>
+
+        <div>
+          <div class="teamHead"><h2>Đội B</h2><span id="scoreB" class="meta"></span></div>
+          <div class="pitch" id="pitchB">
+            <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
+            <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
+          </div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchB" class="benchList"></div></div>
+        </div>
       </div>
+      <pre id="textResult"></pre>
     </div>
   </div>
-  <pre id="textResult" style="display:none"></pre>
 </div>
+
+<div id="overlay" class="overlay">
+  <div id="count" class="count">3</div>
+  <div id="rolling" class="rolling"></div>
+</div>
+
 <script>
-const POSITIONS = ["GK","DEF","MID","FWD"];
-const STARTING_SHAPE = ["GK","DEF","DEF","DEF","MID","MID","FWD"]; // GK + 3-2-1
-let allPlayers = [];
+const POS = ["GK","DEF","MID","FWD"];
+const FORMATIONS = {
+  "3-2-1": ["GK","DEF","DEF","DEF","MID","MID","FWD"],
+  "3-1-2": ["GK","DEF","DEF","DEF","MID","FWD","FWD"],
+  "2-3-1": ["GK","DEF","DEF","MID","MID","MID","FWD"],
+  "2-2-2": ["GK","DEF","DEF","MID","MID","FWD","FWD"]
+};
+let formationA = "3-2-1";
+let formationB = "3-2-1";
+const FORMATION_COORDS = {
+  "3-2-1": {
+    GK:[[50,91]], DEF:[[25,69],[50,72],[75,69]], MID:[[35,46],[65,46]], FWD:[[50,24]]
+  },
+  "3-1-2": {
+    GK:[[50,91]], DEF:[[25,69],[50,72],[75,69]], MID:[[50,48]], FWD:[[35,24],[65,24]]
+  },
+  "2-3-1": {
+    GK:[[50,91]], DEF:[[35,70],[65,70]], MID:[[25,48],[50,51],[75,48]], FWD:[[50,24]]
+  },
+  "2-2-2": {
+    GK:[[50,91]], DEF:[[35,70],[65,70]], MID:[[35,48],[65,48]], FWD:[[35,24],[65,24]]
+  }
+};
+let players = [];
 let lastResult = null;
 
-function setStatus(msg, isError=false){const el=document.getElementById('status');el.textContent=msg;el.className='status'+(isError?' error':'')}
-function normalizePos(v){return String(v||'').trim().toUpperCase()}
-function normalizeActive(v){return ['YES','Y','TRUE','1','CÓ','CO','X'].includes(String(v||'').trim().toUpperCase())}
-function escapeHtml(str){return String(str||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+function defaultAvatar(name){
+  const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());
+  return `https://ui-avatars.com/api/?name=${initials}&background=0f172a&color=ffffff&bold=true`;
+}
+function normalizePos(v){return String(v||"").trim().toUpperCase();}
+function splitSecond(v){return String(v||"").toUpperCase().split(/[\/,;|]/).map(x=>x.trim()).filter(x=>POS.includes(x));}
 
-async function handleFile(event){
-  const file = event.target.files[0]; if(!file) return;
+
+function setFormation(team, value){
+  if(team === "A") formationA = value;
+  if(team === "B") formationB = value;
+
+  clearPitch("pitchA");
+  clearPitch("pitchB");
+  setBench("benchA", []);
+  setBench("benchB", []);
+  document.getElementById("textResult").textContent = "";
+}
+async function importExcel(evt){
+  clearError();
   try{
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data,{type:'array'});
-    const sheetName = wb.SheetNames.includes('Players') ? 'Players' : wb.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:''});
-    allPlayers = rows.map((r,i)=>{
-      const name = String(r.Name || r.name || r.Tên || r.ten || '').trim();
-      const main = normalizePos(r.MainPosition || r.mainPosition || r.Main || r.Position || r['Vị trí chính']);
-      const secondaryRaw = String(r.SecondaryPositions || r.secondaryPositions || r.Secondary || r['Vị trí phụ'] || '').toUpperCase();
-      const secondary = secondaryRaw.split(/[\/|;,]/).map(x=>x.trim()).filter(x=>POSITIONS.includes(x));
-      const rating = Number(r.Rating || r.rating || 5) || 5;
-      const active = normalizeActive(r.Active || r.active || 'YES');
-      const note = String(r.Note || r.note || '').trim();
-      if(!name || !POSITIONS.includes(main)) return null;
-      return {id:i+'_'+name,name,main,secondary,rating,active,selected:active,note};
+    const file = evt.target.files[0];
+    if(!file) return;
+
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, {type:"array"});
+    const sheetName = wb.SheetNames[0];
+    if(!sheetName) throw new Error("Không tìm thấy sheet trong Excel.");
+
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {defval:""});
+    if(!rows.length) throw new Error("File Excel chưa có dữ liệu cầu thủ.");
+
+    const list = rows.map((row, idx) => {
+      const lower = {};
+      Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
+
+      const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
+      const main = normalizePos(lower.main_position || lower.main || lower["vị trí chính"] || lower.vi_tri_chinh || "");
+      const secondaryValue = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
+      const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
+      const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
+
+      if(!name) return null;
+      if(!POS.includes(main)) return null;
+
+      return {
+        id: (idx + 2) + "_" + name,
+        name,
+        main,
+        secondary: splitSecond(secondaryValue),
+        rating: Number.isFinite(rating) ? rating : 5,
+        avatar: avatarText || defaultAvatar(name),
+        selected: true
+      };
     }).filter(Boolean);
-    renderPlayerList();
-    setStatus(`Đã load ${allPlayers.length} cầu thủ từ sheet "${sheetName}". Tick người đá hôm nay rồi random.`);
-  }catch(e){setStatus('Không đọc được file Excel: '+e.message,true)}
-}
 
-function renderPlayerList(){
-  const el=document.getElementById('playerList');
-  if(!allPlayers.length){el.innerHTML='<div class="pitem"><span></span><div>Chưa có cầu thủ</div></div>';return}
-  el.innerHTML=allPlayers.map((p,i)=>`<label class="pitem"><input type="checkbox" ${p.selected?'checked':''} onchange="allPlayers[${i}].selected=this.checked; updatePickedCount();"><div><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.main}${p.secondary.length?' / '+p.secondary.join('/') : ''}${p.note?' · '+escapeHtml(p.note):''}</div></div><div class="rating">★ ${p.rating}</div></label>`).join('');
-  updatePickedCount();
-}
-function updatePickedCount(){const n=allPlayers.filter(p=>p.selected).length; document.getElementById('totalPlayers').textContent=n}
-function selectAll(){allPlayers.forEach(p=>p.selected=true);renderPlayerList()} function selectActive(){allPlayers.forEach(p=>p.selected=p.active);renderPlayerList()} function clearSelected(){allPlayers.forEach(p=>p.selected=false);renderPlayerList()}
-
-function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function canPlay(p,pos){if(p.main===pos)return 2;if(p.secondary.includes(pos))return 1;return 0}
-function sumRating(team){return team.reduce((s,p)=>s+(Number(p.rating)||5),0)}
-function countMainPositions(team){const c={GK:0,DEF:0,MID:0,FWD:0};team.forEach(p=>c[p.main]++);return c}
-
-function buildLineup(team){
-  const available=[...team], starters=[]; let score=0;
-  for(const need of STARTING_SHAPE){
-    let bestIndex=-1,bestFit=-1;
-    for(let i=0;i<available.length;i++){
-      const fit=canPlay(available[i],need); const noise=Math.random()*0.01;
-      if(fit+noise>bestFit){bestFit=fit+noise;bestIndex=i}
+    if(list.length < 1) {
+      throw new Error("Không đọc được cầu thủ. Cần cột name và main_position. Vị trí hợp lệ: GK, DEF, MID, FWD.");
     }
-    if(bestIndex>=0 && bestFit>=1){const p=available.splice(bestIndex,1)[0];starters.push({...p,assigned:need,fit:Math.floor(bestFit)});score+=Math.floor(bestFit)===2?12:7}
-    else if(available.length>0){const p=available.shift();starters.push({...p,assigned:need,fit:0});score-=14}
-    else{starters.push({name:'Thiếu người',main:'-',secondary:[],rating:0,assigned:need,fit:-1});score-=40}
+
+    players = list;
+    renderPlayerPicker();
+    updateStats();
+  }catch(e){
+    showError(e.message || "Không import được file Excel.");
   }
-  return {starters,bench:available,score};
 }
-function evaluateSplit(teamA,teamB){
-  const lineupA=buildLineup(teamA), lineupB=buildLineup(teamB); const cA=countMainPositions(teamA), cB=countMainPositions(teamB);
-  let score=lineupA.score+lineupB.score;
-  for(const pos of POSITIONS) score-=Math.abs((cA[pos]||0)-(cB[pos]||0))*5;
-  score-=Math.abs(teamA.length-teamB.length)*10;
-  score-=Math.abs(sumRating(teamA)-sumRating(teamB))*3;
-  if(teamA.some(p=>p.main==='GK'))score+=20;else score-=35; if(teamB.some(p=>p.main==='GK'))score+=20;else score-=35;
-  return {teamA,teamB,lineupA,lineupB,score,ratingA:sumRating(teamA),ratingB:sumRating(teamB)};
+function renderPlayerPicker(){
+  const el = document.getElementById("players");
+  el.innerHTML = players.map((p,i)=>`
+    <label class="row">
+      <input type="checkbox" ${p.selected?"checked":""} onchange="players[${i}].selected=this.checked;updateStats()">
+      <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""} · rating ${p.rating}</div></div>
+      <span class="badge">${p.main}</span>
+    </label>`).join("");
 }
-function randomSplit(players){const s=shuffle(players);const half=Math.ceil(s.length/2);return [s.slice(0,half),s.slice(half)]}
+function selectAll(v){players.forEach(p=>p.selected=v);renderPlayerPicker();updateStats();}
 
-async function randomizeWithEffect(){
-  try{
-    const players=allPlayers.filter(p=>p.selected);
-    if(players.length<14) throw new Error('Cần tối thiểu 14 người được chọn để đủ 2 đội sân 7.');
-    if(players.filter(p=>p.main==='GK'||p.secondary.includes('GK')).length<2) setStatus('Cảnh báo: ít hơn 2 người có thể đá GK, app vẫn chia nhưng có thể lệch thủ môn.',true); else setStatus('Đang random...');
-    const ATTEMPTS=7000; let best=null;
-    for(let i=0;i<ATTEMPTS;i++){const [a,b]=randomSplit(players); const r=evaluateSplit(a,b); if(!best||r.score>best.score) best=r}
-    lastResult=best; clearBoard(); await countdown(); render(best,players.length,ATTEMPTS,true);
-  }catch(e){setStatus(e.message,true)}
+function fit(p,pos){ if(p.main===pos)return 2; if(p.secondary.includes(pos))return 1; return 0; }
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function build(team, formation){
+  const av=[...team], starters=[]; let score=0;
+  for(const need of FORMATIONS[formation]){
+    let bi=-1,bv=-999;
+    for(let i=0;i<av.length;i++){
+      let v = fit(av[i],need)*20 + (av[i].rating||5) + Math.random();
+      if(need==="GK" && av[i].main!=="GK") v -= 30;
+      if(v>bv){bv=v;bi=i}
+    }
+    if(bi>=0){
+      const p=av.splice(bi,1)[0];
+      const f=fit(p,need);
+      starters.push({...p,assigned:need,fit:f});
+      score += f===2?25:f===1?14:-18;
+      score += Math.min(10, p.rating||5);
+    }
+  }
+  return {starters,bench:av,score};
 }
-function clearBoard(){['formationA','formationB','benchA','benchB'].forEach(id=>document.getElementById(id).innerHTML='')}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function countdown(){const o=document.getElementById('overlay'), c=document.getElementById('count'); o.style.display='flex'; for(const n of ['3','2','1','DUFC!']){c.textContent=n;c.className='count'; void c.offsetWidth; await sleep(650)} o.style.display='none'}
+function counts(team){const c={GK:0,DEF:0,MID:0,FWD:0};team.forEach(p=>c[p.main]++);return c}
+function evalSplit(a,b){
+  const la=build(a, formationA), lb=build(b, formationB); let s=la.score+lb.score;
+  const ca=counts(a), cb=counts(b);
+  POS.forEach(pos=>s-=Math.abs(ca[pos]-cb[pos])*6);
+  s-=Math.abs(a.length-b.length)*10;
+  s-=Math.abs(sumRating(a)-sumRating(b))*1.5;
+  if(a.some(p=>p.main==="GK"))s+=30;else s-=50;
+  if(b.some(p=>p.main==="GK"))s+=30;else s-=50;
+  return {teamA:a,teamB:b,lineupA:la,lineupB:lb,score:Math.round(s)};
+}
+function sumRating(t){return t.reduce((s,p)=>s+(p.rating||5),0)}
+function randomBest(list){
+  let best=null;
+  for(let i=0;i<9000;i++){
+    const sh=shuffle(list), half=Math.ceil(sh.length/2);
+    const res=evalSplit(sh.slice(0,half),sh.slice(half));
+    if(!best || res.score>best.score) best=res;
+  }
+  return best;
+}
 
-function makeSlot(p){return `<div class="slot"><div class="player"><div class="name">${escapeHtml(p.name)}</div><div class="pos">${p.assigned}</div><div class="fit ${p.fit===2?'good':p.fit===1?'ok':'bad'}">${p.fit===2?'đúng sở trường':p.fit===1?'vị trí phụ':p.fit===0?'trái vị trí':''}</div></div></div>`}
-function renderFormation(elId,lineup){
-  const groups={FWD:[],MID:[],DEF:[],GK:[]}; lineup.starters.forEach(p=>groups[p.assigned].push(p));
-  document.getElementById(elId).innerHTML=`<div class="line fwd">${groups.FWD.map(makeSlot).join('')}</div><div class="line mid">${groups.MID.map(makeSlot).join('')}</div><div class="line def">${groups.DEF.map(makeSlot).join('')}</div><div class="line gk">${groups.GK.map(makeSlot).join('')}</div>`;
+async function startRandom(){
+  clearError();
+  const selected = players.filter(p=>p.selected);
+  if(selected.length<14){showError("Cần tối thiểu 14 cầu thủ để chia đủ 2 đội sân 7.");return;}
+  clearPitch("pitchA"); clearPitch("pitchB"); setBench("benchA",[]); setBench("benchB",[]);
+  await suspense(selected);
+  lastResult = randomBest(selected);
+  updateResultStats(lastResult, selected.length);
+  await revealBothLineups(lastResult.lineupA, lastResult.lineupB);
+  setBench("benchA", lastResult.lineupA.bench);
+  setBench("benchB", lastResult.lineupB.bench);
+  document.getElementById("textResult").textContent = textResult(lastResult);
 }
-async function revealPlayers(){const cards=[...document.querySelectorAll('.player')]; for(const card of cards){await sleep(180); card.classList.add('show')}}
-function renderBench(elId,bench){document.getElementById(elId).innerHTML=bench.length?bench.map(p=>`<div class="tag">${escapeHtml(p.name)} - ${p.main}${p.secondary.length?'/'+p.secondary.join('/'):''} ★${p.rating}</div>`).join(''):'<div class="tag">Không có dự bị</div>'}
-async function render(best,total,attempts,animated=false){
-  renderFormation('formationA',best.lineupA); renderFormation('formationB',best.lineupB); renderBench('benchA',best.lineupA.bench); renderBench('benchB',best.lineupB.bench);
-  document.getElementById('totalPlayers').textContent=total; document.getElementById('teamSize').textContent=`${best.teamA.length} - ${best.teamB.length}`; document.getElementById('bestScore').textContent=best.score; document.getElementById('ratingScore').textContent=`${best.ratingA} - ${best.ratingB}`; document.getElementById('attempts').textContent=attempts;
-  document.getElementById('scoreA').textContent=`Lineup ${best.lineupA.score} · Rating ${best.ratingA}`; document.getElementById('scoreB').textContent=`Lineup ${best.lineupB.score} · Rating ${best.ratingB}`;
-  document.getElementById('textResult').textContent=makeTextResult(best); setStatus('Đã chia đội xong. Có thể copy kết quả gửi group.'); if(animated) await revealPlayers(); else document.querySelectorAll('.player').forEach(x=>x.classList.add('show'));
+async function suspense(list){
+  const overlay=document.getElementById("overlay"), count=document.getElementById("count"), rolling=document.getElementById("rolling");
+  overlay.classList.add("show");
+  const seq=["3","2","1","DUFC!"];
+  for(const x of seq){count.textContent=x;rolling.innerHTML="";await wait(850);}
+  const end=Date.now()+3600; // random dài hơn, tăng hồi hộp
+  while(Date.now()<end){
+    const p=list[Math.floor(Math.random()*list.length)];
+    count.textContent="Đang chia đội...";
+    rolling.innerHTML=`<img src="${escapeAttr(p.avatar)}"><span>${escapeHtml(p.name)}</span>`;
+    await wait(135);
+  }
+  overlay.classList.remove("show");
 }
-function makeTextResult(best){function block(title,lineup,rating){const starters=lineup.starters.map(p=>`${p.assigned}: ${p.name}`).join('\n'); const bench=lineup.bench.length?lineup.bench.map(p=>`${p.name} (${p.main}${p.secondary.length?'/'+p.secondary.join('/'):''})`).join(', '):'Không có'; return `${title} - Rating ${rating}\nĐội hình GK + 3-2-1:\n${starters}\nDự bị: ${bench}`} return `${block('ĐỘI A',best.lineupA,best.ratingA)}\n\n${block('ĐỘI B',best.lineupB,best.ratingB)}`}
-function copyResult(){const t=document.getElementById('textResult').textContent;if(!t){alert('Chưa có kết quả để copy.');return}navigator.clipboard.writeText(t);alert('Đã copy kết quả.')}
 
-renderPlayerList();
+async function revealBothLineups(lineupA, lineupB){
+  const indexA = {};
+  const indexB = {};
+  const max = Math.max(lineupA.starters.length, lineupB.starters.length);
+
+  for(let i = 0; i < max; i++){
+    if(lineupA.starters[i]){
+      await addPlayerToPitch("pitchA", lineupA.starters[i], indexA, formationA);
+      await wait(760);
+    }
+
+    if(lineupB.starters[i]){
+      await addPlayerToPitch("pitchB", lineupB.starters[i], indexB, formationB);
+      await wait(920);
+    }
+  }
+}
+
+async function addPlayerToPitch(pitchId, p, indexByPos, formation){
+  const [x,y] = getPosCoord(p.assigned, indexByPos, formation);
+  const el = document.createElement("div");
+  el.className = "slot";
+  el.style.left = x + "%";
+  el.style.top = y + "%";
+  el.innerHTML = cardHtml(p);
+  document.getElementById(pitchId).appendChild(el);
+  await wait(80);
+  el.classList.add("show");
+}
+
+function getPosCoord(assigned, indexByPos, formation){
+  const idx = indexByPos[assigned] || 0;
+  indexByPos[assigned] = idx + 1;
+  const arr = FORMATION_COORDS[formation][assigned];
+  return arr[Math.min(idx, arr.length - 1)];
+}
+function cardHtml(p){
+  const ft=p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí";
+  return `<div class="cardPlayer"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${ft}</div></div>`;
+}
+function setBench(id,bench){
+  document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
+}
+function clearPitch(id){
+  [...document.getElementById(id).querySelectorAll(".slot")].forEach(x=>x.remove());
+}
+function updateStats(){
+  document.getElementById("total").textContent=players.length;
+  document.getElementById("selected").textContent=players.filter(p=>p.selected).length;
+}
+function updateResultStats(r,totalSelected){
+  document.getElementById("selected").textContent=totalSelected;
+  document.getElementById("sizes").textContent=`${r.teamA.length} - ${r.teamB.length}`;
+  document.getElementById("score").textContent=r.score;
+  document.getElementById("scoreA").textContent=`score ${r.lineupA.score} · rating ${sumRating(r.teamA)}`;
+  document.getElementById("scoreB").textContent=`score ${r.lineupB.score} · rating ${sumRating(r.teamB)}`;
+}
+function textResult(r){
+  function block(title,l){
+    return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}: ${p.name}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
+  }
+  return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("ĐỘI A",r.lineupA)+"\n\n"+block("ĐỘI B",r.lineupB);
+}
+function copyResult(){
+  const t=document.getElementById("textResult").textContent;
+  if(!t){alert("Chưa có kết quả.");return}
+  navigator.clipboard.writeText(t); alert("Đã copy kết quả.");
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+function showError(msg){const e=document.getElementById("error");e.textContent=msg;e.style.display="block"}
+function clearError(){const e=document.getElementById("error");e.textContent="";e.style.display="none"}
+function escapeHtml(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function escapeAttr(s){return escapeHtml(s)}
 </script>
 </body>
 </html>
