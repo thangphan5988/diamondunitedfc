@@ -26,6 +26,8 @@
     button:hover{filter:brightness(1.12)}
     button.secondary{background:#334155}
     button.gold{background:#b45309}
+    button.danger{background:#b91c1c}
+    button.danger:hover{filter:brightness(1.15)}
     .hint{font-size:13px;color:var(--muted);line-height:1.45;margin-top:10px}
     .players{max-height:390px;overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:14px}
     .row{display:grid;grid-template-columns:32px 42px 1fr auto;gap:9px;align-items:center;padding:9px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -85,6 +87,23 @@
         0 0 0 1px rgba(250,204,21,.55),
         0 10px 24px rgba(250,204,21,.28);
     }
+    .cardPlayer.capTeam{
+      border:3px solid #38bdf8;
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,.55),
+        0 10px 24px rgba(56,189,248,.28);
+    }
+    .cardPlayer.capSubTeam{
+      border:3px solid #a78bfa;
+      box-shadow:
+        0 0 0 1px rgba(167,139,250,.55),
+        0 10px 24px rgba(167,139,250,.28);
+    }
+    .lineupModes{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .lineupMode{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
+    .lineupMode.active{background:#0f766e;color:#fff;border-color:#0f766e}
+    .opponentField{margin-bottom:14px}
+    .opponentField label{display:block;font-size:11px;color:#94a3b8;font-weight:800;margin-bottom:6px}
     .cardPlayer img{width:39px;height:39px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.45)}
     .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
@@ -147,42 +166,125 @@
     @keyframes pulse{0%{transform:scale(.94);opacity:.7}50%{transform:scale(1.06);opacity:1}100%{transform:scale(.94);opacity:.7}}
     .error{display:none;margin-top:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:10px;border-radius:12px}
     pre{white-space:pre-wrap;background:#020617;border:1px solid var(--line);border-radius:12px;padding:10px;color:#cbd5e1;display:none}
-    @media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.pitch{height:620px}.summary{grid-template-columns:repeat(2,1fr)}}
+    .tabs{display:flex;gap:8px;margin-bottom:14px}
+    .tab{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:10px 16px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0}
+    .tab.active{background:#0284c7;color:#fff;border-color:#0284c7}
+    .lockBanner{display:none;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.45);color:#fde68a;padding:12px 14px;border-radius:14px;margin-bottom:14px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .lockBanner.show{display:flex}
+    .lockBanner b{color:#fff}
+    .scoreRow{display:grid;grid-template-columns:1fr 80px 1fr;gap:10px;align-items:center;margin-bottom:14px}
+    .scoreRow input{text-align:center;font-size:22px;font-weight:900;padding:8px}
+    .scoreTeamLabel{text-align:center;font-weight:900;font-size:14px}
+    .resultTeam{margin-bottom:14px}
+    .resultTeam h3{margin:0 0 8px;font-size:16px}
+    .resultPlayer{display:grid;grid-template-columns:38px 1fr 58px 46px 46px 40px;gap:6px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px;background:#020617;margin-bottom:6px}
+    .resultPlayer.noStats{grid-template-columns:38px 1fr 70px 52px}
+    .resultPlayerHead{background:transparent;border:0;padding:0 8px 4px;margin-bottom:2px;font-size:9px;color:var(--muted);font-weight:800}
+    .resultPlayer img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .resultPlayer select{padding:8px;font-size:12px}
+    .resultStatInput{padding:7px 4px;font-size:12px;text-align:center}
+    .resultColHead{text-align:center;font-size:9px;color:var(--muted)}
+    .deltaBadge{font-size:11px;font-weight:900;text-align:center;border-radius:999px;padding:4px 0}
+    .deltaBadge.up{background:rgba(34,197,94,.2);color:#86efac}
+    .deltaBadge.down{background:rgba(239,68,68,.2);color:#fca5a5}
+    .deltaBadge.zero{background:rgba(148,163,184,.15);color:#cbd5e1}
+    .mvpTag{font-size:10px;font-weight:900;color:#facc15;text-align:center}
+    .historyList{display:grid;gap:10px}
+    .historyItem{border:1px solid var(--line);border-radius:14px;padding:12px;background:#020617;cursor:pointer}
+    .historyItem:hover{border-color:#38bdf8}
+    .historyItem h3{margin:0 0 6px;font-size:16px}
+    .historyMeta{font-size:11px;color:var(--muted);line-height:1.5}
+    .historyDetail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none}
+    .historyDetail.show{display:block}
+    .historyPlayerRow{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px}
+    .historyPlayerRow:last-child{border-bottom:0}
+    .locked .lockable{opacity:.45;pointer-events:none}
+    .statsGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .statList{display:grid;gap:6px;max-height:560px;overflow:auto;margin-top:10px}
+    .statRow{display:grid;grid-template-columns:36px 38px 1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617}
+    .statRow img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .statRank{font-weight:900;color:#94a3b8;font-size:12px;text-align:center}
+    .statValue{font-weight:900;font-size:12px;padding:5px 10px;border-radius:999px;white-space:nowrap}
+    .statMvp{background:rgba(250,204,21,.2);color:#facc15}
+    .statRating{background:rgba(56,189,248,.15);color:#7dd3fc}
+    @media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.pitch{height:620px}.summary{grid-template-columns:repeat(2,1fr)}.statsGrid{grid-template-columns:1fr}}
+    @media(max-width:700px){.resultPlayer{grid-template-columns:32px 1fr 50px 40px 40px 36px}.resultPlayer.noStats{grid-template-columns:34px 1fr 64px 44px}}
+    .authBar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .authBar .meta{margin:0}
+    .authActions{display:flex;gap:8px;align-items:center}
+    .authActions button{width:auto;margin:0;padding:8px 14px}
+    .permGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+    .permItem{display:flex;gap:8px;align-items:center;font-size:11px;background:#020617;border:1px solid var(--line);border-radius:10px;padding:8px}
+    .adminUserRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617;margin-bottom:8px;font-size:11px}
+    .guestReadonly .formationControl select,.guestReadonly button{pointer-events:none;opacity:.85}
   </style>
 </head>
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.11.5</div>
-  
-  <div class="grid">
-    <div class="card">
-      <h2>1. Danh sách thành viên</h2>
-      <input id="searchBox" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
-      <input id="screenshotInput" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
+  <div class="buildVersion">Build v1.18.1</div>
+
+  <div class="authBar">
+    <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
+    <div class="authActions">
+      <button id="btnLogin" class="secondary" onclick="openLoginModal()">Đăng nhập</button>
+      <button id="btnLogout" class="secondary" onclick="adminLogout()" style="display:none">Đăng xuất</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button id="tabLatest" class="tab active" onclick="switchTab('latest')">Đội hình gần nhất</button>
+    <button id="tabHistory" class="tab" onclick="switchTab('history')">Lịch sử trận</button>
+    <button id="tabStats" class="tab" onclick="switchTab('stats')">Thống kê</button>
+    <button id="tabLineup" class="tab" onclick="switchTab('lineup')" style="display:none">Chia đội</button>
+    <button id="tabAdmin" class="tab" onclick="switchTab('admin')" style="display:none">Admin</button>
+  </div>
+
+  <div id="lockBanner" class="lockBanner">
+    <div>🔒 Trận <b id="lockMatchId"></b> đang chờ nhập kết quả. Vui lòng chấm điểm và lưu trước khi chia đội mới.</div>
+    <button onclick="openResultModal()" style="width:auto;margin:0;padding:8px 14px">Nhập kết quả trận</button>
+  </div>
+
+  <div id="lineupView" style="display:none">
+  <div class="lineupModes">
+    <button id="modeInternal" class="lineupMode active" onclick="switchLineupMode('internal')">Chia đội Nội bộ</button>
+    <button id="modeCap" class="lineupMode" onclick="switchLineupMode('cap')">Đội hình đá Cáp</button>
+  </div>
+  <div class="grid" id="lineupGrid">
+    <div class="card" id="playerCard">
+      <h2 id="playerCardTitle">1. Danh sách thành viên</h2>
+      <input id="searchBox" class="lockable" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
+      <input id="screenshotInput" class="lockable" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
       <div id="ocrStatus" class="ocrStatus"></div>
-      <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
-      <button class="gold" onclick="startRandom()">Random chia đội</button>
-      <button onclick="exportImage()">Xuất hình ảnh đội hình</button>
+      <button class="secondary lockable" onclick="selectAll(false)">Bỏ chọn tất cả</button>
+      <button class="gold lockable" id="btnRandom" onclick="startRandom()">Random chia đội</button>
+      <button class="gold lockable" id="btnOptimizeCap" onclick="startOptimizeCap()" style="display:none">Sắp xếp đội hình tối ưu</button>
+      <button id="btnExport" onclick="exportImage()">Xuất hình ảnh đội hình</button>
       
       <div id="error" class="error"></div>
       <div id="players" class="players"></div>
     </div>
 
     <div class="card" id="exportArea">
-      <div class="summary">
+      <div class="summary" id="summaryInternal">
         <div class="metric"><b id="total">0</b><span>Tổng thành viên</span></div>
         <div class="metric"><b id="selected">0</b><span>Tham gia hôm nay</span></div>
         <div class="metric"><b id="sizes">0 - 0</b><span>Quân số 2 đội</span></div>
         <div class="metric"><b id="score">0</b><span>Điểm cân bằng</span></div>
       </div>
+      <div class="summary" id="summaryCap" style="display:none">
+        <div class="metric"><b id="totalCap">0</b><span>Tổng thành viên</span></div>
+        <div class="metric"><b id="selectedCap">0</b><span>Tham gia Cáp</span></div>
+        <div class="metric"><b id="sizesCap">0 / 0</b><span>Ra sân Chính/Phụ</span></div>
+        <div class="metric"><b id="scoreCap">0</b><span>Điểm đội hình</span></div>
+      </div>
 
-      <div class="teams">
+      <div class="teams" id="internalTeams">
         <div>
           <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A (Áo Đỏ)</h2><span id="scoreA" class="meta"></span></div>
           <div class="formationControl">
             <label>Sơ đồ Đội A</label>
-            <select id="formationSelectA" onchange="setFormation('A', this.value)">
+            <select id="formationSelectA" class="lockable" onchange="setFormation('A', this.value)">
               <option value="3-2-1">3-2-1</option>
               <option value="3-1-2" selected>3-1-2</option>
               <option value="2-3-1">2-3-1</option>
@@ -200,7 +302,7 @@
           <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B (Áo Vàng)</h2><span id="scoreB" class="meta"></span></div>
           <div class="formationControl">
             <label>Sơ đồ Đội B</label>
-            <select id="formationSelectB" onchange="setFormation('B', this.value)">
+            <select id="formationSelectB" class="lockable" onchange="setFormation('B', this.value)">
               <option value="3-2-1">3-2-1</option>
               <option value="3-1-2" selected>3-1-2</option>
               <option value="2-3-1">2-3-1</option>
@@ -214,11 +316,134 @@
           <div class="bench"><h3>Dự bị</h3><div id="benchB" class="benchList"></div></div>
         </div>
       </div>
+
+      <div class="teams" id="capTeams" style="display:none">
+        <div>
+          <div class="teamHead"><h2 style="color:#38bdf8">⚽ Đội hình Chính</h2><span id="scoreCapMain" class="meta"></span></div>
+          <div class="formationControl">
+            <label>Sơ đồ Chính</label>
+            <select id="formationSelectCapMain" class="lockable" onchange="setCapFormation('main', this.value)">
+              <option value="3-2-1">3-2-1</option>
+              <option value="3-1-2" selected>3-1-2</option>
+              <option value="2-3-1">2-3-1</option>
+              <option value="2-2-2">2-2-2</option>
+            </select>
+          </div>
+          <div class="pitch" id="pitchCapMain">
+            <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
+            <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
+          </div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchCapMain" class="benchList"></div></div>
+        </div>
+
+        <div>
+          <div class="teamHead"><h2 style="color:#a78bfa">🔄 Đội hình Phụ</h2><span id="scoreCapSub" class="meta"></span></div>
+          <div class="formationControl">
+            <label>Sơ đồ Phụ</label>
+            <select id="formationSelectCapSub" class="lockable" onchange="setCapFormation('sub', this.value)">
+              <option value="3-2-1">3-2-1</option>
+              <option value="3-1-2" selected>3-1-2</option>
+              <option value="2-3-1">2-3-1</option>
+              <option value="2-2-2">2-2-2</option>
+            </select>
+          </div>
+          <div class="pitch" id="pitchCapSub">
+            <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
+            <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
+          </div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchCapSub" class="benchList"></div></div>
+        </div>
+      </div>
       <pre id="textResult"></pre>
+    </div>
+  </div>
+  </div>
+
+  <div id="guestLineupView">
+    <div class="card guestReadonly">
+      <h2>Đội hình trận gần nhất</h2>
+      <div id="guestLineupMeta" class="meta">Đang tải...</div>
+      <button class="secondary" onclick="loadLatestLineup()" style="width:auto;margin:0 0 12px">Tải lại</button>
+      <div id="guestLineupInternal" class="teams">
+        <div>
+          <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A</h2></div>
+          <div class="pitch" id="pitchGuestA"><div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div><div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div></div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchGuestA" class="benchList"></div></div>
+        </div>
+        <div>
+          <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B</h2></div>
+          <div class="pitch" id="pitchGuestB"><div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div><div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div></div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchGuestB" class="benchList"></div></div>
+        </div>
+      </div>
+      <div id="guestLineupCap" class="teams" style="display:none">
+        <div>
+          <div class="teamHead"><h2 style="color:#38bdf8">⚽ Đội hình Chính</h2></div>
+          <div class="pitch" id="pitchGuestCapMain"><div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div><div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div></div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchGuestCapMain" class="benchList"></div></div>
+        </div>
+        <div>
+          <div class="teamHead"><h2 style="color:#a78bfa">🔄 Đội hình Phụ</h2></div>
+          <div class="pitch" id="pitchGuestCapSub"><div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div><div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div></div>
+          <div class="bench"><h3>Dự bị</h3><div id="benchGuestCapSub" class="benchList"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="historyView" style="display:none">
+    <div class="card">
+      <h2>Lịch sử trận</h2>
+      <button class="secondary" onclick="loadMatchHistory()" style="width:auto;margin:0 0 12px">Tải lại</button>
+      <div id="historyList" class="historyList"></div>
+    </div>
+  </div>
+
+  <div id="statsView" style="display:none">
+    <div class="statsGrid">
+      <div class="card">
+        <h2>🏆 Bảng MVP</h2>
+        <div class="meta">Sắp xếp theo số lần MVP — cao → thấp</div>
+        <div id="mvpRanking" class="statList"></div>
+      </div>
+      <div class="card">
+        <h2>⭐ Bảng Rating</h2>
+        <div class="meta">Sắp xếp theo rating hiện tại — cao → thấp</div>
+        <div id="ratingRanking" class="statList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminView" style="display:none">
+    <div class="card">
+      <h2>Quản lý tài khoản</h2>
+      <div class="meta">Phân quyền: chia đội nội bộ · đá Cáp · xuất ảnh · nhập kết quả · hủy trận · quản lý user</div>
+      <div id="adminUserList"></div>
+      <h3 style="margin-top:16px;font-size:16px">Thêm / Sửa tài khoản</h3>
+      <input id="adminUsername" type="text" placeholder="Username" style="margin-bottom:8px">
+      <input id="adminDisplayName" type="text" placeholder="Tên hiển thị" style="margin-bottom:8px">
+      <input id="adminPassword" type="password" placeholder="Mật khẩu (để trống nếu giữ nguyên khi sửa)" style="margin-bottom:8px">
+      <div id="adminPermGrid" class="permGrid"></div>
+      <label class="permItem"><input id="adminActive" type="checkbox" checked> Kích hoạt</label>
+      <button onclick="saveAdminUser()" style="width:auto;margin-top:10px">Lưu tài khoản</button>
     </div>
   </div>
 </div>
 
+<div id="loginModal" class="confirmModal">
+  <div class="modalBox" style="width:min(420px,96vw)">
+    <div class="modalHead"><h2>Đăng nhập Admin</h2></div>
+    <div class="modalBody">
+      <input id="loginUsername" type="text" placeholder="Username" style="margin-bottom:10px">
+      <input id="loginPassword" type="password" placeholder="Password" style="margin-bottom:10px">
+      <div id="loginError" class="error" style="display:none"></div>
+    </div>
+    <div class="modalActions">
+      <button class="secondary" onclick="closeLoginModal()">Đóng</button>
+      <button id="btnDoLogin" onclick="adminLogin()">Đăng nhập</button>
+    </div>
+  </div>
+</div>
 
 <div id="confirmModal" class="confirmModal">
   <div class="modalBox">
@@ -244,6 +469,42 @@
 <div id="overlay" class="overlay">
   <div id="count" class="count">3</div>
   <div id="rolling" class="rolling"></div>
+</div>
+
+<div id="resultModal" class="confirmModal">
+  <div class="modalBox" style="width:min(860px,96vw)">
+    <div class="modalHead">
+      <h2>Kết quả trận</h2>
+      <div id="resultSummary" class="meta"></div>
+    </div>
+    <div class="modalBody">
+      <div id="opponentFieldWrap" class="opponentField" style="display:none">
+        <label for="opponentTeamName">Tên đội bạn</label>
+        <input id="opponentTeamName" type="text" placeholder="VD: FC ABC, Đội XYZ...">
+      </div>
+      <div class="scoreRow">
+        <div>
+          <div class="scoreTeamLabel" id="scoreLabelA" style="color:#ef4444">🔴 Đội A</div>
+          <input id="teamAScore" type="number" min="0" max="99" placeholder="0">
+        </div>
+        <div class="scoreTeamLabel">VS</div>
+        <div>
+          <div class="scoreTeamLabel" id="scoreLabelB" style="color:#facc15">🟡 Đội B</div>
+          <input id="teamBScore" type="number" min="0" max="99" placeholder="0">
+        </div>
+      </div>
+      <div class="hint" id="resultHint">
+        <b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+        <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.
+      </div>
+      <div id="resultTeams"></div>
+    </div>
+    <div class="modalActions" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="danger" id="btnCancelMatch" onclick="cancelPendingMatch()">Hủy Trận</button>
+      <button class="secondary" onclick="closeResultModal()">Đóng</button>
+      <button id="btnSaveResult" onclick="saveMatchResult()">Lưu kết quả trận</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -276,6 +537,10 @@ const FORMATIONS = {
 };
 let formationA = "3-1-2";
 let formationB = "3-1-2";
+let formationCapMain = "3-1-2";
+let formationCapSub = "3-1-2";
+let lineupMode = "internal";
+let opponentTeamName = "";
 const FORMATION_COORDS = {
   "3-2-1": {
     GK:[[50,91]], DEF:[[25,69],[50,72],[75,69]], MID:[[35,46],[65,46]], FWD:[[50,24]]
@@ -293,6 +558,1311 @@ const FORMATION_COORDS = {
 let players = [];
 let lastResult = null;
 let pendingDetectedNames = new Set();
+let matchLocked = false;
+let currentMatchId = null;
+let currentMatchLabel = null;
+let currentImageFilename = null;
+let playerMatchScores = {};
+let playerMatchGoals = {};
+let playerMatchAssists = {};
+let cachedHistoryMatches = [];
+const PENDING_MATCH_KEY = "dufc_pending_match";
+const AUTH_SESSION_KEY = "dufc_admin_session";
+const PERMS = {
+  ALL: "all",
+  LINEUP_INTERNAL: "lineup_internal",
+  LINEUP_CAP: "lineup_cap",
+  EXPORT: "export",
+  MATCH_RESULT: "match_result",
+  CANCEL_MATCH: "cancel_match",
+  MANAGE_USERS: "manage_users"
+};
+const PERM_OPTIONS = [
+  { id: PERMS.LINEUP_INTERNAL, label: "Chia đội nội bộ" },
+  { id: PERMS.LINEUP_CAP, label: "Đội hình Cáp" },
+  { id: PERMS.EXPORT, label: "Xuất ảnh & lưu lineup" },
+  { id: PERMS.MATCH_RESULT, label: "Nhập & lưu kết quả" },
+  { id: PERMS.CANCEL_MATCH, label: "Hủy trận" },
+  { id: PERMS.MANAGE_USERS, label: "Quản lý tài khoản" },
+  { id: PERMS.ALL, label: "Toàn quyền (all)" }
+];
+let authSession = null;
+const WEEKDAYS_VI = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+
+function formatMatchLabel(date = new Date()){
+  const d = date instanceof Date ? date : new Date(date);
+  const weekday = WEEKDAYS_VI[d.getDay()];
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `DUFC - ${weekday} Ngày ${day}/${month}/${year}`;
+}
+
+function formatCapMatchLabel(date = new Date()){
+  const d = date instanceof Date ? date : new Date(date);
+  const weekday = WEEKDAYS_VI[d.getDay()];
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `DUFC Cáp - ${weekday} Ngày ${day}/${month}/${year}`;
+}
+
+function getMatchMode(){
+  return lastResult?.matchMode || lineupMode || "internal";
+}
+
+function isCapMode(){
+  return getMatchMode() === "cap";
+}
+
+function switchLineupMode(mode, silent){
+  if(isLoggedIn()){
+    if(mode === "cap" && !hasPerm(PERMS.LINEUP_CAP)){
+      showError("Tài khoản không có quyền đội hình Cáp.");
+      return;
+    }
+    if(mode !== "cap" && !hasPerm(PERMS.LINEUP_INTERNAL)){
+      showError("Tài khoản không có quyền chia đội nội bộ.");
+      return;
+    }
+  }
+  if(matchLocked && mode !== lineupMode){
+    showError("Đang chờ kết quả trận. Hoàn tất trước khi đổi chế độ.");
+    return;
+  }
+
+  lineupMode = mode === "cap" ? "cap" : "internal";
+  document.getElementById("modeInternal").classList.toggle("active", lineupMode === "internal");
+  document.getElementById("modeCap").classList.toggle("active", lineupMode === "cap");
+
+  document.getElementById("btnRandom").style.display =
+    lineupMode === "internal" && (!isLoggedIn() || hasPerm(PERMS.LINEUP_INTERNAL)) ? "" : "none";
+  document.getElementById("btnOptimizeCap").style.display =
+    lineupMode === "cap" && (!isLoggedIn() || hasPerm(PERMS.LINEUP_CAP)) ? "" : "none";
+
+  document.getElementById("summaryInternal").style.display = lineupMode === "internal" ? "" : "none";
+  document.getElementById("summaryCap").style.display = lineupMode === "cap" ? "" : "none";
+  document.getElementById("internalTeams").style.display = lineupMode === "internal" ? "" : "none";
+  document.getElementById("capTeams").style.display = lineupMode === "cap" ? "" : "none";
+
+  document.getElementById("playerCardTitle").textContent =
+    lineupMode === "cap" ? "1. Chọn cầu thủ đá Cáp" : "1. Danh sách thành viên";
+
+  if(!silent && !matchLocked){
+    lastResult = null;
+    clearPitch("pitchA");
+    clearPitch("pitchB");
+    clearPitch("pitchCapMain");
+    clearPitch("pitchCapSub");
+    setBench("benchA", []);
+    setBench("benchB", []);
+    setBench("benchCapMain", []);
+    setBench("benchCapSub", []);
+    document.getElementById("textResult").textContent = "";
+    document.getElementById("sizes").textContent = "0 - 0";
+    document.getElementById("score").textContent = "0";
+    document.getElementById("scoreA").textContent = "";
+    document.getElementById("scoreB").textContent = "";
+    document.getElementById("sizesCap").textContent = "0 / 0";
+    document.getElementById("scoreCap").textContent = "0";
+    document.getElementById("scoreCapMain").textContent = "";
+    document.getElementById("scoreCapSub").textContent = "";
+  }
+
+  updateStats();
+}
+
+function generateMatchId(date = new Date()){
+  const d = date instanceof Date ? date : new Date(date);
+  const pad = n => String(n).padStart(2, "0");
+  return `dufc-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+
+function displayMatchLabel(match){
+  if(match) return match.match_label || match.matchLabel || match.match_id || match.match_date || "";
+  return currentMatchLabel || currentMatchId || "";
+}
+
+function isLoggedIn(){
+  return !!(authSession && authSession.token);
+}
+
+function hasPerm(perm){
+  if(!authSession || !authSession.permissions) return false;
+  const list = authSession.permissions;
+  return list.includes(PERMS.ALL) || list.includes(perm);
+}
+
+function canUseLineupTab(){
+  return hasPerm(PERMS.EXPORT) || hasPerm(PERMS.LINEUP_INTERNAL) || hasPerm(PERMS.LINEUP_CAP);
+}
+
+async function apiPost(action, payload){
+  const body = Object.assign({action}, payload || {});
+  if(authSession?.token) body.session_token = authSession.token;
+  const res = await fetch(MATCH_HISTORY_WEB_APP_URL, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error("API HTTP " + res.status);
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || "API error");
+  return data;
+}
+
+async function apiGet(action, params){
+  const query = Object.assign({action}, params || {}, {ts: Date.now()});
+  if(authSession?.token) query.session_token = authSession.token;
+  const qs = new URLSearchParams(query);
+  const res = await fetch(MATCH_HISTORY_WEB_APP_URL + "?" + qs.toString(), {cache: "no-store"});
+  if(!res.ok) throw new Error("API HTTP " + res.status);
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || "API error");
+  return data;
+}
+
+function calcRatingDelta(matchScore){
+  const s = Number(matchScore);
+  if(!Number.isFinite(s)) return 0;
+  if(s >= 8) return 1;
+  if(s <= 5) return -1;
+  return 0;
+}
+
+function deltaLabel(delta){
+  if(delta > 0) return "+" + delta;
+  if(delta < 0) return String(delta);
+  return "0";
+}
+
+function deltaClass(delta){
+  if(delta > 0) return "up";
+  if(delta < 0) return "down";
+  return "zero";
+}
+
+function getAllMatchPlayers(){
+  if(!lastResult) return [];
+  const result = [];
+  function addTeam(teamName, shirt, lineup){
+    lineup.starters.forEach(p => result.push(Object.assign({}, p, {team: teamName, shirt, starter: true})));
+    lineup.bench.forEach(p => result.push(Object.assign({}, p, {team: teamName, shirt, starter: false})));
+  }
+  if(isCapMode()){
+    const pool = lastResult.teamCap || lastResult.teamMain || lastResult.teamA || [];
+    const lineupMain = lastResult.lineupMain || lastResult.lineupA || { starters: [], bench: [] };
+    const lineupSub = lastResult.lineupSub || lastResult.lineupB || { starters: [], bench: [] };
+    const enrichMap = new Map();
+    [...lineupMain.starters, ...lineupMain.bench, ...lineupSub.starters].forEach(p => {
+      if(!enrichMap.has(p.name)) enrichMap.set(p.name, p);
+    });
+
+    pool.forEach(p => {
+      const ep = enrichMap.get(p.name) || p;
+      const inMain = lineupMain.starters.some(x => x.name === p.name);
+      const inSub = lineupSub.starters.some(x => x.name === p.name);
+      let capLabel = "Dự bị";
+      if(inMain && inSub) capLabel = "Chính RS · Phụ RS";
+      else if(inMain) capLabel = "Chính RS";
+      else if(inSub) capLabel = "Phụ RS";
+
+      result.push(Object.assign({}, ep, {
+        team: "CAP",
+        shirt: "DUFC",
+        starter: inMain || inSub,
+        capLabel
+      }));
+    });
+    return result;
+  }
+  addTeam("A", "Áo Đỏ", lastResult.lineupA);
+  addTeam("B", "Áo Vàng", lastResult.lineupB);
+  return result;
+}
+
+function applyLockUI(locked){
+  matchLocked = locked;
+  const banner = document.getElementById("lockBanner");
+  const grid = document.getElementById("lineupGrid");
+  const canManageResult = isLoggedIn() && hasPerm(PERMS.MATCH_RESULT);
+  if(locked){
+    if(canManageResult) banner.classList.add("show");
+    else banner.classList.remove("show");
+    grid.classList.add("locked");
+    document.getElementById("lockMatchId").textContent = displayMatchLabel();
+    document.getElementById("btnExport").textContent = "Đã xuất ảnh — chờ kết quả";
+    document.getElementById("btnExport").disabled = true;
+  }else{
+    banner.classList.remove("show");
+    grid.classList.remove("locked");
+    document.getElementById("btnExport").textContent = "Xuất hình ảnh đội hình";
+    document.getElementById("btnExport").disabled = false;
+  }
+}
+
+function lockMatchState(matchId, matchLabel, imageFilename){
+  currentMatchId = matchId;
+  currentMatchLabel = matchLabel || matchId;
+  currentImageFilename = imageFilename;
+  const allPlayers = getAllMatchPlayers();
+  playerMatchScores = {};
+  playerMatchGoals = {};
+  playerMatchAssists = {};
+  allPlayers.forEach(p => {
+    playerMatchScores[p.name] = 7;
+    playerMatchGoals[p.name] = 0;
+    playerMatchAssists[p.name] = 0;
+  });
+  finishPendingMatchRestore();
+}
+
+function unlockMatchState(){
+  matchLocked = false;
+  currentMatchId = null;
+  currentMatchLabel = null;
+  currentImageFilename = null;
+  opponentTeamName = "";
+  playerMatchScores = {};
+  playerMatchGoals = {};
+  playerMatchAssists = {};
+  localStorage.removeItem(PENDING_MATCH_KEY);
+  applyLockUI(false);
+  lastResult = null;
+  clearPitch("pitchA");
+  clearPitch("pitchB");
+  clearPitch("pitchCapMain");
+  clearPitch("pitchCapSub");
+  setBench("benchA", []);
+  setBench("benchB", []);
+  setBench("benchCapMain", []);
+  setBench("benchCapSub", []);
+  document.getElementById("textResult").textContent = "";
+  document.getElementById("sizes").textContent = "0 - 0";
+  document.getElementById("score").textContent = "0";
+  document.getElementById("scoreA").textContent = "";
+  document.getElementById("scoreB").textContent = "";
+  document.getElementById("sizesCap").textContent = "0 / 0";
+  document.getElementById("scoreCap").textContent = "0";
+  document.getElementById("scoreCapMain").textContent = "";
+  document.getElementById("scoreCapSub").textContent = "";
+  selectAll(false);
+}
+
+function rosterPlayerByName(name){
+  const key = normalizeName(name);
+  return players.find(p => normalizeName(p.name) === key);
+}
+
+function fitFromHistoryLabel(fitLabel){
+  if(fitLabel === "main_position") return 2;
+  if(fitLabel === "secondary_position") return 1;
+  return 0;
+}
+
+function isCapMatchFromDetail(summary, historyPlayers){
+  const type = String(summary?.match_type || "").trim().toLowerCase();
+  if(type === "cap") return true;
+  const teams = new Set((historyPlayers || []).map(hp => String(hp.team || "").toUpperCase()));
+  return teams.has("CAP") || teams.has("MAIN") || teams.has("SUB") ||
+    (!teams.has("B") && !teams.has("A") && teams.size <= 2);
+}
+
+function rebuildLastResultFromDetail(historyPlayers, summary){
+  const capMatch = isCapMatchFromDetail(summary, historyPlayers);
+  const teamA = [];
+  const teamB = [];
+  const teamMain = [];
+  const teamSub = [];
+  const teamCap = [];
+  const lineupA = { starters: [], bench: [], score: 0 };
+  const lineupB = { starters: [], bench: [], score: 0 };
+  const lineupMain = { starters: [], bench: [], score: 0 };
+  const lineupSub = { starters: [], bench: [], score: 0 };
+  const lineupCap = { starters: [], bench: [], score: 0 };
+  const teamsInMatch = new Set((historyPlayers || []).map(hp => String(hp.team || "").toUpperCase()));
+  const hasMainSub = teamsInMatch.has("MAIN") || teamsInMatch.has("SUB");
+
+  historyPlayers.forEach(hp => {
+    let base = rosterPlayerByName(hp.player_name);
+    if(!base){
+      base = {
+        id: hp.player_name,
+        name: hp.player_name,
+        main: hp.main_position || "MID",
+        secondary: [],
+        rating: Number(hp.rating) || 5,
+        mvp_count: 0,
+        avatar: defaultAvatar(hp.player_name),
+        side: [],
+        selected: true
+      };
+    }
+
+    const assignedRaw = hp.assigned_position === "BENCH"
+      ? (hp.main_position || base.main)
+      : (hp.assigned_position || base.main);
+    const assigned = normalizePos(assignedRaw) || base.main;
+    const p = Object.assign({}, base, {
+      rating: Number(hp.rating) || base.rating,
+      assigned,
+      assignedSide: hp.assigned_side || "",
+      captain: hp.captain === true || hp.captain === "TRUE",
+      fit: fitFromHistoryLabel(hp.fit_label)
+    });
+
+    const teamKey = String(hp.team || "").toUpperCase();
+    const isTeamA = teamKey === "A";
+    const isMain = capMatch && (teamKey === "MAIN" || (!hasMainSub && teamKey === "CAP"));
+    const isSub = capMatch && teamKey === "SUB";
+
+    if(isMain){
+      teamMain.push(p);
+      teamCap.push(p);
+    }else if(isSub){
+      teamSub.push(p);
+      teamCap.push(p);
+    }else if(isTeamA) teamA.push(p);
+    else teamB.push(p);
+
+    const isStarter = hp.starter === true || hp.starter === "TRUE";
+    if(isMain){
+      if(isStarter) lineupMain.starters.push(p);
+      else lineupMain.bench.push(p);
+      if(isStarter) lineupCap.starters.push(p);
+      else lineupCap.bench.push(p);
+    }else if(isSub){
+      if(isStarter) lineupSub.starters.push(p);
+      else lineupSub.bench.push(p);
+    }else if(isTeamA){
+      if(isStarter) lineupA.starters.push(p);
+      else lineupA.bench.push(p);
+    }else{
+      if(isStarter) lineupB.starters.push(p);
+      else lineupB.bench.push(p);
+    }
+  });
+
+  if(capMatch || teamCap.length){
+    const pool = teamMain.length ? teamMain : teamCap;
+    const subStarterNames = new Set(lineupSub.starters.map(p => p.name));
+    if(lineupSub.starters.length && pool.length){
+      lineupSub.bench = pool.filter(p => !subStarterNames.has(p.name));
+    }
+    const primaryLineup = lineupMain.starters.length || lineupMain.bench.length ? lineupMain : lineupCap;
+
+    return {
+      matchMode: "cap",
+      teamCap: pool,
+      teamMain: pool,
+      teamSub: pool,
+      lineupMain: primaryLineup,
+      lineupSub,
+      lineupCap: primaryLineup,
+      teamA: pool,
+      teamB: pool,
+      lineupA: primaryLineup,
+      lineupB: lineupSub,
+      score: 0
+    };
+  }
+
+  return { matchMode: "internal", teamA, teamB, lineupA, lineupB, score: 0 };
+}
+
+function syncSelectedPlayersFromMatch(historyPlayers){
+  const names = new Set((historyPlayers || []).map(hp => normalizeName(hp.player_name)));
+  players.forEach(p => { p.selected = names.has(normalizeName(p.name)); });
+  renderPlayerPicker();
+  updateStats();
+}
+
+function finishPendingMatchRestore(sourceNote){
+  const cap = isCapMode();
+  switchLineupMode(cap ? "cap" : "internal", true);
+
+  if(cap){
+    document.getElementById("formationSelectCapMain").value = formationCapMain;
+    document.getElementById("formationSelectCapSub").value = formationCapSub;
+    renderCapLineups(lastResult);
+    updateCapResultStats(lastResult);
+    document.getElementById("textResult").textContent = textResultCap(lastResult);
+  }else{
+    document.getElementById("formationSelectA").value = formationA;
+    document.getElementById("formationSelectB").value = formationB;
+    clearPitch("pitchA");
+    clearPitch("pitchB");
+    renderLineupInstant("pitchA", lastResult.lineupA, formationA, "redTeam");
+    renderLineupInstant("pitchB", lastResult.lineupB, formationB, "yellowTeam");
+    setBench("benchA", lastResult.lineupA.bench);
+    setBench("benchB", lastResult.lineupB.bench);
+    updateResultStats(lastResult, getAllMatchPlayers().length);
+    document.getElementById("textResult").textContent = textResult(lastResult);
+  }
+
+  localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify({
+    matchId: currentMatchId,
+    matchLabel: currentMatchLabel,
+    imageFilename: currentImageFilename,
+    lineupMode: getMatchMode(),
+    formationA,
+    formationB,
+    formationCapMain,
+    formationCapSub,
+    opponentTeamName,
+    lastResult,
+    playerMatchScores,
+    playerMatchGoals,
+    playerMatchAssists,
+    lockedAt: new Date().toISOString()
+  }));
+
+  applyLockUI(true);
+  const note = sourceNote ? ` <span class="meta">(${sourceNote})</span>` : "";
+  document.getElementById("ocrStatus").innerHTML =
+    `Đang chờ kết quả trận <b>${displayMatchLabel()}</b>.${note}`;
+}
+
+function resolveFormation(value, fallback = "3-1-2"){
+  const fb = FORMATIONS[fallback] ? fallback : "3-1-2";
+  const s = String(value || "").trim();
+  if(!s) return fb;
+  if(FORMATIONS[s]) return s;
+  const dashed = s.replace(/\//g, "-");
+  if(FORMATIONS[dashed]) return dashed;
+  const dateMangle = s.match(/^(\d-\d-\d)/);
+  if(dateMangle && FORMATIONS[dateMangle[1]]) return dateMangle[1];
+  if(s.includes("T") && s.includes(":")) return fb;
+  return fb;
+}
+
+function normalizeFormationValue(value, fallback){
+  return resolveFormation(value, fallback);
+}
+
+function restorePendingMatchFromLocalStorage(){
+  const raw = localStorage.getItem(PENDING_MATCH_KEY);
+  if(!raw) return false;
+
+  try{
+    const saved = JSON.parse(raw);
+    if(!saved || !saved.matchId || !saved.lastResult) return false;
+
+    currentMatchId = saved.matchId;
+    currentMatchLabel = saved.matchLabel || formatMatchLabel(saved.lockedAt || Date.now());
+    currentImageFilename = saved.imageFilename || "";
+    formationA = normalizeFormationValue(saved.formationA, formationA);
+    formationB = normalizeFormationValue(saved.formationB, formationB);
+    formationCapMain = normalizeFormationValue(saved.formationCapMain || saved.formationCap, formationCapMain);
+    formationCapSub = normalizeFormationValue(saved.formationCapSub || saved.formationCap, formationCapSub);
+    opponentTeamName = saved.opponentTeamName || "";
+    lastResult = saved.lastResult;
+    if(saved.lineupMode) lineupMode = saved.lineupMode;
+    playerMatchScores = saved.playerMatchScores || {};
+    playerMatchGoals = saved.playerMatchGoals || {};
+    playerMatchAssists = saved.playerMatchAssists || {};
+    finishPendingMatchRestore("(offline cache)");
+    return true;
+  }catch(e){
+    console.error(e);
+    localStorage.removeItem(PENDING_MATCH_KEY);
+    return false;
+  }
+}
+
+async function restorePendingMatchIfAny(){
+  try{
+    const data = await apiGet("get_pending_match");
+
+    if(data.pending && data.summary && data.players?.length){
+      const summary = data.summary;
+      currentMatchId = summary.match_id;
+      currentMatchLabel = summary.match_label || formatMatchLabel(summary.created_at || Date.now());
+      currentImageFilename = summary.image_filename || "";
+      formationA = normalizeFormationValue(summary.formation_a, formationA);
+      formationB = normalizeFormationValue(summary.formation_b, formationB);
+      formationCapMain = normalizeFormationValue(summary.formation_a, formationCapMain);
+      formationCapSub = normalizeFormationValue(summary.formation_b, formationCapSub);
+      opponentTeamName = summary.opponent_name || "";
+      lastResult = rebuildLastResultFromDetail(data.players, summary);
+      syncSelectedPlayersFromMatch(data.players);
+      playerMatchScores = {};
+      playerMatchGoals = {};
+      playerMatchAssists = {};
+      getAllMatchPlayers().forEach(p => {
+        playerMatchScores[p.name] = 7;
+        playerMatchGoals[p.name] = 0;
+        playerMatchAssists[p.name] = 0;
+      });
+      finishPendingMatchRestore("đồng bộ từ server");
+      return;
+    }
+
+    // Sheet không còn trận pending → xóa cache browser cũ
+    localStorage.removeItem(PENDING_MATCH_KEY);
+    if(matchLocked) unlockMatchState();
+  }catch(e){
+    console.error("restorePendingMatchIfAny server failed:", e);
+    restorePendingMatchFromLocalStorage();
+  }
+}
+
+function openResultModal(){
+  if(!isLoggedIn() || !hasPerm(PERMS.MATCH_RESULT)){
+    showError("Bạn cần đăng nhập với quyền nhập kết quả.");
+    return;
+  }
+  if(!matchLocked || !lastResult){
+    showError("Chưa có trận nào đang chờ kết quả.");
+    return;
+  }
+  renderResultForm();
+  document.getElementById("resultModal").classList.add("show");
+}
+
+function closeResultModal(){
+  document.getElementById("resultModal").classList.remove("show");
+}
+
+async function cancelPendingMatch(){
+  clearError();
+  if(!isLoggedIn() || !hasPerm(PERMS.CANCEL_MATCH)){
+    showError("Bạn cần quyền hủy trận.");
+    return;
+  }
+  if(!matchLocked || !currentMatchId){
+    showError("Không có trận đang chờ để hủy.");
+    return;
+  }
+
+  const label = displayMatchLabel();
+  const confirmed = confirm(
+    `⚠️ Hủy trận "${label}"?\n\n` +
+    "Toàn bộ dữ liệu đội hình và kết quả đang nhập của trận này sẽ bị XÓA trên Google Sheet.\n\n" +
+    "Thao tác này không thể hoàn tác. Bạn có chắc chắn?"
+  );
+  if(!confirmed) return;
+
+  const btn = document.getElementById("btnCancelMatch");
+  btn.disabled = true;
+  btn.textContent = "Đang hủy...";
+
+  try{
+    await apiPost("cancel_match", { match_id: currentMatchId });
+    closeResultModal();
+    unlockMatchState();
+    document.getElementById("ocrStatus").innerHTML =
+      `Đã hủy trận <b>${escapeHtml(label)}</b>. Có thể chia đội / lên đội hình mới.`;
+  }catch(e){
+    console.error(e);
+    showError(e.message || "Không hủy được trận.");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Hủy Trận";
+  }
+}
+
+function renderResultForm(){
+  const cap = isCapMode();
+  document.getElementById("opponentFieldWrap").style.display = cap ? "" : "none";
+  document.getElementById("opponentTeamName").value = opponentTeamName || "";
+
+  if(cap){
+    document.getElementById("scoreLabelA").textContent = "⚽ DUFC";
+    document.getElementById("scoreLabelA").style.color = "#38bdf8";
+    document.getElementById("scoreLabelB").textContent = "Đội bạn";
+    document.getElementById("scoreLabelB").style.color = "#94a3b8";
+    document.getElementById("resultSummary").textContent =
+      `Trận ${displayMatchLabel()} · ${formationCapMain} / ${formationCapSub}`;
+  }else{
+    document.getElementById("scoreLabelA").textContent = "🔴 Đội A";
+    document.getElementById("scoreLabelA").style.color = "#ef4444";
+    document.getElementById("scoreLabelB").textContent = "🟡 Đội B";
+    document.getElementById("scoreLabelB").style.color = "#facc15";
+    document.getElementById("resultSummary").textContent =
+      `Trận ${displayMatchLabel()} · ${formationA} vs ${formationB}`;
+  }
+
+  document.getElementById("resultHint").innerHTML = cap
+    ? `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+       <b>MVP</b>: 1 người điểm cao nhất trong đội DUFC → cộng <b>1 lần MVP</b>.<br>
+       <b>⚽ BT / 🅰️ KT</b>: bàn thắng và kiến tạo từng cầu thủ.`
+    : `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+       <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.`;
+
+  const mvpNames = getMvpNamesFromScores();
+  const teams = cap
+    ? [{key: "CAP", title: "⚽ DUFC", color: "#38bdf8"}]
+    : [
+        {key: "A", title: "🔴 Đội A (Áo Đỏ)", color: "#ef4444"},
+        {key: "B", title: "🟡 Đội B (Áo Vàng)", color: "#facc15"}
+      ];
+
+  document.getElementById("resultTeams").innerHTML = teams.map(team => {
+    const list = getAllMatchPlayers().filter(p => p.team === team.key);
+    const header = cap
+      ? `<div class="resultPlayer resultPlayerHead">
+          <span></span><span>Cầu thủ</span>
+          <span class="resultColHead">Điểm</span>
+          <span class="resultColHead">⚽ BT</span>
+          <span class="resultColHead">🅰️ KT</span>
+          <span></span>
+        </div>`
+      : `<div class="resultPlayer resultPlayerHead noStats">
+          <span></span><span>Cầu thủ</span>
+          <span class="resultColHead">Điểm</span>
+          <span></span>
+        </div>`;
+    const rows = list.map(p => {
+      const score = Number(playerMatchScores[p.name] ?? 7);
+      const goals = Number(playerMatchGoals[p.name] ?? 0);
+      const assists = Number(playerMatchAssists[p.name] ?? 0);
+      const ratingBefore = Number(p.rating) || 5;
+      const isMvp = mvpNames.includes(p.name);
+      const mvpTotal = Number(p.mvp_count) || 0;
+      const encodedName = encodeURIComponent(p.name);
+      const roleMeta = cap
+        ? `${p.capLabel || (p.starter ? "Ra sân" : "Dự bị")}`
+        : (p.starter ? p.assigned : "Dự bị");
+      const statInputs = cap
+        ? `<input class="resultStatInput" type="number" min="0" max="30" value="${goals}"
+            onchange="setPlayerMatchGoals(decodeURIComponent('${encodedName}'), this.value)">
+          <input class="resultStatInput" type="number" min="0" max="30" value="${assists}"
+            onchange="setPlayerMatchAssists(decodeURIComponent('${encodedName}'), this.value)">`
+        : "";
+      return `<div class="resultPlayer${cap ? "" : " noStats"}">
+        <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
+        <div>
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="meta">${roleMeta} · rating ${ratingBefore}${mvpTotal ? ` · 🏆 ${mvpTotal} MVP` : ""}</div>
+        </div>
+        <select onchange="setPlayerMatchScore(decodeURIComponent('${encodedName}'), this.value)">
+          ${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n===score?"selected":""}>${n}</option>`).join("")}
+        </select>
+        ${statInputs}
+        <div class="mvpTag">${isMvp ? `⭐ MVP` : ""}</div>
+      </div>`;
+    }).join("");
+
+    return `<div class="resultTeam"><h3 style="color:${team.color}">${team.title}</h3>${header}${rows}</div>`;
+  }).join("");
+}
+
+function clampMatchStat(value){
+  const n = Math.round(Number(value));
+  if(!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(30, n);
+}
+
+function persistPendingMatchStats(){
+  const saved = JSON.parse(localStorage.getItem(PENDING_MATCH_KEY) || "{}");
+  if(!saved.matchId) return;
+  saved.playerMatchScores = playerMatchScores;
+  saved.playerMatchGoals = playerMatchGoals;
+  saved.playerMatchAssists = playerMatchAssists;
+  localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify(saved));
+}
+
+function setPlayerMatchScore(name, value){
+  playerMatchScores[name] = Number(value);
+  persistPendingMatchStats();
+  renderResultForm();
+}
+
+function setPlayerMatchGoals(name, value){
+  playerMatchGoals[name] = clampMatchStat(value);
+  persistPendingMatchStats();
+}
+
+function setPlayerMatchAssists(name, value){
+  playerMatchAssists[name] = clampMatchStat(value);
+  persistPendingMatchStats();
+}
+
+function pickTeamMvp_(teamPlayers){
+  if(!teamPlayers.length) return null;
+  let maxScore = -1;
+  teamPlayers.forEach(p => {
+    const s = Number(playerMatchScores[p.name] ?? 7);
+    if(s > maxScore) maxScore = s;
+  });
+  const tied = teamPlayers.filter(p => Number(playerMatchScores[p.name] ?? 7) === maxScore);
+  tied.sort((a, b) => {
+    if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
+    return a.name.localeCompare(b.name, "vi");
+  });
+  return tied[0] ? tied[0].name : null;
+}
+
+function getMvpNamesFromScores(){
+  if(isCapMode()){
+    const winner = pickTeamMvp_(getAllMatchPlayers());
+    return winner ? [winner] : [];
+  }
+  const mvps = [];
+  ["A", "B"].forEach(team => {
+    const winner = pickTeamMvp_(getAllMatchPlayers().filter(p => p.team === team));
+    if(winner) mvps.push(winner);
+  });
+  return mvps;
+}
+
+async function saveMatchResult(){
+  clearError();
+  if(!isLoggedIn() || !hasPerm(PERMS.MATCH_RESULT)){
+    showError("Bạn cần quyền nhập kết quả.");
+    return;
+  }
+  if(!matchLocked || !currentMatchId || !lastResult){
+    showError("Không có trận đang chờ kết quả.");
+    return;
+  }
+
+  const cap = isCapMode();
+  const teamAScore = Number(document.getElementById("teamAScore").value);
+  const teamBScore = Number(document.getElementById("teamBScore").value);
+  if(!Number.isFinite(teamAScore) || !Number.isFinite(teamBScore)){
+    showError(cap ? "Vui lòng nhập tỷ số DUFC và đội bạn." : "Vui lòng nhập tỷ số 2 đội.");
+    return;
+  }
+
+  if(cap){
+    opponentTeamName = String(document.getElementById("opponentTeamName").value || "").trim();
+    if(!opponentTeamName){
+      showError("Vui lòng nhập tên đội bạn.");
+      return;
+    }
+  }
+
+  const allPlayers = getAllMatchPlayers();
+  const mvpNames = getMvpNamesFromScores();
+  const seenNames = new Set();
+  const payloadPlayers = allPlayers.filter(p => {
+    if(seenNames.has(p.name)) return false;
+    seenNames.add(p.name);
+    return true;
+  }).map(p => ({
+    player_name: p.name,
+    team: p.team,
+    starter: !!p.starter,
+    match_score: Number(playerMatchScores[p.name] ?? 7),
+    goals: cap ? clampMatchStat(playerMatchGoals[p.name] ?? 0) : 0,
+    assists: cap ? clampMatchStat(playerMatchAssists[p.name] ?? 0) : 0,
+    rating_before: Number(p.rating) || 5,
+    mvp_count_before: Number(p.mvp_count) || 0,
+    is_mvp: mvpNames.includes(p.name)
+  }));
+
+  const btn = document.getElementById("btnSaveResult");
+  btn.disabled = true;
+  btn.textContent = "Đang lưu...";
+
+  try{
+    const data = await apiPost("save_match_result", {
+      match_id: currentMatchId,
+      match_label: currentMatchLabel || displayMatchLabel(),
+      match_type: cap ? "cap" : "internal",
+      opponent_name: cap ? opponentTeamName : "",
+      formation_a: cap ? formationCapMain : formationA,
+      formation_b: cap ? formationCapSub : formationB,
+      team_a_score: teamAScore,
+      team_b_score: teamBScore,
+      players: payloadPlayers
+    });
+
+    closeResultModal();
+    unlockMatchState();
+    await loadDefaultRoster();
+
+    document.getElementById("ocrStatus").innerHTML =
+      `Đã lưu kết quả trận <b>${data.match_label || displayMatchLabel()}</b>. MVP: <b>${(data.mvp_players || []).join(", ") || "—"}</b>. Rating đã cập nhật.`;
+  }catch(e){
+    console.error(e);
+    const msg = e.message || "Không lưu được kết quả trận.";
+    showError(msg.includes("Không tìm thấy trận")
+      ? msg + " Hoặc bấm F12 → Application → Local Storage → xóa dufc_pending_match rồi xuất ảnh lại."
+      : msg);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Lưu kết quả trận";
+  }
+}
+
+function statRowHtml(p, rank, mode){
+  const value = mode === "mvp" ? (Number(p.mvp_count) || 0) : (Number(p.rating) || 5);
+  const badgeClass = mode === "mvp" ? "statMvp" : "statRating";
+  const label = mode === "mvp" ? `🏆 ${value}` : String(value);
+  return `<div class="statRow">
+    <span class="statRank">#${rank}</span>
+    <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
+    <div>
+      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}</div>
+    </div>
+    <span class="statValue ${badgeClass}">${label}</span>
+  </div>`;
+}
+
+function renderStats(){
+  const mvpEl = document.getElementById("mvpRanking");
+  const ratingEl = document.getElementById("ratingRanking");
+  if(!mvpEl || !ratingEl) return;
+
+  if(!players.length){
+    mvpEl.innerHTML = `<div class="meta">Chưa có dữ liệu thành viên.</div>`;
+    ratingEl.innerHTML = `<div class="meta">Chưa có dữ liệu thành viên.</div>`;
+    return;
+  }
+
+  const byMvp = [...players].sort((a, b) => {
+    const diff = (Number(b.mvp_count) || 0) - (Number(a.mvp_count) || 0);
+    return diff || a.name.localeCompare(b.name, "vi");
+  });
+
+  const byRating = [...players].sort((a, b) => {
+    const diff = (Number(b.rating) || 0) - (Number(a.rating) || 0);
+    return diff || a.name.localeCompare(b.name, "vi");
+  });
+
+  mvpEl.innerHTML = byMvp.map((p, i) => statRowHtml(p, i + 1, "mvp")).join("");
+  ratingEl.innerHTML = byRating.map((p, i) => statRowHtml(p, i + 1, "rating")).join("");
+}
+
+function permLabelList(perms){
+  if(!perms || !perms.length) return "Không có quyền";
+  if(perms.includes(PERMS.ALL)) return "Toàn quyền";
+  const labels = PERM_OPTIONS.filter(p => p.id !== PERMS.ALL && perms.includes(p.id)).map(p => p.label);
+  return labels.length ? labels.join(", ") : perms.join(", ");
+}
+
+function initAdminPermGrid(){
+  const grid = document.getElementById("adminPermGrid");
+  if(!grid) return;
+  grid.innerHTML = PERM_OPTIONS.map(p =>
+    `<label class="permItem"><input type="checkbox" class="adminPermCb" data-perm="${p.id}"> ${escapeHtml(p.label)}</label>`
+  ).join("");
+}
+
+function getAdminFormPerms(){
+  return [...document.querySelectorAll(".adminPermCb:checked")].map(el => el.dataset.perm);
+}
+
+function setAdminFormPerms(perms){
+  const set = new Set(perms || []);
+  document.querySelectorAll(".adminPermCb").forEach(el => {
+    el.checked = set.has(el.dataset.perm) || set.has(PERMS.ALL);
+  });
+}
+
+function clearAdminUserForm(){
+  editingAdminUser = null;
+  document.getElementById("adminUsername").value = "";
+  document.getElementById("adminUsername").disabled = false;
+  document.getElementById("adminDisplayName").value = "";
+  document.getElementById("adminPassword").value = "";
+  document.getElementById("adminActive").checked = true;
+  setAdminFormPerms([]);
+}
+
+let editingAdminUser = null;
+
+async function loadAdminUsers(){
+  const el = document.getElementById("adminUserList");
+  if(!el) return;
+  el.innerHTML = `<div class="meta">Đang tải...</div>`;
+  try{
+    const data = await apiGet("admin_list_users");
+    if(!data.users?.length){
+      el.innerHTML = `<div class="meta">Chưa có tài khoản.</div>`;
+      return;
+    }
+    el.innerHTML = data.users.map(u => `
+      <div class="adminUserRow">
+        <div>
+          <b>${escapeHtml(u.display_name || u.username)}</b>
+          <div class="meta">@${escapeHtml(u.username)} · ${escapeHtml(permLabelList(u.permissions))} · ${u.active ? "Hoạt động" : "Tắt"}</div>
+        </div>
+        <button class="secondary" style="width:auto;margin:0" onclick="editAdminUser('${escapeAttr(u.username)}')">Sửa</button>
+        <button class="danger" style="width:auto;margin:0" onclick="deleteAdminUser('${escapeAttr(u.username)}')">Xóa</button>
+      </div>
+    `).join("");
+  }catch(e){
+    el.innerHTML = `<div class="error" style="display:block">${escapeHtml(e.message || "Không tải được danh sách.")}</div>`;
+  }
+}
+
+function editAdminUser(username){
+  apiGet("admin_list_users").then(data => {
+    const user = (data.users || []).find(u => u.username === username);
+    if(!user) return;
+    editingAdminUser = user.username;
+    document.getElementById("adminUsername").value = user.username;
+    document.getElementById("adminUsername").disabled = true;
+    document.getElementById("adminDisplayName").value = user.display_name || user.username;
+    document.getElementById("adminPassword").value = "";
+    document.getElementById("adminActive").checked = !!user.active;
+    setAdminFormPerms(user.permissions || []);
+  }).catch(e => alert(e.message));
+}
+
+async function saveAdminUser(){
+  const username = document.getElementById("adminUsername").value.trim();
+  const displayName = document.getElementById("adminDisplayName").value.trim() || username;
+  const password = document.getElementById("adminPassword").value;
+  const permissions = getAdminFormPerms();
+  const active = document.getElementById("adminActive").checked;
+  if(!username) return alert("Nhập username.");
+  if(!editingAdminUser && !password) return alert("Mật khẩu bắt buộc khi tạo tài khoản mới.");
+  try{
+    await apiPost("admin_save_user", { username, display_name: displayName, password, permissions, active });
+    clearAdminUserForm();
+    await loadAdminUsers();
+    alert("Đã lưu tài khoản.");
+  }catch(e){
+    alert(e.message || "Lưu thất bại.");
+  }
+}
+
+async function deleteAdminUser(username){
+  if(!confirm(`Xóa tài khoản "${username}"?`)) return;
+  try{
+    await apiPost("admin_delete_user", { username });
+    if(editingAdminUser === username) clearAdminUserForm();
+    await loadAdminUsers();
+  }catch(e){
+    alert(e.message || "Xóa thất bại.");
+  }
+}
+
+function openLoginModal(){
+  document.getElementById("loginError").style.display = "none";
+  document.getElementById("loginUsername").value = "";
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginModal").classList.add("show");
+}
+
+function closeLoginModal(){
+  document.getElementById("loginModal").classList.remove("show");
+}
+
+async function adminLogin(){
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  const btn = document.getElementById("btnDoLogin");
+  errEl.style.display = "none";
+  if(!username || !password){
+    errEl.textContent = "Nhập username và password.";
+    errEl.style.display = "block";
+    return;
+  }
+  btn.disabled = true;
+  try{
+    const data = await apiPost("admin_login", { username, password });
+    authSession = {
+      token: data.token,
+      expires_at: data.expires_at,
+      username: data.username,
+      display_name: data.display_name || data.username,
+      permissions: data.permissions || []
+    };
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
+    closeLoginModal();
+    applyAuthUI();
+    if(hasPerm(PERMS.MATCH_RESULT) || hasPerm(PERMS.EXPORT) || hasPerm(PERMS.ALL)){
+      await restorePendingMatchIfAny();
+    }
+    if(canUseLineupTab()) switchTab("lineup");
+  }catch(e){
+    errEl.textContent = e.message || "Đăng nhập thất bại.";
+    errEl.style.display = "block";
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function adminLogout(){
+  try{
+    if(authSession?.token) await apiPost("admin_logout", {});
+  }catch(e){
+    console.error(e);
+  }
+  authSession = null;
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem(PENDING_MATCH_KEY);
+  unlockMatchState();
+  applyAuthUI();
+  switchTab("latest");
+}
+
+function updateResultModalPerms(){
+  const canResult = isLoggedIn() && hasPerm(PERMS.MATCH_RESULT);
+  const canCancel = isLoggedIn() && hasPerm(PERMS.CANCEL_MATCH);
+  const lockBtn = document.querySelector("#lockBanner button");
+  if(lockBtn) lockBtn.style.display = canResult ? "" : "none";
+  const cancelBtn = document.getElementById("btnCancelMatch");
+  if(cancelBtn) cancelBtn.style.display = canCancel ? "" : "none";
+  const saveBtn = document.getElementById("btnSaveResult");
+  if(saveBtn) saveBtn.style.display = canResult ? "" : "none";
+}
+
+function applyAuthUI(){
+  const loggedIn = isLoggedIn();
+  const label = document.getElementById("authUserLabel");
+  const btnLogin = document.getElementById("btnLogin");
+  const btnLogout = document.getElementById("btnLogout");
+  const tabLineup = document.getElementById("tabLineup");
+  const tabAdmin = document.getElementById("tabAdmin");
+  const showLineup = loggedIn && canUseLineupTab();
+
+  if(loggedIn){
+    label.textContent = `Đăng nhập: ${authSession.display_name || authSession.username} · ${permLabelList(authSession.permissions)}`;
+    btnLogin.style.display = "none";
+    btnLogout.style.display = "";
+  }else{
+    label.textContent = "Chế độ xem công khai — đăng nhập để quản lý trận";
+    btnLogin.style.display = "";
+    btnLogout.style.display = "none";
+    document.getElementById("lockBanner").classList.remove("show");
+  }
+
+  tabLineup.style.display = showLineup ? "" : "none";
+  tabAdmin.style.display = loggedIn && hasPerm(PERMS.MANAGE_USERS) ? "" : "none";
+
+  if(showLineup){
+    document.getElementById("modeInternal").style.display = hasPerm(PERMS.LINEUP_INTERNAL) ? "" : "none";
+    document.getElementById("modeCap").style.display = hasPerm(PERMS.LINEUP_CAP) ? "" : "none";
+    document.getElementById("btnExport").style.display = hasPerm(PERMS.EXPORT) ? "" : "none";
+    document.getElementById("btnRandom").style.display =
+      hasPerm(PERMS.LINEUP_INTERNAL) && lineupMode === "internal" ? "" : "none";
+    document.getElementById("btnOptimizeCap").style.display =
+      hasPerm(PERMS.LINEUP_CAP) && lineupMode === "cap" ? "" : "none";
+
+    if(lineupMode === "internal" && !hasPerm(PERMS.LINEUP_INTERNAL) && hasPerm(PERMS.LINEUP_CAP)){
+      switchLineupMode("cap", true);
+    }else if(lineupMode === "cap" && !hasPerm(PERMS.LINEUP_CAP) && hasPerm(PERMS.LINEUP_INTERNAL)){
+      switchLineupMode("internal", true);
+    }
+  }
+
+  if(document.getElementById("tabLineup").classList.contains("active") && !showLineup) switchTab("latest");
+  if(document.getElementById("tabAdmin").classList.contains("active") && !(loggedIn && hasPerm(PERMS.MANAGE_USERS))) switchTab("latest");
+
+  updateResultModalPerms();
+  if(matchLocked) applyLockUI(true);
+}
+
+async function initAuth(){
+  initAdminPermGrid();
+  const raw = localStorage.getItem(AUTH_SESSION_KEY);
+  if(raw){
+    try{
+      const saved = JSON.parse(raw);
+      if(saved?.token){
+        const data = await apiGet("admin_validate_session", { session_token: saved.token });
+        if(data.valid){
+          authSession = {
+            token: saved.token,
+            expires_at: data.expires_at,
+            username: data.username,
+            display_name: data.display_name || data.username,
+            permissions: data.permissions || []
+          };
+          localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
+        }else{
+          localStorage.removeItem(AUTH_SESSION_KEY);
+          authSession = null;
+        }
+      }
+    }catch(e){
+      console.error(e);
+      authSession = null;
+    }
+  }
+  applyAuthUI();
+}
+
+function renderGuestLineup(data){
+  const metaEl = document.getElementById("guestLineupMeta");
+  const internalEl = document.getElementById("guestLineupInternal");
+  const capEl = document.getElementById("guestLineupCap");
+
+  if(!data?.found || !data.summary || !data.players?.length){
+    metaEl.textContent = "Chưa có đội hình nào được lưu.";
+    internalEl.style.display = "";
+    capEl.style.display = "none";
+    clearPitch("pitchGuestA");
+    clearPitch("pitchGuestB");
+    setBench("benchGuestA", []);
+    setBench("benchGuestB", []);
+    return;
+  }
+
+  const summary = data.summary;
+  const cap = isCapMatchFromDetail(summary, data.players);
+  const label = summary.match_label || summary.match_id || "Trận gần nhất";
+  const typeLabel = cap ? "Đá Cáp" : "Nội bộ";
+  const opponent = summary.opponent_name ? ` · vs ${summary.opponent_name}` : "";
+  const status = summary.status ? ` · ${summary.status}` : "";
+  metaEl.textContent = `${label} · ${typeLabel}${opponent}${status}`;
+
+  const result = rebuildLastResultFromDetail(data.players, summary);
+  const fMain = resolveFormation(summary.formation_a, "3-1-2");
+  const fSub = resolveFormation(summary.formation_b, "3-1-2");
+
+  if(cap){
+    internalEl.style.display = "none";
+    capEl.style.display = "";
+    clearPitch("pitchGuestCapMain");
+    clearPitch("pitchGuestCapSub");
+    renderLineupInstant("pitchGuestCapMain", result.lineupMain || result.lineupA, fMain, "capTeam");
+    renderLineupInstant("pitchGuestCapSub", result.lineupSub || result.lineupB, fSub, "capSubTeam");
+    setBench("benchGuestCapMain", (result.lineupMain || result.lineupA).bench || []);
+    setBench("benchGuestCapSub", (result.lineupSub || result.lineupB).bench || []);
+  }else{
+    capEl.style.display = "none";
+    internalEl.style.display = "";
+    clearPitch("pitchGuestA");
+    clearPitch("pitchGuestB");
+    renderLineupInstant("pitchGuestA", result.lineupA, fMain, "redTeam");
+    renderLineupInstant("pitchGuestB", result.lineupB, fSub, "yellowTeam");
+    setBench("benchGuestA", result.lineupA.bench || []);
+    setBench("benchGuestB", result.lineupB.bench || []);
+  }
+}
+
+async function loadLatestLineup(){
+  const metaEl = document.getElementById("guestLineupMeta");
+  if(metaEl) metaEl.textContent = "Đang tải...";
+  try{
+    const data = await apiGet("get_latest_lineup");
+    renderGuestLineup(data);
+  }catch(e){
+    console.error(e);
+    if(metaEl) metaEl.textContent = e.message || "Không tải được đội hình.";
+  }
+}
+
+function switchTab(tab){
+  const isLatest = tab === "latest";
+  const isLineup = tab === "lineup";
+  const isHistory = tab === "history";
+  const isStats = tab === "stats";
+  const isAdmin = tab === "admin";
+
+  if(isLineup && !canUseLineupTab()){
+    tab = "latest";
+  }
+  if(isAdmin && !(isLoggedIn() && hasPerm(PERMS.MANAGE_USERS))){
+    tab = "latest";
+  }
+
+  document.getElementById("guestLineupView").style.display = tab === "latest" ? "" : "none";
+  document.getElementById("lineupView").style.display = tab === "lineup" ? "" : "none";
+  document.getElementById("historyView").style.display = tab === "history" ? "" : "none";
+  document.getElementById("statsView").style.display = tab === "stats" ? "" : "none";
+  document.getElementById("adminView").style.display = tab === "admin" ? "" : "none";
+
+  document.getElementById("tabLatest").classList.toggle("active", tab === "latest");
+  document.getElementById("tabLineup").classList.toggle("active", tab === "lineup");
+  document.getElementById("tabHistory").classList.toggle("active", tab === "history");
+  document.getElementById("tabStats").classList.toggle("active", tab === "stats");
+  document.getElementById("tabAdmin").classList.toggle("active", tab === "admin");
+
+  if(tab === "latest") loadLatestLineup();
+  if(tab === "history") loadMatchHistory();
+  if(tab === "stats") renderStats();
+  if(tab === "admin") loadAdminUsers();
+}
+
+async function loadMatchHistory(){
+  const el = document.getElementById("historyList");
+  el.innerHTML = `<div class="meta">Đang tải lịch sử...</div>`;
+  try{
+    const data = await apiGet("get_match_list", {limit: 40});
+    renderMatchHistoryList(data.matches || []);
+  }catch(e){
+    console.error(e);
+    el.innerHTML = `<div class="error" style="display:block">${escapeHtml(e.message || "Không tải được lịch sử.")}</div>`;
+  }
+}
+
+function renderMatchHistoryList(matches){
+  const el = document.getElementById("historyList");
+  cachedHistoryMatches = matches;
+  if(!matches.length){
+    el.innerHTML = `<div class="meta">Chưa có trận nào hoàn tất.</div>`;
+    return;
+  }
+
+  el.innerHTML = matches.map((m, idx) => {
+    const isCap = String(m.match_type || "").toLowerCase() === "cap";
+    const score = isCap
+      ? `DUFC ${m.team_a_score ?? "?"} - ${m.team_b_score ?? "?"} ${escapeHtml(String(m.opponent_name || "Đội bạn"))}`
+      : `🔴 ${m.team_a_score ?? "?"} - ${m.team_b_score ?? "?"} 🟡`;
+    const formationText = isCap
+      ? `${escapeHtml(String(m.formation_a || ""))} / ${escapeHtml(String(m.formation_b || ""))}`
+      : `${escapeHtml(String(m.formation_a || ""))} vs ${escapeHtml(String(m.formation_b || ""))}`;
+    const typeTag = isCap ? " · ⚽ Cáp" : "";
+    return `<div class="historyItem" onclick="toggleHistoryDetail(${idx})">
+      <h3>${escapeHtml(displayMatchLabel(m))}${typeTag} · ${score}</h3>
+      <div class="historyMeta">
+        MVP: <b>${escapeHtml(String(m.mvp_players || "—"))}</b> ·
+        ${formationText}
+      </div>
+      <div id="histDetail_${idx}" class="historyDetail"></div>
+    </div>`;
+  }).join("");
+}
+
+async function toggleHistoryDetail(idx){
+  const matchId = cachedHistoryMatches[idx]?.match_id;
+  const detailEl = document.getElementById("histDetail_" + idx);
+  if(!detailEl || !matchId) return;
+
+  if(detailEl.classList.contains("show")){
+    detailEl.classList.remove("show");
+    detailEl.innerHTML = "";
+    return;
+  }
+
+  document.querySelectorAll(".historyDetail.show").forEach(el => {
+    el.classList.remove("show");
+    el.innerHTML = "";
+  });
+
+  detailEl.innerHTML = `<div class="meta">Đang tải chi tiết...</div>`;
+  detailEl.classList.add("show");
+
+  try{
+    const data = await apiGet("get_match_detail", {match_id: matchId});
+    const players = (data.players || []).slice().sort((a, b) => {
+      if(a.team !== b.team) return String(a.team).localeCompare(String(b.team));
+      if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
+      return String(a.player_name).localeCompare(String(b.player_name), "vi");
+    });
+
+    detailEl.innerHTML = players.map(p => {
+      const delta = Number(p.rating_delta);
+      const deltaText = Number.isFinite(delta) ? deltaLabel(delta) : "—";
+      const mvp = p.is_mvp === true || p.is_mvp === "TRUE" ? " ⭐MVP" : "";
+      const goals = Number(p.goals);
+      const assists = Number(p.assists);
+      const goalsText = Number.isFinite(goals) && goals > 0 ? goals : "—";
+      const assistsText = Number.isFinite(assists) && assists > 0 ? assists : "—";
+      return `<div class="historyPlayerRow">
+        <span>${escapeHtml(String(p.player_name || ""))}${mvp} <span class="meta">(${escapeHtml(String(p.team || ""))}${p.starter ? "" : " · dự bị"})</span></span>
+        <span>⚽ BT <b>${escapeHtml(String(goalsText))}</b></span>
+        <span>🅰️ KT <b>${escapeHtml(String(assistsText))}</b></span>
+        <span>Điểm: <b>${escapeHtml(String(p.match_score ?? "—"))}</b></span>
+        <span>Rating: ${escapeHtml(String(p.rating_before ?? "—"))} → ${escapeHtml(String(p.rating_after ?? "—"))}</span>
+        <span class="deltaBadge ${deltaClass(delta)}">${deltaText}</span>
+      </div>`;
+    }).join("") || `<div class="meta">Không có dữ liệu cầu thủ.</div>`;
+  }catch(e){
+    detailEl.innerHTML = `<div class="error" style="display:block">${escapeHtml(e.message || "Không tải được chi tiết.")}</div>`;
+  }
+}
 
 function defaultAvatar(name){
   const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());
@@ -370,6 +1940,7 @@ function sideFit(playerSide, slotSide){
 
 
 function setFormation(team, value){
+  if(isCapMode()) return;
   if(team === "A") formationA = value;
   if(team === "B") formationB = value;
 
@@ -458,6 +2029,7 @@ function applyRows(rows){
     }
 
     const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
+    const mvpCount = Number(lower.mvp_count || lower.mvp || lower["số mvp"] || lower.so_mvp || 0);
     const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
 
     // Format mới:
@@ -482,6 +2054,7 @@ function applyRows(rows){
       main,
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
+      mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
       avatar: avatarText || defaultAvatar(name),
       side,
       selected: true
@@ -495,6 +2068,7 @@ function applyRows(rows){
   players = list;
   renderPlayerPicker();
   updateStats();
+  if(document.getElementById("statsView")?.style.display !== "none") renderStats();
 }
 
 function renderPlayerPicker(){
@@ -522,7 +2096,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
-      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}</div></div>
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }
@@ -958,6 +2532,163 @@ function build(team, formation){
 
   return {starters, bench, score:Math.round(score * 10) / 10};
 }
+
+function gkCandidateIndexes(team){
+  const idx = [];
+  team.forEach((p, i) => {
+    if(canCoverPosition(p, "GK")) idx.push(i);
+  });
+  return idx;
+}
+
+function buildSubLineup(team, formation, benchNames, mainStarterNames, refMainLineup){
+  const slots = slotOrderForFormation(formation);
+  const n = team.length;
+  const gkIndexes = gkCandidateIndexes(team);
+  let forcedGkIndex = -1;
+
+  if(gkIndexes.length === 1){
+    forcedGkIndex = gkIndexes[0];
+  }else{
+    const mainGk = (refMainLineup.starters || []).find(p => p.assigned === "GK");
+    if(mainGk){
+      forcedGkIndex = team.findIndex(p => normalizeName(p.name) === normalizeName(mainGk.name));
+    }
+  }
+
+  const memo = new Map();
+
+  function subAssignmentScore(player, slot, playerIndex){
+    let score = assignmentScore(player, slot);
+    const nameKey = normalizeName(player.name);
+
+    if(slot.pos === "GK"){
+      if(forcedGkIndex >= 0 && playerIndex === forcedGkIndex) score += 200000;
+      return score;
+    }
+
+    // Ưu tiên dự bị đội hình Chính vào Phụ trước
+    if(benchNames.has(nameKey)) score += 125000;
+    else if(mainStarterNames.has(nameKey)) score -= 78000;
+    else score += 18000;
+
+    return score;
+  }
+
+  function solve(slotIdx, usedMask){
+    if(slotIdx >= slots.length) return {score: 0, picks: []};
+
+    const key = slotIdx + "|" + usedMask;
+    if(memo.has(key)) return memo.get(key);
+
+    const slot = slots[slotIdx];
+    let best = {score: -1e15, picks: []};
+
+    for(let i = 0; i < n; i++){
+      if(usedMask & (1 << i)) continue;
+      if(slot.pos === "GK" && forcedGkIndex >= 0 && i !== forcedGkIndex) continue;
+
+      const player = team[i];
+      const score = subAssignmentScore(player, slot, i);
+      const next = solve(slotIdx + 1, usedMask | (1 << i));
+      const total = score + next.score;
+
+      if(total > best.score){
+        best = {score: total, picks: [{playerIndex: i, slot}, ...next.picks]};
+      }
+    }
+
+    memo.set(key, best);
+    return best;
+  }
+
+  let solved = solve(0, 0);
+
+  if(!solved.picks || solved.picks.length < slots.length){
+    solved = {score: -9999, picks: []};
+    const used = new Set();
+    for(const slot of slots){
+      let bestIndex = -1;
+      let bestValue = -1e15;
+      for(let i = 0; i < n; i++){
+        if(used.has(i)) continue;
+        if(slot.pos === "GK" && forcedGkIndex >= 0 && i !== forcedGkIndex) continue;
+        const value = subAssignmentScore(team[i], slot, i);
+        if(value > bestValue){
+          bestValue = value;
+          bestIndex = i;
+        }
+      }
+      if(bestIndex >= 0){
+        used.add(bestIndex);
+        solved.picks.push({playerIndex: bestIndex, slot});
+      }
+    }
+  }
+
+  const usedIndexes = new Set(solved.picks.map(x => x.playerIndex));
+  const starters = solved.picks.map(({playerIndex, slot}) => {
+    const p = team[playerIndex];
+    return {
+      ...p,
+      assigned: slot.pos,
+      assignedSide: slot.side,
+      fit: fitLabelValue(p, slot.pos),
+      forcedStarter: false,
+      captain: false
+    };
+  });
+
+  const bench = team.filter((_, idx) => !usedIndexes.has(idx));
+
+  let score = 0;
+  starters.forEach(p => {
+    const slot = {pos: p.assigned, side: p.assignedSide};
+    score += assignmentScore(p, slot) / 100;
+    score += p.fit === 2 ? 80 : p.fit === 1 ? 35 : -120;
+  });
+
+  const order = {GK: 0, DEF: 1, MID: 2, FWD: 3};
+  const sideOrder = {LEFT: 0, CENTER: 1, RIGHT: 2};
+  starters.sort((a, b) => {
+    if(order[a.assigned] !== order[b.assigned]) return order[a.assigned] - order[b.assigned];
+    return (sideOrder[a.assignedSide] ?? 1) - (sideOrder[b.assignedSide] ?? 1);
+  });
+
+  return {starters, bench, score: Math.round(score * 10) / 10};
+}
+
+function optimizeCapDual(pool){
+  // Ước lượng dự bị Chính để xếp Phụ trước
+  const estimateMain = build(pool, formationCapMain);
+  const benchNames = new Set(estimateMain.bench.map(p => normalizeName(p.name)));
+  const mainStarterNames = new Set(estimateMain.starters.map(p => normalizeName(p.name)));
+
+  // 1. Đội hình Phụ trước — ưu tiên dự bị Chính
+  const lineupSub = buildSubLineup(pool, formationCapSub, benchNames, mainStarterNames, estimateMain);
+
+  // 2. Đội hình Chính sau
+  const lineupMain = build(pool, formationCapMain);
+
+  const benchInSub = lineupSub.starters.filter(p => benchNames.has(normalizeName(p.name))).length;
+  const score = Math.round(lineupMain.score + lineupSub.score + benchInSub * 18);
+
+  return {
+    matchMode: "cap",
+    teamCap: pool,
+    teamMain: pool,
+    teamSub: pool,
+    lineupMain,
+    lineupSub,
+    lineupCap: lineupMain,
+    teamA: pool,
+    teamB: pool,
+    lineupA: lineupMain,
+    lineupB: lineupSub,
+    score
+  };
+}
+
 function counts(team){
   const c={GK:0,DEF:0,MID:0,FWD:0};
   team.forEach(p=>c[p.main]++);
@@ -1141,6 +2872,18 @@ function randomBest(list){
 
 async function startRandom(){
   clearError();
+  if(!isLoggedIn() || !hasPerm(PERMS.LINEUP_INTERNAL)){
+    showError("Bạn cần quyền chia đội nội bộ.");
+    return;
+  }
+  if(lineupMode !== "internal"){
+    showError("Chuyển sang chế độ Chia đội Nội bộ để random.");
+    return;
+  }
+  if(matchLocked){
+    showError("Đang chờ kết quả trận trước. Nhập kết quả trước khi chia đội mới.");
+    return;
+  }
   const overlay = document.getElementById("overlay");
 
   try{
@@ -1162,6 +2905,7 @@ async function startRandom(){
     if(!lastResult){
       throw new Error("Không tìm được phương án chia đội phù hợp.");
     }
+    lastResult.matchMode = "internal";
 
     updateResultStats(lastResult, selected.length);
     await revealBothLineups(lastResult.lineupA, lastResult.lineupB);
@@ -1197,9 +2941,11 @@ async function suspense(list){
   overlay.classList.remove("show");
 }
 function renderLineupInstant(pitchId, lineup, formation, teamClass){
+  if(!lineup?.starters?.length) return;
+  const safeFormation = resolveFormation(formation, "3-1-2");
   const indexByPos = {};
   for(const p of lineup.starters){
-    const [x,y] = getPosCoord(p.assigned, p.assignedSide, indexByPos, formation);
+    const [x,y] = getPosCoord(p.assigned, p.assignedSide, indexByPos, safeFormation);
     const el = document.createElement("div");
     el.className = "slot show";
     el.style.left = x + "%";
@@ -1257,10 +3003,12 @@ async function addPlayerToPitch(pitchId, p, indexByPos, formation, teamClass){
 }
 
 function getPosCoord(assigned, assignedSide, indexByPos, formation){
-  const coordsByPos = FORMATION_COORDS[formation][assigned] || [];
-  const slotsByPos = FORMATIONS[formation].filter(slot => slot.pos === assigned);
+  const safeFormation = resolveFormation(formation, "3-1-2");
+  const pos = normalizePos(assigned || "MID");
+  const coordsByPos = (FORMATION_COORDS[safeFormation] && FORMATION_COORDS[safeFormation][pos]) || [];
+  const slotsByPos = FORMATIONS[safeFormation].filter(slot => slot.pos === pos);
 
-  const key = assigned + "_" + (assignedSide || "ANY");
+  const key = pos + "_" + (assignedSide || "ANY");
   const currentIndex = indexByPos[key] || 0;
 
   // Nếu có nhiều slot cùng pos + same side, ví dụ 2-3-1 có DEF CENTER + DEF CENTER,
@@ -1284,7 +3032,7 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation){
   }
 
   // Fallback nếu thiếu assignedSide.
-  const fallbackKey = assigned + "_fallback";
+  const fallbackKey = pos + "_fallback";
   const idx = indexByPos[fallbackKey] || 0;
   indexByPos[fallbackKey] = idx + 1;
   return coordsByPos[Math.min(idx, coordsByPos.length - 1)] || [50,50];
@@ -1300,8 +3048,104 @@ function clearPitch(id){
   [...document.getElementById(id).querySelectorAll(".slot")].forEach(x=>x.remove());
 }
 function updateStats(){
-  document.getElementById("total").textContent=players.length;
-  document.getElementById("selected").textContent=players.filter(p=>p.selected).length;
+  const selectedCount = players.filter(p => p.selected).length;
+  document.getElementById("total").textContent = players.length;
+  document.getElementById("selected").textContent = selectedCount;
+  document.getElementById("totalCap").textContent = players.length;
+  document.getElementById("selectedCap").textContent = selectedCount;
+}
+
+function renderCapLineups(result){
+  const lineupMain = result.lineupMain || result.lineupA || { starters: [], bench: [] };
+  const lineupSub = result.lineupSub || result.lineupB || { starters: [], bench: [] };
+  clearPitch("pitchCapMain");
+  clearPitch("pitchCapSub");
+  renderLineupInstant("pitchCapMain", lineupMain, formationCapMain, "capTeam");
+  renderLineupInstant("pitchCapSub", lineupSub, formationCapSub, "capSubTeam");
+  setBench("benchCapMain", lineupMain.bench);
+  setBench("benchCapSub", lineupSub.bench);
+}
+
+function updateCapResultStats(r){
+  const pool = r.teamCap || r.teamMain || r.teamA || [];
+  const lineupMain = r.lineupMain || r.lineupA || {starters: [], score: 0};
+  const lineupSub = r.lineupSub || r.lineupB || {starters: [], score: 0};
+  document.getElementById("selectedCap").textContent = pool.length;
+  document.getElementById("sizesCap").textContent = `${lineupMain.starters.length} / ${lineupSub.starters.length}`;
+  document.getElementById("scoreCap").textContent = r.score ?? 0;
+  document.getElementById("scoreCapMain").textContent =
+    `score ${lineupMain.score ?? 0} · ${lineupMain.starters.length} RS`;
+  document.getElementById("scoreCapSub").textContent =
+    `score ${lineupSub.score ?? 0} · ${lineupSub.starters.length} RS`;
+}
+
+function textResultCap(r){
+  function block(title, lineup, formation){
+    const starters = (lineup.starters || []).map(p =>
+      `${p.assigned}${p.assignedSide ? " " + sideLabel(p.assignedSide) : ""}: ${p.name}${p.captain ? " (Đội trưởng)" : ""}`
+    ).join("\n");
+    const bench = lineup.bench?.length
+      ? lineup.bench.map(p => `${p.name} (${p.main})`).join(", ")
+      : "Không có";
+    return `${title} (${formation})\nĐội hình ra sân:\n${starters}\nDự bị: ${bench}`;
+  }
+
+  const lineupMain = r.lineupMain || r.lineupA || { starters: [], bench: [] };
+  const lineupSub = r.lineupSub || r.lineupB || { starters: [], bench: [] };
+  const sharedGk = lineupMain.starters.find(p => p.assigned === "GK" && lineupSub.starters.some(s => s.name === p.name));
+  const gkNote = sharedGk ? `\n(GK chung: ${sharedGk.name})\n` : "";
+  return `SƠ ĐỒ CHÍNH: ${formationCapMain} · SƠ ĐỒ PHỤ: ${formationCapSub}${gkNote}\n` +
+    block("⚽ ĐỘI HÌNH CHÍNH", lineupMain, formationCapMain) + "\n\n" +
+    block("🔄 ĐỘI HÌNH PHỤ (dự bị Chính ưu tiên)", lineupSub, formationCapSub);
+}
+
+async function startOptimizeCap(){
+  clearError();
+  if(!isLoggedIn() || !hasPerm(PERMS.LINEUP_CAP)){
+    showError("Bạn cần quyền đội hình Cáp.");
+    return;
+  }
+  if(lineupMode !== "cap"){
+    showError("Chuyển sang chế độ Đội hình đá Cáp để sắp xếp.");
+    return;
+  }
+  if(matchLocked){
+    showError("Đang chờ kết quả trận trước. Nhập kết quả trước khi lên đội hình mới.");
+    return;
+  }
+
+  try{
+    const selected = players.filter(p => p.selected);
+    if(selected.length < 5){
+      showError("Cần tối thiểu 5 cầu thủ để lên đội hình Cáp.");
+      return;
+    }
+    if(!hasRequiredPositions(selected)){
+      showError("Danh sách cần có đủ GK, DEF, MID, FWD (có thể cùng 1 người đá nhiều vị trí).");
+      return;
+    }
+
+    lastResult = optimizeCapDual(selected);
+    renderCapLineups(lastResult);
+    updateCapResultStats(lastResult);
+    document.getElementById("textResult").textContent = textResultCap(lastResult);
+  }catch(e){
+    console.error(e);
+    showError(e.message || "Có lỗi khi sắp xếp đội hình Cáp.");
+  }
+}
+
+function setCapFormation(team, value){
+  if(team === "main") formationCapMain = value;
+  if(team === "sub") formationCapSub = value;
+  if(!lastResult || !isCapMode()) return;
+
+  const pool = lastResult.teamCap || lastResult.teamMain || lastResult.teamA || [];
+  Object.assign(lastResult, optimizeCapDual(pool));
+
+  renderCapLineups(lastResult);
+  updateCapResultStats(lastResult);
+  document.getElementById("textResult").textContent = textResultCap(lastResult);
 }
 function updateResultStats(r,totalSelected){
   document.getElementById("selected").textContent=totalSelected;
@@ -1317,6 +3161,14 @@ function textResult(r){
   return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("🔴 ĐỘI A (ÁO ĐỎ)",r.lineupA)+"\n\n"+block("🟡 ĐỘI B (ÁO VÀNG)",r.lineupB);
 }
 async function exportImage(){
+  if(!isLoggedIn() || !hasPerm(PERMS.EXPORT)){
+    showError("Bạn cần quyền xuất ảnh & lưu đội hình.");
+    return;
+  }
+  if(matchLocked){
+    openResultModal();
+    return;
+  }
   if(!lastResult){
     alert("Chưa có kết quả để xuất hình.");
     return;
@@ -1366,8 +3218,9 @@ async function exportImage(){
     link.click();
     link.remove();
 
-    // Sau khi xuất hình ảnh đội hình xong, lưu danh sách 2 đội vào Google Sheet.
-    await saveMatchHistoryToSheet(filename);
+    const savedMatch = await saveMatchHistoryToSheet(filename);
+    lockMatchState(savedMatch.matchId, savedMatch.matchLabel, filename);
+    openResultModal();
   }catch(e){
     console.error(e);
     alert("Không xuất được hình hoặc chưa lưu được lịch sử. Chi tiết lỗi đã hiện trong Console.");
@@ -1437,15 +3290,16 @@ function fallbackAvatarDataURL(text){
 
 
 async function saveMatchHistoryToSheet(imageFilename){
-  if(!lastResult) return;
+  if(!lastResult) throw new Error("Chưa có kết quả chia đội.");
 
   if(!MATCH_HISTORY_WEB_APP_URL){
-    console.warn("MATCH_HISTORY_WEB_APP_URL chưa được cấu hình, bỏ qua lưu lịch sử trận.");
-    return;
+    throw new Error("MATCH_HISTORY_WEB_APP_URL chưa được cấu hình.");
   }
 
   const now = new Date();
-  const matchId = `dufc-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}${String(now.getSeconds()).padStart(2,"0")}`;
+  const matchId = generateMatchId(now);
+  const cap = isCapMode();
+  const matchLabel = cap ? formatCapMatchLabel(now) : formatMatchLabel(now);
 
   const rows = [];
 
@@ -1469,7 +3323,8 @@ async function saveMatchHistoryToSheet(imageFilename){
         preferred_side: Array.isArray(p.side) ? p.side.join("/") : (p.side || ""),
         fit_label: p.fit === 2 ? "main_position" : p.fit === 1 ? "secondary_position" : "wrong_position",
         captain: !!p.captain,
-        image_filename: imageFilename || ""
+        image_filename: imageFilename || "",
+        status: "lineup_exported"
       });
     });
 
@@ -1492,35 +3347,59 @@ async function saveMatchHistoryToSheet(imageFilename){
         preferred_side: Array.isArray(p.side) ? p.side.join("/") : (p.side || ""),
         fit_label: "bench",
         captain: false,
-        image_filename: imageFilename || ""
+        image_filename: imageFilename || "",
+        status: "lineup_exported"
       });
     });
   }
 
-  addTeamRows("A", "Áo Đỏ", lastResult.lineupA, formationA);
-  addTeamRows("B", "Áo Vàng", lastResult.lineupB, formationB);
-
-  try{
-    const res = await fetch(MATCH_HISTORY_WEB_APP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify({
-        action: "save_match_history",
-        spreadsheet_id: "1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU",
-        sheet_gid: "228928781",
+  if(cap){
+    const lineupMain = lastResult.lineupMain || lastResult.lineupA;
+    const lineupSub = lastResult.lineupSub || lastResult.lineupB;
+    addTeamRows("MAIN", "Chính", lineupMain, formationCapMain);
+    lineupSub.starters.forEach((p, index) => {
+      rows.push({
         match_id: matchId,
-        rows
-      })
+        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        created_at: now.toISOString(),
+        team: "SUB",
+        shirt: "Phụ",
+        formation: formationCapSub,
+        player_name: p.name,
+        rating: Number(p.rating) || 5,
+        starter: true,
+        lineup_order: index + 1,
+        assigned_position: p.assigned || "",
+        assigned_side: p.assignedSide || "",
+        main_position: p.main || "",
+        secondary_positions: (p.secondary || []).join("/"),
+        preferred_side: Array.isArray(p.side) ? p.side.join("/") : (p.side || ""),
+        fit_label: p.fit === 2 ? "main_position" : p.fit === 1 ? "secondary_position" : "wrong_position",
+        captain: false,
+        image_filename: imageFilename || "",
+        status: "lineup_exported"
+      });
     });
-
-    document.getElementById("ocrStatus").innerHTML =
-      `Đã xuất ảnh và gửi lưu lịch sử trận <b>${matchId}</b>.`;
-  }catch(e){
-    console.error(e);
-    document.getElementById("ocrStatus").innerHTML =
-      `Đã xuất ảnh, nhưng chưa lưu được lịch sử trận. Kiểm tra Apps Script URL.`;
+  }else{
+    addTeamRows("A", "Áo Đỏ", lastResult.lineupA, formationA);
+    addTeamRows("B", "Áo Vàng", lastResult.lineupB, formationB);
   }
+
+  await apiPost("save_match_history", {
+    spreadsheet_id: "1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU",
+    sheet_gid: "228928781",
+    match_id: matchId,
+    match_label: matchLabel,
+    match_type: cap ? "cap" : "internal",
+    formation_a: cap ? formationCapMain : formationA,
+    formation_b: cap ? formationCapSub : formationB,
+    rows
+  });
+
+  document.getElementById("ocrStatus").innerHTML =
+    `Đã xuất ảnh và lưu lịch sử trận <b>${matchLabel}</b>. Nhập kết quả bên dưới.`;
+
+  return { matchId, matchLabel };
 }
 
 
@@ -1529,7 +3408,14 @@ function showError(msg){const e=document.getElementById("error");e.textContent=m
 function clearError(){const e=document.getElementById("error");e.textContent="";e.style.display="none"}
 function escapeHtml(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function escapeAttr(s){return escapeHtml(s)}
-window.addEventListener("DOMContentLoaded", loadDefaultRoster);
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadDefaultRoster();
+  await initAuth();
+  await loadLatestLineup();
+  if(isLoggedIn() && (hasPerm(PERMS.MATCH_RESULT) || hasPerm(PERMS.EXPORT) || hasPerm(PERMS.ALL))){
+    await restorePendingMatchIfAny();
+  }
+});
 </script>
 </body>
 </html>
