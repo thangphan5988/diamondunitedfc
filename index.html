@@ -16,12 +16,12 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
     .wrap{max-width:1440px;margin:auto;padding:22px}
-    h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:12px;margin-bottom:12px}.ocrStatus{font-size:12px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
+    h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:10px;margin-bottom:12px}.ocrStatus{font-size:10px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
     .sub{color:var(--muted);margin-bottom:16px}
     .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
     .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
     #exportArea{background:#0f172a}
-    input,button,select{width:100%;border-radius:12px;border:1px solid var(--line);background:#020617;color:var(--text);padding:11px 12px;font-size:14px}
+    input,button,select{width:100%;border-radius:12px;border:1px solid var(--line);background:#020617;color:var(--text);padding:11px 12px;font-size:11px}
     button{background:#0284c7;border:0;font-weight:800;cursor:pointer;margin-top:10px}
     button:hover{filter:brightness(1.12)}
     button.secondary{background:#334155}
@@ -32,11 +32,11 @@
     .row:last-child{border-bottom:0}
     .row img,.miniAvatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e293b;border:1px solid rgba(255,255,255,.2)}
     .name{font-weight:800}
-    .meta{font-size:12px;color:var(--muted)}
+    .meta{font-size:10px;color:var(--muted)}
     .badge{font-size:11px;border:1px solid var(--line);padding:4px 6px;border-radius:999px;color:#cbd5e1}
     .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
     .metric{background:#020617;border:1px solid var(--line);border-radius:14px;padding:10px}
-    .metric b{font-size:20px;display:block}.metric span{font-size:12px;color:var(--muted)}
+    .metric b{font-size:20px;display:block}.metric span{font-size:10px;color:var(--muted)}
     .teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .teamHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
     .teamHead h2{margin:0;font-size:22px}
@@ -85,11 +85,11 @@
     .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
     .cardPlayer .fit{font-size:9px;color:#cbd5e1;margin-top:3px}
-    .cardPlayer .captainBadge{font-size:9px;color:#facc15;font-weight:900;margin-top:2px}
+    .cardPlayer .captainBadge{position:absolute;top:-3px;left:-3px;font-size:12px;color:#facc15;font-weight:900}.ratingBadge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
     .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
     .bench h3{margin:0 0 8px;font-size:15px}
     .benchList{display:flex;flex-wrap:wrap;gap:8px}
-    .benchItem{display:flex;align-items:center;gap:6px;background:#020617;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:12px}
+    .benchItem{display:flex;align-items:center;gap:6px;background:#020617;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px}
     .benchItem img{width:24px;height:24px;border-radius:50%;object-fit:cover}
     .overlay{
       position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column
@@ -130,7 +130,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.4.0</div>
+  <div class="buildVersion">Build v1.8.4</div>
   
   <div class="grid">
     <div class="card">
@@ -141,13 +141,13 @@
       <div id="ocrStatus" class="ocrStatus"></div>
       <select id="formationSelectA" onchange="setFormation('A', this.value)">
         <option value="3-2-1">Đội A: Sơ đồ 3-2-1</option>
-        <option value="3-1-2">Đội A: Sơ đồ 3-1-2</option>
+        <option value="3-1-2" selected>Đội A: Sơ đồ 3-1-2</option>
         <option value="2-3-1">Đội A: Sơ đồ 2-3-1</option>
         <option value="2-2-2">Đội A: Sơ đồ 2-2-2</option>
       </select>
       <select id="formationSelectB" onchange="setFormation('B', this.value)">
         <option value="3-2-1">Đội B: Sơ đồ 3-2-1</option>
-        <option value="3-1-2">Đội B: Sơ đồ 3-1-2</option>
+        <option value="3-1-2" selected>Đội B: Sơ đồ 3-1-2</option>
         <option value="2-3-1">Đội B: Sơ đồ 2-3-1</option>
         <option value="2-2-2">Đội B: Sơ đồ 2-2-2</option>
       </select>
@@ -222,13 +222,33 @@
 <script>
 const POS = ["GK","DEF","MID","FWD"];
 const FORMATIONS = {
-  "3-2-1": ["GK","DEF","DEF","DEF","MID","MID","FWD"],
-  "3-1-2": ["GK","DEF","DEF","DEF","MID","FWD","FWD"],
-  "2-3-1": ["GK","DEF","DEF","MID","MID","MID","FWD"],
-  "2-2-2": ["GK","DEF","DEF","MID","MID","FWD","FWD"]
+  "3-2-1": [
+    {pos:"GK", side:"CENTER"},
+    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"CENTER"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"MID", side:"LEFT"}, {pos:"MID", side:"RIGHT"},
+    {pos:"FWD", side:"CENTER"}
+  ],
+  "3-1-2": [
+    {pos:"GK", side:"CENTER"},
+    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"CENTER"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"MID", side:"CENTER"},
+    {pos:"FWD", side:"LEFT"}, {pos:"FWD", side:"RIGHT"}
+  ],
+  "2-3-1": [
+    {pos:"GK", side:"CENTER"},
+    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"MID", side:"LEFT"}, {pos:"MID", side:"CENTER"}, {pos:"MID", side:"RIGHT"},
+    {pos:"FWD", side:"CENTER"}
+  ],
+  "2-2-2": [
+    {pos:"GK", side:"CENTER"},
+    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"MID", side:"LEFT"}, {pos:"MID", side:"RIGHT"},
+    {pos:"FWD", side:"LEFT"}, {pos:"FWD", side:"RIGHT"}
+  ]
 };
-let formationA = "3-2-1";
-let formationB = "3-2-1";
+let formationA = "3-1-2";
+let formationB = "3-1-2";
 const FORMATION_COORDS = {
   "3-2-1": {
     GK:[[50,91]], DEF:[[25,69],[50,72],[75,69]], MID:[[35,46],[65,46]], FWD:[[50,24]]
@@ -252,7 +272,74 @@ function defaultAvatar(name){
   return `https://ui-avatars.com/api/?name=${initials}&background=0f172a&color=ffffff&bold=true`;
 }
 function normalizePos(v){return String(v||"").trim().toUpperCase();}
-function splitSecond(v){return String(v||"").toUpperCase().split(/[\/,;|]/).map(x=>x.trim()).filter(x=>POS.includes(x));}
+
+function splitPositions(v){
+  return String(v || "")
+    .toUpperCase()
+    .split(/[\/,;|]/)
+    .map(x => x.trim())
+    .filter(x => POS.includes(x));
+}
+
+function splitSecond(v){
+  return splitPositions(v);
+}
+
+function removeVietnameseAccent(text){
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
+
+function normalizeSideOne(v){
+  const s = removeVietnameseAccent(v).trim().toUpperCase().replace(/\s+/g, " ");
+  if(["LEFT", "L", "TRAI"].includes(s)) return "LEFT";
+  if(["RIGHT", "R", "PHAI"].includes(s)) return "RIGHT";
+  if(["CENTER", "CENTRE", "C", "TRUNG TAM", "GIUA"].includes(s)) return "CENTER";
+  return "";
+}
+
+function normalizeSideList(v){
+  const seen = new Set();
+  const result = String(v || "")
+    .split(/[\/,;|]/)
+    .map(x => normalizeSideOne(x))
+    .filter(Boolean)
+    .filter(x => {
+      if(seen.has(x)) return false;
+      seen.add(x);
+      return true;
+    });
+  return result;
+}
+
+function sideLabel(side){
+  const arr = Array.isArray(side) ? side : (side ? [side] : []);
+  return arr.map(s => {
+    if(s === "LEFT") return "Trái";
+    if(s === "RIGHT") return "Phải";
+    if(s === "CENTER") return "Trung tâm";
+    return s;
+  }).filter(Boolean).join("/");
+}
+
+function sideFit(playerSide, slotSide){
+  const sides = Array.isArray(playerSide) ? playerSide : (playerSide ? [playerSide] : []);
+  if(!sides.length || !slotSide) return 0;
+
+  const exactIndex = sides.indexOf(slotSide);
+  if(exactIndex >= 0){
+    // Giá trị đầu tiên là sở trường chính, các giá trị sau là phụ theo thứ tự.
+    return [18, 10, 6, 4][exactIndex] || 4;
+  }
+
+  const primary = sides[0];
+  if(primary === "CENTER" && (slotSide === "LEFT" || slotSide === "RIGHT")) return 3;
+  if(slotSide === "CENTER" && (primary === "LEFT" || primary === "RIGHT")) return -3;
+  return -8;
+}
 
 
 function setFormation(team, value){
@@ -266,19 +353,23 @@ function setFormation(team, value){
   document.getElementById("textResult").textContent = "";
 }
 
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Y7XC0m8kMsP0USO6Agpl3GNWFzYE4vyQ/gviz/tq?tqx=out:csv&gid=545791527";
+
 async function loadDefaultRoster(){
   clearError();
   try{
-    const res = await fetch("members.csv?ts=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error("Không tìm thấy file members.csv trên GitHub. Hãy upload members.csv cùng cấp với index.html.");
+    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&ts=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("Không load được Google Sheet. Kiểm tra quyền share: Anyone with the link can view.");
+
     const text = await res.text();
     const wb = XLSX.read(text, {type:"string"});
     const sheetName = wb.SheetNames[0];
-    if(!sheetName) throw new Error("Không đọc được members.csv.");
+    if(!sheetName) throw new Error("Không đọc được dữ liệu từ Google Sheet.");
+
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:""});
     applyRows(rows);
   }catch(e){
-    showError(e.message || "Không load được danh sách từ GitHub.");
+    showError(e.message || "Không load được danh sách từ Google Sheet.");
   }
 }
 
@@ -290,10 +381,47 @@ function applyRows(rows){
     Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
 
     const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
-    const main = normalizePos(lower.main_position || lower.main || lower["vị trí chính"] || lower.vi_tri_chinh || "");
-    const secondaryValue = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
+
+    // Format mới:
+    // position = "MID, FWD, DEF"
+    // Giá trị đầu tiên là vị trí chính, các giá trị tiếp theo là vị trí phụ.
+    const positionRaw =
+      lower.position ||
+      lower.positions ||
+      lower.main_position ||
+      lower.main ||
+      lower["vị trí"] ||
+      lower["vị trí chính"] ||
+      lower.vi_tri ||
+      lower.vi_tri_chinh ||
+      "";
+
+    const positionList = splitPositions(positionRaw);
+    const main = positionList[0] || "";
+    let secondary = positionList.slice(1);
+
+    // Backward compatible nếu file cũ vẫn có secondary_positions.
+    const secondaryRaw = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
+    if(secondaryRaw){
+      const moreSecondary = splitPositions(secondaryRaw);
+      secondary = [...new Set([...secondary, ...moreSecondary].filter(x => x !== main))];
+    }
+
     const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
     const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
+
+    // Format mới:
+    // preferred_side = "CENTER, RIGHT, LEFT"
+    // Giá trị đầu tiên là khu vực chính, các giá trị sau là khu vực phụ.
+    const side = normalizeSideList(
+      lower.preferred_side ||
+      lower.side ||
+      lower["khu vực"] ||
+      lower.khu_vuc ||
+      lower["sở trường khu vực"] ||
+      lower.so_truong_khu_vuc ||
+      ""
+    );
 
     if(!name) return null;
     if(!POS.includes(main)) return null;
@@ -302,15 +430,16 @@ function applyRows(rows){
       id: (idx + 2) + "_" + name,
       name,
       main,
-      secondary: splitSecond(secondaryValue),
+      secondary,
       rating: Number.isFinite(rating) ? rating : 5,
       avatar: avatarText || defaultAvatar(name),
+      side,
       selected: true
     };
   }).filter(Boolean);
 
   if(list.length < 1) {
-    throw new Error("Không đọc được cầu thủ. Cần cột name và main_position. Vị trí hợp lệ: GK, DEF, MID, FWD.");
+    throw new Error("Không đọc được cầu thủ. Cần cột name và position. Ví dụ position: MID, FWD, DEF.");
   }
 
   players = list;
@@ -318,17 +447,20 @@ function applyRows(rows){
   updateStats();
 }
 
-
 function renderPlayerPicker(){
   const el = document.getElementById("players");
-  const keyword = String(document.getElementById("searchBox")?.value || "").trim().toLowerCase();
+  const keyword = normalizeName(String(document.getElementById("searchBox")?.value || "").trim());
 
   const filtered = players
     .map((p, i) => ({p, i}))
     .filter(({p}) => {
       if(!keyword) return true;
-      const haystack = `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase();
+      const haystack = normalizeName(`${p.name} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`);
       return haystack.includes(keyword);
+    })
+    .sort((a, b) => {
+      if(a.p.selected !== b.p.selected) return a.p.selected ? -1 : 1;
+      return a.p.name.localeCompare(b.p.name, "vi");
     });
 
   if(!filtered.length){
@@ -340,7 +472,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
-      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""} · rating ${p.rating}</div></div>
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }
@@ -348,25 +480,109 @@ function renderPlayerPicker(){
 function cleanDetectedText(text){
   return String(text || "")
     .replace(/DC\s*[-–—]\s*/gi, " ")
-    .replace(/Bạn/gi, " Thang Phan ")
+    .replace(/\bBan\b/gi, " Thang Phan ")
+    .replace(/\bBạn\b/gi, " Thang Phan ")
     .replace(/[^\p{L}\p{N}\s\-]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function nameMatchScore(ocrText, playerName){
-  const text = normalizeName(cleanDetectedText(ocrText));
-  const name = normalizeName(playerName);
+function normalizeForOcr(text){
+  return removeVietnameseAccent(text)
+    .toLowerCase()
+    .replace(/dc\s*[-–—]?\s*/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
+function getOcrLines(rawText){
+  return String(rawText || "")
+    .split(/\r?\n/)
+    .map(line => normalizeForOcr(line))
+    .map(line => line.replace(/^dc\s+/, "").trim())
+    .filter(line => line.length >= 2);
+}
+
+function isLikelyExactNameInLine(line, playerName){
+  const name = normalizeForOcr(playerName);
   if(!name) return false;
-  if(text.includes(name)) return true;
 
-  // Match mềm: tách token tên, yêu cầu đa số token xuất hiện.
-  const tokens = name.split(/\s+/).filter(t => t.length >= 2);
-  if(tokens.length <= 1) return tokens.some(t => text.includes(t));
+  // Exact phrase with word boundary.
+  const phraseRegex = new RegExp(`(^|\\s)${escapeRegExp(name)}($|\\s)`, "i");
+  if(phraseRegex.test(line)) return true;
 
-  const matched = tokens.filter(t => text.includes(t)).length;
-  return matched >= Math.max(1, Math.ceil(tokens.length * 0.75));
+  // Zalo sometimes truncates long names with "..."; support prefix match for long names only.
+  const tokens = name.split(/\s+/).filter(Boolean);
+  if(tokens.length >= 3){
+    const prefix2 = tokens.slice(0, 2).join(" ");
+    const prefix3 = tokens.slice(0, 3).join(" ");
+    if(line.includes(prefix3) || line.includes(prefix2)) return true;
+  }
+
+  return false;
+}
+
+function fuzzyNameMatch(line, playerName){
+  const name = normalizeForOcr(playerName);
+  const lineTokens = new Set(line.split(/\s+/).filter(t => t.length >= 2));
+  const nameTokens = name.split(/\s+/).filter(t => t.length >= 2);
+
+  if(nameTokens.length === 1){
+    return lineTokens.has(nameTokens[0]);
+  }
+
+  const matched = nameTokens.filter(t => lineTokens.has(t)).length;
+
+  // Rất chặt để tránh detect nhầm:
+  // - tên 2 token: phải match đủ 2
+  // - tên >=3 token: cho phép thiếu 1 token
+  if(nameTokens.length === 2) return matched === 2;
+  return matched >= nameTokens.length - 1;
+}
+
+function escapeRegExp(str){
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function detectNamesFromOcrText(rawText){
+  const lines = getOcrLines(rawText);
+  const detected = new Set();
+
+  for(const p of players){
+    const name = normalizeForOcr(p.name);
+    if(!name) continue;
+
+    let found = false;
+
+    // Pass 1: exact line/phrase match.
+    for(const line of lines){
+      if(isLikelyExactNameInLine(line, p.name)){
+        found = true;
+        break;
+      }
+    }
+
+    // Pass 2: strict token fallback.
+    if(!found){
+      for(const line of lines){
+        if(fuzzyNameMatch(line, p.name)){
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if(found) detected.add(p.name);
+  }
+
+  return detected;
+}
+
+function nameMatchScore(ocrText, playerName){
+  // Kept for backward compatibility; new code uses detectNamesFromOcrText().
+  const detected = detectNamesFromOcrText(ocrText);
+  return detected.has(playerName);
 }
 
 async function detectPlayersFromScreenshot(evt){
@@ -397,10 +613,8 @@ async function detectPlayersFromScreenshot(evt){
       });
 
       const rawText = result?.data?.text || "";
-
-      players.forEach(p => {
-        if(nameMatchScore(rawText, p.name)) detectedSet.add(p.name);
-      });
+      const detectedInThisImage = detectNamesFromOcrText(rawText);
+      detectedInThisImage.forEach(name => detectedSet.add(name));
     }
 
     pendingDetectedNames = detectedSet;
@@ -428,11 +642,18 @@ function closeConfirmModal(){
 }
 
 function renderConfirmList(){
-  const keyword = String(document.getElementById("confirmSearch")?.value || "").trim().toLowerCase();
-  const list = players.filter(p => {
-    if(!keyword) return true;
-    return `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase().includes(keyword);
-  });
+  const keyword = normalizeName(String(document.getElementById("confirmSearch")?.value || "").trim());
+  const list = players
+    .filter(p => {
+      if(!keyword) return true;
+      return normalizeName(`${p.name} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`).includes(keyword);
+    })
+    .sort((a, b) => {
+      const aSelected = pendingDetectedNames.has(a.name) ? 1 : 0;
+      const bSelected = pendingDetectedNames.has(b.name) ? 1 : 0;
+      if(aSelected !== bSelected) return bSelected - aSelected;
+      return a.name.localeCompare(b.name, "vi");
+    });
 
   document.getElementById("confirmSummary").textContent =
     `Đang chọn ${pendingDetectedNames.size} / ${players.length} thành viên`;
@@ -442,7 +663,7 @@ function renderConfirmList(){
     return `<label class="confirmPlayer">
       <input type="checkbox" ${checked} onchange="togglePendingPlayer('${escapeAttr(p.name)}', this.checked)">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
-      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}</div></div>
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""}</div></div>
     </label>`;
   }).join("");
 }
@@ -455,9 +676,9 @@ function togglePendingPlayer(name, checked){
 }
 
 function setConfirmAll(value){
-  const keyword = String(document.getElementById("confirmSearch")?.value || "").trim().toLowerCase();
+  const keyword = normalizeName(String(document.getElementById("confirmSearch")?.value || "").trim());
   players.forEach(p => {
-    const visible = !keyword || `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase().includes(keyword);
+    const visible = !keyword || normalizeName(`${p.name} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`).includes(keyword);
     if(visible){
       if(value) pendingDetectedNames.add(p.name);
       else pendingDetectedNames.delete(p.name);
@@ -469,6 +690,10 @@ function setConfirmAll(value){
 function applyConfirmedPlayers(){
   players.forEach(p => {
     p.selected = pendingDetectedNames.has(p.name);
+  });
+  players.sort((a, b) => {
+    if(a.selected !== b.selected) return a.selected ? -1 : 1;
+    return a.name.localeCompare(b.name, "vi");
   });
   renderPlayerPicker();
   updateStats();
@@ -505,10 +730,10 @@ function build(team, formation){
     let bestValue = -999;
 
     for(let i = 0; i < shape.length; i++){
-      const need = shape[i];
-      let value = fit(p, need) * 30;
-      if(need === "GK" && p.main !== "GK") value -= 80;
-      if(p.main === need) value += 20;
+      const slot = shape[i];
+      let value = fit(p, slot.pos) * 30 + sideFit(p.side, slot.side);
+      if(slot.pos === "GK" && p.main !== "GK") value -= 80;
+      if(p.main === slot.pos) value += 20;
       if(value > bestValue){
         bestValue = value;
         bestSlotIndex = i;
@@ -516,33 +741,39 @@ function build(team, formation){
     }
 
     if(bestSlotIndex >= 0){
-      const assigned = shape.splice(bestSlotIndex, 1)[0];
-      const f = fit(p, assigned);
-      starters.push({...p, assigned, fit:f, forcedStarter:true, captain:true});
+      const slot = shape.splice(bestSlotIndex, 1)[0];
+      const f = fit(p, slot.pos);
+      starters.push({...p, assigned:slot.pos, assignedSide:slot.side, fit:f, forcedStarter:true, captain:true});
       score += f===2 ? 32 : f===1 ? 20 : -10;
+      score += sideFit(p.side, slot.side);
       score += Math.min(10, p.rating || 5);
     }
   }
 
-  for(const need of shape){
+  for(const slot of shape){
     let bi=-1,bv=-999;
     for(let i=0;i<av.length;i++){
-      let v = fit(av[i],need)*20 + (av[i].rating||5) + Math.random();
-      if(need==="GK" && av[i].main!=="GK") v -= 30;
+      let v = fit(av[i],slot.pos)*20 + sideFit(av[i].side, slot.side) + (av[i].rating||5) + Math.random();
+      if(slot.pos==="GK" && av[i].main!=="GK") v -= 30;
       if(v>bv){bv=v;bi=i}
     }
     if(bi>=0){
       const p=av.splice(bi,1)[0];
-      const f=fit(p,need);
-      starters.push({...p,assigned:need,fit:f});
+      const f=fit(p,slot.pos);
+      starters.push({...p,assigned:slot.pos,assignedSide:slot.side,fit:f});
       score += f===2?25:f===1?14:-18;
+      score += sideFit(p.side, slot.side);
       score += Math.min(10, p.rating||5);
     }
   }
 
-  // Sắp lại thứ tự render theo đúng sơ đồ: GK, DEF, MID, FWD.
+  // Sắp lại thứ tự render theo đúng sơ đồ: GK, DEF, MID, FWD và trái/trung tâm/phải.
   const order = {GK:0, DEF:1, MID:2, FWD:3};
-  starters.sort((a,b) => order[a.assigned] - order[b.assigned]);
+  const sideOrder = {LEFT:0, CENTER:1, RIGHT:2};
+  starters.sort((a,b) => {
+    if(order[a.assigned] !== order[b.assigned]) return order[a.assigned] - order[b.assigned];
+    return (sideOrder[a.assignedSide] ?? 1) - (sideOrder[b.assignedSide] ?? 1);
+  });
 
   return {starters,bench:av,score};
 }
@@ -676,7 +907,7 @@ async function revealBothLineups(lineupA, lineupB){
 }
 
 async function addPlayerToPitch(pitchId, p, indexByPos, formation, teamClass){
-  const [x,y] = getPosCoord(p.assigned, indexByPos, formation);
+  const [x,y] = getPosCoord(p.assigned, p.assignedSide, indexByPos, formation);
   const el = document.createElement("div");
   el.className = "slot";
   el.style.left = x + "%";
@@ -687,16 +918,29 @@ async function addPlayerToPitch(pitchId, p, indexByPos, formation, teamClass){
   el.classList.add("show");
 }
 
-function getPosCoord(assigned, indexByPos, formation){
+function getPosCoord(assigned, assignedSide, indexByPos, formation){
+  const coordsByPos = FORMATION_COORDS[formation][assigned] || [];
+  const slotsByPos = FORMATIONS[formation].filter(slot => slot.pos === assigned);
+
+  // Fix v1.8.1:
+  // Lấy tọa độ theo đúng khu vực LEFT / CENTER / RIGHT,
+  // không phụ thuộc thứ tự reveal cầu thủ.
+  if(assignedSide){
+    const sideIndex = slotsByPos.findIndex(slot => slot.side === assignedSide);
+    if(sideIndex >= 0 && coordsByPos[sideIndex]){
+      return coordsByPos[sideIndex];
+    }
+  }
+
+  // Fallback nếu thiếu assignedSide.
   const idx = indexByPos[assigned] || 0;
   indexByPos[assigned] = idx + 1;
-  const arr = FORMATION_COORDS[formation][assigned];
-  return arr[Math.min(idx, arr.length - 1)];
+  return coordsByPos[Math.min(idx, coordsByPos.length - 1)] || [50,50];
 }
 
 function cardHtml(p, teamClass){
   const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
-  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div>${p.captain ? '<div class="captainBadge">👑 Đội trưởng</div>' : ''}<div class="fit">${ft}</div></div>`;
+  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div>${p.captain ? '<div class="captainBadge">👑</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
 }
 function setBench(id,bench){
   document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
@@ -717,7 +961,7 @@ function updateResultStats(r,totalSelected){
 }
 function textResult(r){
   function block(title,l){
-    return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}: ${p.name}${p.captain ? " (Đội trưởng)" : ""}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
+    return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}${p.assignedSide ? " " + sideLabel(p.assignedSide) : ""}: ${p.name}${p.captain ? " (Đội trưởng)" : ""}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
   }
   return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("🔴 ĐỘI A (ÁO ĐỎ)",r.lineupA)+"\n\n"+block("🟡 ĐỘI B (ÁO VÀNG)",r.lineupB);
 }
@@ -744,8 +988,8 @@ async function exportImage(){
 
     const link = document.createElement("a");
     const now = new Date();
-    const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-    link.download = `diamond-united-fc-san-7-${stamp}.png`;
+    const stamp = `${now.getDate()}-${now.getMonth()+1}`;
+    link.download = `diamondunitedfc-${stamp}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   }catch(e){
@@ -763,3 +1007,4 @@ window.addEventListener("DOMContentLoaded", loadDefaultRoster);
 </script>
 </body>
 </html>
+<!-- v1.8.4: removed preferred_side and fit text from player cards -->
