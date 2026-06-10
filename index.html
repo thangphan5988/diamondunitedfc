@@ -89,7 +89,25 @@
     .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
     .cardPlayer .fit{font-size:9px;color:#cbd5e1;margin-top:3px}
-    .cardPlayer .captainBadge{position:absolute;top:-3px;left:-3px;font-size:12px;color:#facc15;font-weight:900}.ratingBadge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+    .cardPlayer .captainBadge{
+      position:absolute;
+      top:-3px;
+      left:-3px;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:#facc15;
+      color:#000;
+      font-size:10px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 10px rgba(250,204,21,.75);
+    }
+    .cardPlayer.captainCard{box-shadow:0 0 0 2px #facc15,0 0 18px rgba(250,204,21,.45),0 10px 24px rgba(0,0,0,.36)!important}
+    .cardPlayer.captainCard .pname{color:#facc15}
+    .ratingBadge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
     .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
     .bench h3{margin:0 0 8px;font-size:15px}
     .benchList{display:flex;flex-wrap:wrap;gap:8px}
@@ -135,16 +153,14 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.9.1</div>
+  <div class="buildVersion">Build v1.9.5</div>
   
   <div class="grid">
     <div class="card">
       <h2>1. Danh sách thành viên</h2>
       <input id="searchBox" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
       <input id="screenshotInput" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
-      <button class="secondary" onclick="clearTodaySelection()">Bỏ chọn hôm nay</button>
       <div id="ocrStatus" class="ocrStatus"></div>
-      <button class="secondary" onclick="selectAll(true)">Chọn tất cả</button>
       <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
       <button class="gold" onclick="startRandom()">Random chia đội</button>
       <button onclick="exportImage()">Xuất hình ảnh đội hình</button>
@@ -742,6 +758,41 @@ function selectAll(v){players.forEach(p=>p.selected=v);renderPlayerPicker();upda
 
 function fit(p,pos){ if(p.main===pos)return 2; if(p.secondary.includes(pos))return 1; return 0; }
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+
+function positionFitScore(player, pos){
+  if(player.main === pos) return 120;
+  if(player.secondary.includes(pos)) return 82;
+  return -65;
+}
+
+function fitLabelValue(player, pos){
+  if(player.main === pos) return 2;
+  if(player.secondary.includes(pos)) return 1;
+  return 0;
+}
+
+function assignmentScore(player, slot){
+  const rating = Number(player.rating) || 5;
+  const posScore = positionFitScore(player, slot.pos);
+  const sideScore = sideFit(player.side, slot.side) * 2.2;
+
+  // Rating có trọng số cao hơn nếu cầu thủ đang đá vị trí phụ.
+  // Mục tiêu: vẫn ưu tiên sở trường, nhưng cầu thủ rating cao ở vị trí phụ
+  // có thể được chọn thay cầu thủ rating thấp hơn ở đúng vị trí.
+  let ratingScore = rating * 4.2;
+  if(player.secondary.includes(slot.pos) && player.main !== slot.pos){
+    ratingScore = rating * 6.4;
+  }
+
+  // GK vẫn là vị trí đặc biệt, tránh kéo non-GK xuống thủ môn.
+  let gkPenalty = 0;
+  if(slot.pos === "GK" && player.main !== "GK" && !player.secondary.includes("GK")){
+    gkPenalty = -120;
+  }
+
+  return posScore + sideScore + ratingScore + gkPenalty + Math.random() * 0.05;
+}
+
 function build(team, formation){
   const av = [...team];
   const starters = [];
@@ -761,9 +812,8 @@ function build(team, formation){
 
     for(let i = 0; i < shape.length; i++){
       const slot = shape[i];
-      let value = fit(p, slot.pos) * 30 + sideFit(p.side, slot.side);
-      if(slot.pos === "GK" && p.main !== "GK") value -= 80;
-      if(p.main === slot.pos) value += 20;
+      let value = assignmentScore(p, slot);
+      if(p.main === slot.pos) value += 25;
       if(value > bestValue){
         bestValue = value;
         bestSlotIndex = i;
@@ -772,28 +822,27 @@ function build(team, formation){
 
     if(bestSlotIndex >= 0){
       const slot = shape.splice(bestSlotIndex, 1)[0];
-      const f = fit(p, slot.pos);
+      const f = fitLabelValue(p, slot.pos);
       starters.push({...p, assigned:slot.pos, assignedSide:slot.side, fit:f, forcedStarter:true, captain:true});
-      score += f===2 ? 32 : f===1 ? 20 : -10;
-      score += sideFit(p.side, slot.side);
-      score += Math.min(10, p.rating || 5);
+      score += f===2 ? 38 : f===1 ? 25 : -18;
+      score += sideFit(p.side, slot.side) * 1.8;
+      score += Math.min(12, p.rating || 5);
     }
   }
 
   for(const slot of shape){
     let bi=-1,bv=-999;
     for(let i=0;i<av.length;i++){
-      let v = fit(av[i],slot.pos)*20 + sideFit(av[i].side, slot.side) + (av[i].rating||5) + Math.random();
-      if(slot.pos==="GK" && av[i].main!=="GK") v -= 30;
+      let v = assignmentScore(av[i], slot);
       if(v>bv){bv=v;bi=i}
     }
     if(bi>=0){
       const p=av.splice(bi,1)[0];
-      const f=fit(p,slot.pos);
+      const f=fitLabelValue(p,slot.pos);
       starters.push({...p,assigned:slot.pos,assignedSide:slot.side,fit:f});
-      score += f===2?25:f===1?14:-18;
-      score += sideFit(p.side, slot.side);
-      score += Math.min(10, p.rating||5);
+      score += f===2?32:f===1?22:-22;
+      score += sideFit(p.side, slot.side) * 1.8;
+      score += Math.min(12, p.rating||5);
     }
   }
 
@@ -814,11 +863,51 @@ function evalSplit(a,b){
   POS.forEach(pos=>s-=Math.abs(ca[pos]-cb[pos])*6);
   s-=Math.abs(a.length-b.length)*10;
   s-=Math.abs(sumRating(a)-sumRating(b))*1.5;
+  s-=ratingDistributionPenalty(a,b);
   if(a.some(p=>p.main==="GK"))s+=30;else s-=50;
   if(b.some(p=>p.main==="GK"))s+=30;else s-=50;
   return {teamA:a,teamB:b,lineupA:la,lineupB:lb,score:Math.round(s)};
 }
 function sumRating(t){return t.reduce((s,p)=>s+(p.rating||5),0)}
+function ratingBucket(rating){
+  const r = Number(rating) || 5;
+  if(r >= 9) return "elite";   // 9-10
+  if(r >= 7) return "strong";  // 7-8
+  if(r >= 5) return "normal";  // 5-6
+  return "low";                // 1-4
+}
+
+function ratingBucketCounts(team){
+  const c = {elite:0, strong:0, normal:0, low:0};
+  team.forEach(p => c[ratingBucket(p.rating)]++);
+  return c;
+}
+
+function ratingDistributionPenalty(teamA, teamB){
+  const a = ratingBucketCounts(teamA);
+  const b = ratingBucketCounts(teamB);
+
+  // Cân bằng theo số lượng cầu thủ từng nhóm rating,
+  // đặc biệt phạt nặng nếu một đội dồn nhiều rating 9-10.
+  const weights = {
+    elite: 42,
+    strong: 24,
+    normal: 10,
+    low: 8
+  };
+
+  let penalty = 0;
+  Object.keys(weights).forEach(k => {
+    penalty += Math.abs(a[k] - b[k]) * weights[k];
+  });
+
+  // Phạt thêm nếu một đội có nhiều hơn đội kia từ 2 cầu thủ elite trở lên.
+  const eliteDiff = Math.abs(a.elite - b.elite);
+  if(eliteDiff >= 2) penalty += eliteDiff * 60;
+
+  return penalty;
+}
+
 function hasPlayer(team, targetName){
   const target = normalizeName(targetName);
   return team.some(p => normalizeName(p.name) === target);
@@ -983,7 +1072,7 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation){
 
 function cardHtml(p, teamClass){
   const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
-  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${p.fit===2?'✓ Đúng sở trường':p.fit===1?'↔ Vị trí phụ':'⚠ Trái vị trí'}</div>${p.captain ? '<div class="captainBadge">👑</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
+  return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${p.fit===2?'✓ Đúng sở trường':p.fit===1?'↔ Vị trí phụ':'⚠ Trái vị trí'}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
 }
 function setBench(id,bench){
   document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
