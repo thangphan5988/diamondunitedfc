@@ -95,6 +95,29 @@
       position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column
     }
     .overlay.show{display:flex}
+    .confirmModal{
+      position:fixed;inset:0;background:rgba(2,6,23,.88);display:none;z-index:30;
+      align-items:center;justify-content:center;padding:18px
+    }
+    .confirmModal.show{display:flex}
+    .modalBox{
+      width:min(720px,96vw);max-height:88vh;overflow:hidden;
+      background:#0f172a;border:1px solid var(--line);border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column
+    }
+    .modalHead{padding:14px 16px;border-bottom:1px solid var(--line)}
+    .modalHead h2{margin:0;font-size:22px}
+    .modalHead .meta{margin-top:4px}
+    .modalBody{padding:14px 16px;overflow:auto}
+    .modalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px;border-top:1px solid var(--line)}
+    .confirmList{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .confirmPlayer{
+      display:grid;grid-template-columns:28px 38px 1fr;gap:8px;align-items:center;
+      border:1px solid var(--line);border-radius:12px;padding:8px;background:#020617
+    }
+    .confirmPlayer img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    @media(max-width:700px){.confirmList{grid-template-columns:1fr}}
+
     .count{font-size:108px;font-weight:1000;line-height:1;animation:pulse .8s infinite}
     .rolling{margin-top:20px;height:88px;display:flex;align-items:center;gap:12px;font-size:28px;font-weight:900}
     .rolling img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff}
@@ -107,7 +130,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.2.0</div>
+  <div class="buildVersion">Build v1.3.0</div>
   
   <div class="grid">
     <div class="card">
@@ -169,6 +192,28 @@
   </div>
 </div>
 
+
+<div id="confirmModal" class="confirmModal">
+  <div class="modalBox">
+    <div class="modalHead">
+      <h2>Xác nhận danh sách hôm nay</h2>
+      <div id="confirmSummary" class="meta"></div>
+    </div>
+    <div class="modalBody">
+      <input id="confirmSearch" type="text" placeholder="Tìm để thêm/bớt cầu thủ..." oninput="renderConfirmList()" style="margin-bottom:10px">
+      <div class="btn-row">
+        <button class="secondary" onclick="setConfirmAll(true)">Chọn tất cả trong popup</button>
+        <button class="secondary" onclick="setConfirmAll(false)">Bỏ chọn trong popup</button>
+      </div>
+      <div id="confirmList" class="confirmList"></div>
+    </div>
+    <div class="modalActions">
+      <button class="secondary" onclick="closeConfirmModal()">Hủy</button>
+      <button onclick="applyConfirmedPlayers()">OK - Áp dụng danh sách</button>
+    </div>
+  </div>
+</div>
+
 <div id="overlay" class="overlay">
   <div id="count" class="count">3</div>
   <div id="rolling" class="rolling"></div>
@@ -200,6 +245,7 @@ const FORMATION_COORDS = {
 };
 let players = [];
 let lastResult = null;
+let pendingDetectedNames = new Set();
 
 function defaultAvatar(name){
   const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());
@@ -351,22 +397,76 @@ async function detectPlayersFromScreenshot(evt){
       if(nameMatchScore(rawText, p.name)) detected.push(p.name);
     });
 
-    players.forEach(p => {
-      p.selected = detected.includes(p.name);
-    });
+    pendingDetectedNames = new Set(detected);
+    status.textContent = detected.length
+      ? `Detect tạm ${detected.length} cầu thủ. Vui lòng xác nhận trong popup.`
+      : "Chưa detect chắc chắn tên nào. Anh có thể chọn thủ công trong popup.";
 
-    renderPlayerPicker();
-    updateStats();
-
-    if(detected.length){
-      status.innerHTML = `Đã detect <b>${detected.length}</b> cầu thủ: ${detected.map(escapeHtml).join(", ")}`;
-    }else{
-      status.textContent = "Chưa detect được tên nào. Thử crop ảnh rõ hơn hoặc zoom danh sách lớn hơn.";
-    }
+    openConfirmModal();
   }catch(e){
     status.textContent = "";
     showError("Không detect được screenshot. Kiểm tra mạng vì OCR cần tải thư viện/language từ CDN.");
   }
+}
+
+function openConfirmModal(){
+  document.getElementById("confirmSearch").value = "";
+  renderConfirmList();
+  document.getElementById("confirmModal").classList.add("show");
+}
+
+function closeConfirmModal(){
+  document.getElementById("confirmModal").classList.remove("show");
+}
+
+function renderConfirmList(){
+  const keyword = String(document.getElementById("confirmSearch")?.value || "").trim().toLowerCase();
+  const list = players.filter(p => {
+    if(!keyword) return true;
+    return `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase().includes(keyword);
+  });
+
+  document.getElementById("confirmSummary").textContent =
+    `Đang chọn ${pendingDetectedNames.size} / ${players.length} thành viên`;
+
+  document.getElementById("confirmList").innerHTML = list.map((p, i) => {
+    const checked = pendingDetectedNames.has(p.name) ? "checked" : "";
+    return `<label class="confirmPlayer">
+      <input type="checkbox" ${checked} onchange="togglePendingPlayer('${escapeAttr(p.name)}', this.checked)">
+      <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}</div></div>
+    </label>`;
+  }).join("");
+}
+
+function togglePendingPlayer(name, checked){
+  if(checked) pendingDetectedNames.add(name);
+  else pendingDetectedNames.delete(name);
+  document.getElementById("confirmSummary").textContent =
+    `Đang chọn ${pendingDetectedNames.size} / ${players.length} thành viên`;
+}
+
+function setConfirmAll(value){
+  const keyword = String(document.getElementById("confirmSearch")?.value || "").trim().toLowerCase();
+  players.forEach(p => {
+    const visible = !keyword || `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase().includes(keyword);
+    if(visible){
+      if(value) pendingDetectedNames.add(p.name);
+      else pendingDetectedNames.delete(p.name);
+    }
+  });
+  renderConfirmList();
+}
+
+function applyConfirmedPlayers(){
+  players.forEach(p => {
+    p.selected = pendingDetectedNames.has(p.name);
+  });
+  renderPlayerPicker();
+  updateStats();
+  document.getElementById("ocrStatus").innerHTML =
+    `Đã áp dụng <b>${players.filter(p=>p.selected).length}</b> cầu thủ tham gia hôm nay.`;
+  closeConfirmModal();
 }
 
 function clearTodaySelection(){
