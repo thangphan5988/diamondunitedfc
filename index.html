@@ -15,7 +15,7 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
     .wrap{max-width:1440px;margin:auto;padding:22px}
-    h1{margin:0 0 6px;font-size:30px}
+    h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:12px;margin-bottom:12px}
     .sub{color:var(--muted);margin-bottom:16px}
     .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
     .card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
@@ -84,6 +84,7 @@
     .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
     .cardPlayer .fit{font-size:9px;color:#cbd5e1;margin-top:3px}
+    .cardPlayer .captainBadge{font-size:9px;color:#facc15;font-weight:900;margin-top:2px}
     .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
     .bench h3{margin:0 0 8px;font-size:15px}
     .benchList{display:flex;flex-wrap:wrap;gap:8px}
@@ -105,6 +106,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
+  <div class="buildVersion">Build v1.1.0</div>
   
   <div class="grid">
     <div class="card">
@@ -133,7 +135,7 @@
 
     <div class="card" id="exportArea">
       <div class="summary">
-        <div class="metric"><b id="total">0</b><span>Tổng đã load</span></div>
+        <div class="metric"><b id="total">0</b><span>Tổng thành viên</span></div>
         <div class="metric"><b id="selected">0</b><span>Tham gia hôm nay</span></div>
         <div class="metric"><b id="sizes">0 - 0</b><span>Quân số 2 đội</span></div>
         <div class="metric"><b id="score">0</b><span>Điểm cân bằng</span></div>
@@ -297,8 +299,43 @@ function selectAll(v){players.forEach(p=>p.selected=v);renderPlayerPicker();upda
 function fit(p,pos){ if(p.main===pos)return 2; if(p.secondary.includes(pos))return 1; return 0; }
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 function build(team, formation){
-  const av=[...team], starters=[]; let score=0;
-  for(const need of FORMATIONS[formation]){
+  const av = [...team];
+  const starters = [];
+  let score = 0;
+  const shape = [...FORMATIONS[formation]];
+  const forcedNames = ["minh phat", "thang phan"];
+
+  // Luật ẩn: Minh Phat và Thang Phan nếu tham gia thì luôn nằm trong đội hình chính.
+  for(const forcedName of forcedNames){
+    const idx = av.findIndex(p => normalizeName(p.name) === forcedName);
+    if(idx < 0) continue;
+
+    const p = av.splice(idx, 1)[0];
+
+    let bestSlotIndex = -1;
+    let bestValue = -999;
+
+    for(let i = 0; i < shape.length; i++){
+      const need = shape[i];
+      let value = fit(p, need) * 30;
+      if(need === "GK" && p.main !== "GK") value -= 80;
+      if(p.main === need) value += 20;
+      if(value > bestValue){
+        bestValue = value;
+        bestSlotIndex = i;
+      }
+    }
+
+    if(bestSlotIndex >= 0){
+      const assigned = shape.splice(bestSlotIndex, 1)[0];
+      const f = fit(p, assigned);
+      starters.push({...p, assigned, fit:f, forcedStarter:true, captain:true});
+      score += f===2 ? 32 : f===1 ? 20 : -10;
+      score += Math.min(10, p.rating || 5);
+    }
+  }
+
+  for(const need of shape){
     let bi=-1,bv=-999;
     for(let i=0;i<av.length;i++){
       let v = fit(av[i],need)*20 + (av[i].rating||5) + Math.random();
@@ -313,6 +350,11 @@ function build(team, formation){
       score += Math.min(10, p.rating||5);
     }
   }
+
+  // Sắp lại thứ tự render theo đúng sơ đồ: GK, DEF, MID, FWD.
+  const order = {GK:0, DEF:1, MID:2, FWD:3};
+  starters.sort((a,b) => order[a.assigned] - order[b.assigned]);
+
   return {starters,bench:av,score};
 }
 function counts(team){const c={GK:0,DEF:0,MID:0,FWD:0};team.forEach(p=>c[p.main]++);return c}
@@ -412,16 +454,33 @@ async function suspense(list){
 async function revealBothLineups(lineupA, lineupB){
   const indexA = {};
   const indexB = {};
-  const max = Math.max(lineupA.starters.length, lineupB.starters.length);
 
+  const captainA = lineupA.starters.find(p => p.captain);
+  const captainB = lineupB.starters.find(p => p.captain);
+
+  // Random hiện 2 đội trưởng trước.
+  if(captainA){
+    await addPlayerToPitch("pitchA", captainA, indexA, formationA, "redTeam");
+    await wait(1100);
+  }
+  if(captainB){
+    await addPlayerToPitch("pitchB", captainB, indexB, formationB, "yellowTeam");
+    await wait(1300);
+  }
+
+  const restA = lineupA.starters.filter(p => !p.captain);
+  const restB = lineupB.starters.filter(p => !p.captain);
+  const max = Math.max(restA.length, restB.length);
+
+  // Sau đội trưởng, lần lượt bốc thành viên Đội A rồi Đội B.
   for(let i = 0; i < max; i++){
-    if(lineupA.starters[i]){
-      await addPlayerToPitch("pitchA", lineupA.starters[i], indexA, formationA, "redTeam");
+    if(restA[i]){
+      await addPlayerToPitch("pitchA", restA[i], indexA, formationA, "redTeam");
       await wait(760);
     }
 
-    if(lineupB.starters[i]){
-      await addPlayerToPitch("pitchB", lineupB.starters[i], indexB, formationB, "yellowTeam");
+    if(restB[i]){
+      await addPlayerToPitch("pitchB", restB[i], indexB, formationB, "yellowTeam");
       await wait(920);
     }
   }
@@ -445,9 +504,10 @@ function getPosCoord(assigned, indexByPos, formation){
   const arr = FORMATION_COORDS[formation][assigned];
   return arr[Math.min(idx, arr.length - 1)];
 }
+
 function cardHtml(p, teamClass){
-  const ft=p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí";
-  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${ft}</div></div>`;
+  const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
+  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div>${p.captain ? '<div class="captainBadge">👑 Đội trưởng</div>' : ''}<div class="fit">${ft}</div></div>`;
 }
 function setBench(id,bench){
   document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
@@ -468,7 +528,7 @@ function updateResultStats(r,totalSelected){
 }
 function textResult(r){
   function block(title,l){
-    return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}: ${p.name}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
+    return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}: ${p.name}${p.captain ? " (Đội trưởng)" : ""}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
   }
   return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("🔴 ĐỘI A (ÁO ĐỎ)",r.lineupA)+"\n\n"+block("🟡 ĐỘI B (ÁO VÀNG)",r.lineupB);
 }
