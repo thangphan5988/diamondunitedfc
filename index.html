@@ -153,7 +153,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.11.1</div>
+  <div class="buildVersion">Build v1.11.2</div>
   
   <div class="grid">
     <div class="card">
@@ -1329,6 +1329,10 @@ async function exportImage(){
 
   let cloneWrap = null;
 
+  const now = new Date();
+  const stamp = `${now.getDate()}-${now.getMonth()+1}`;
+  const filename = `diamondunitedfc-${stamp}.png`;
+
   try{
     cloneWrap = document.createElement("div");
     cloneWrap.style.position = "fixed";
@@ -1356,9 +1360,7 @@ async function exportImage(){
     });
 
     const link = document.createElement("a");
-    const now = new Date();
-    const stamp = `${now.getDate()}-${now.getMonth()+1}`;
-    link.download = `diamondunitedfc-${stamp}.png`;
+    link.download = filename;
     link.href = canvas.toDataURL("image/png");
     document.body.appendChild(link);
     link.click();
@@ -1368,65 +1370,11 @@ async function exportImage(){
     await saveMatchHistoryToSheet(filename);
   }catch(e){
     console.error(e);
-    alert("Không xuất được hình. Mình đã sửa bản này để tránh lỗi avatar/CORS; nếu vẫn lỗi, thử refresh trang rồi random lại.");
+    alert("Không xuất được hình hoặc chưa lưu được lịch sử. Chi tiết lỗi đã hiện trong Console.");
   }finally{
     if(cloneWrap) cloneWrap.remove();
     text.style.display = oldDisplay;
   }
-}
-
-async function makeImagesExportSafe(root){
-  const imgs = Array.from(root.querySelectorAll("img"));
-  await Promise.all(imgs.map(async img => {
-    const originalSrc = img.getAttribute("src") || "";
-    try{
-      if(originalSrc.startsWith("data:")) return;
-
-      // Ưu tiên fetch ảnh rồi convert sang data URL để html2canvas không bị tainted canvas.
-      const absoluteUrl = new URL(originalSrc, window.location.href).href;
-      const res = await fetch(absoluteUrl, {mode:"cors", cache:"force-cache"});
-      if(!res.ok) throw new Error("image fetch failed");
-
-      const blob = await res.blob();
-      const dataUrl = await blobToDataURL(blob);
-      img.setAttribute("src", dataUrl);
-      img.removeAttribute("srcset");
-      img.crossOrigin = "anonymous";
-    }catch(e){
-      // Fallback avatar SVG nội bộ, luôn export được.
-      img.setAttribute("src", fallbackAvatarDataURL("DUFC"));
-      img.removeAttribute("srcset");
-    }
-  }));
-
-  // Chờ browser decode ảnh sau khi thay src.
-  await Promise.all(imgs.map(img => {
-    if(img.complete) return Promise.resolve();
-    return new Promise(resolve => {
-      img.onload = resolve;
-      img.onerror = resolve;
-      setTimeout(resolve, 1000);
-    });
-  }));
-}
-
-function blobToDataURL(blob){
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-function fallbackAvatarDataURL(text){
-  const label = encodeURIComponent(String(text || "DUFC").slice(0,4));
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
-    <rect width="100%" height="100%" rx="40" fill="#0f172a"/>
-    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-      font-family="Arial" font-size="22" font-weight="700" fill="#ffffff">${label}</text>
-  </svg>`;
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
 async function saveMatchHistoryToSheet(imageFilename){
