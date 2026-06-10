@@ -40,6 +40,10 @@
     .teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .teamHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
     .teamHead h2{margin:0;font-size:22px}
+    .formationControl{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin:0 0 8px}
+    .formationControl label{font-size:10px;color:#94a3b8;font-weight:800}
+    .formationControl select{padding:8px 10px;font-size:11px}
+
     .pitch{
       position:relative;height:650px;border-radius:22px;overflow:hidden;
       background:
@@ -90,6 +94,7 @@
     .bench h3{margin:0 0 8px;font-size:15px}
     .benchList{display:flex;flex-wrap:wrap;gap:8px}
     .benchItem{display:flex;align-items:center;gap:6px;background:#020617;border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px}
+    .benchRating{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700}
     .benchItem img{width:24px;height:24px;border-radius:50%;object-fit:cover}
     .overlay{
       position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column
@@ -130,7 +135,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.8.4</div>
+  <div class="buildVersion">Build v1.9.1</div>
   
   <div class="grid">
     <div class="card">
@@ -139,18 +144,6 @@
       <input id="screenshotInput" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
       <button class="secondary" onclick="clearTodaySelection()">Bỏ chọn hôm nay</button>
       <div id="ocrStatus" class="ocrStatus"></div>
-      <select id="formationSelectA" onchange="setFormation('A', this.value)">
-        <option value="3-2-1">Đội A: Sơ đồ 3-2-1</option>
-        <option value="3-1-2" selected>Đội A: Sơ đồ 3-1-2</option>
-        <option value="2-3-1">Đội A: Sơ đồ 2-3-1</option>
-        <option value="2-2-2">Đội A: Sơ đồ 2-2-2</option>
-      </select>
-      <select id="formationSelectB" onchange="setFormation('B', this.value)">
-        <option value="3-2-1">Đội B: Sơ đồ 3-2-1</option>
-        <option value="3-1-2" selected>Đội B: Sơ đồ 3-1-2</option>
-        <option value="2-3-1">Đội B: Sơ đồ 2-3-1</option>
-        <option value="2-2-2">Đội B: Sơ đồ 2-2-2</option>
-      </select>
       <button class="secondary" onclick="selectAll(true)">Chọn tất cả</button>
       <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
       <button class="gold" onclick="startRandom()">Random chia đội</button>
@@ -171,6 +164,15 @@
       <div class="teams">
         <div>
           <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A (Áo Đỏ)</h2><span id="scoreA" class="meta"></span></div>
+          <div class="formationControl">
+            <label>Sơ đồ Đội A</label>
+            <select id="formationSelectA" onchange="setFormation('A', this.value)">
+              <option value="3-2-1">3-2-1</option>
+              <option value="3-1-2" selected>3-1-2</option>
+              <option value="2-3-1">2-3-1</option>
+              <option value="2-2-2">2-2-2</option>
+            </select>
+          </div>
           <div class="pitch" id="pitchA">
             <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
             <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
@@ -180,6 +182,15 @@
 
         <div>
           <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B (Áo Vàng)</h2><span id="scoreB" class="meta"></span></div>
+          <div class="formationControl">
+            <label>Sơ đồ Đội B</label>
+            <select id="formationSelectB" onchange="setFormation('B', this.value)">
+              <option value="3-2-1">3-2-1</option>
+              <option value="3-1-2" selected>3-1-2</option>
+              <option value="2-3-1">2-3-1</option>
+              <option value="2-2-2">2-2-2</option>
+            </select>
+          </div>
           <div class="pitch" id="pitchB">
             <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
             <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
@@ -346,13 +357,32 @@ function setFormation(team, value){
   if(team === "A") formationA = value;
   if(team === "B") formationB = value;
 
+  // Nếu chưa random thì chỉ đổi mặc định, chưa cần render.
+  if(!lastResult){
+    clearPitch("pitchA");
+    clearPitch("pitchB");
+    setBench("benchA", []);
+    setBench("benchB", []);
+    document.getElementById("textResult").textContent = "";
+    return;
+  }
+
+  // Sau khi đã random, đổi sơ đồ sẽ tối ưu lại đội hình chính/dự bị
+  // dựa trên đúng danh sách Đội A/Đội B đã random trước đó.
+  const optimized = evalSplit(lastResult.teamA, lastResult.teamB);
+  lastResult.lineupA = optimized.lineupA;
+  lastResult.lineupB = optimized.lineupB;
+  lastResult.score = optimized.score;
+
   clearPitch("pitchA");
   clearPitch("pitchB");
-  setBench("benchA", []);
-  setBench("benchB", []);
-  document.getElementById("textResult").textContent = "";
+  renderLineupInstant("pitchA", lastResult.lineupA, formationA, "redTeam");
+  renderLineupInstant("pitchB", lastResult.lineupB, formationB, "yellowTeam");
+  setBench("benchA", lastResult.lineupA.bench);
+  setBench("benchB", lastResult.lineupB.bench);
+  updateResultStats(lastResult, players.filter(p=>p.selected).length);
+  document.getElementById("textResult").textContent = textResult(lastResult);
 }
-
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Y7XC0m8kMsP0USO6Agpl3GNWFzYE4vyQ/gviz/tq?tqx=out:csv&gid=545791527";
 
 async function loadDefaultRoster(){
@@ -871,6 +901,19 @@ async function suspense(list){
   overlay.classList.remove("show");
 }
 
+function renderLineupInstant(pitchId, lineup, formation, teamClass){
+  const indexByPos = {};
+  for(const p of lineup.starters){
+    const [x,y] = getPosCoord(p.assigned, p.assignedSide, indexByPos, formation);
+    const el = document.createElement("div");
+    el.className = "slot show";
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    el.innerHTML = cardHtml(p, teamClass);
+    document.getElementById(pitchId).appendChild(el);
+  }
+}
+
 async function revealBothLineups(lineupA, lineupB){
   const indexA = {};
   const indexB = {};
@@ -940,10 +983,10 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation){
 
 function cardHtml(p, teamClass){
   const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
-  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div>${p.captain ? '<div class="captainBadge">👑</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
+  return `<div class="cardPlayer ${teamClass || ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${p.fit===2?'✓ Đúng sở trường':p.fit===1?'↔ Vị trí phụ':'⚠ Trái vị trí'}</div>${p.captain ? '<div class="captainBadge">👑</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
 }
 function setBench(id,bench){
-  document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
+  document.getElementById(id).innerHTML = bench.length ? bench.map(p=>`<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}">${escapeHtml(p.name)} · ${p.main}</div>`).join("") : `<div class="benchItem">Không có dự bị</div>`;
 }
 function clearPitch(id){
   [...document.getElementById(id).querySelectorAll(".slot")].forEach(x=>x.remove());
@@ -971,19 +1014,37 @@ async function exportImage(){
     return;
   }
 
-  const area = document.getElementById("exportArea");
-
-  // Tạm show textResult để ảnh có thêm danh sách text dự phòng nếu cần.
+  const source = document.getElementById("exportArea");
   const text = document.getElementById("textResult");
   const oldDisplay = text.style.display;
   text.style.display = "none";
 
+  let cloneWrap = null;
+
   try{
-    const canvas = await html2canvas(area, {
+    cloneWrap = document.createElement("div");
+    cloneWrap.style.position = "fixed";
+    cloneWrap.style.left = "-99999px";
+    cloneWrap.style.top = "0";
+    cloneWrap.style.width = source.offsetWidth + "px";
+    cloneWrap.style.background = "#0f172a";
+    cloneWrap.style.padding = "0";
+    cloneWrap.style.zIndex = "-1";
+
+    const clone = source.cloneNode(true);
+    clone.id = "exportAreaClone";
+    cloneWrap.appendChild(clone);
+    document.body.appendChild(cloneWrap);
+
+    await makeImagesExportSafe(clone);
+
+    const canvas = await html2canvas(clone, {
       backgroundColor: "#0f172a",
       scale: 2,
       useCORS: true,
-      allowTaint: true
+      allowTaint: false,
+      logging: false,
+      imageTimeout: 8000
     });
 
     const link = document.createElement("a");
@@ -991,12 +1052,70 @@ async function exportImage(){
     const stamp = `${now.getDate()}-${now.getMonth()+1}`;
     link.download = `diamondunitedfc-${stamp}.png`;
     link.href = canvas.toDataURL("image/png");
+    document.body.appendChild(link);
     link.click();
+    link.remove();
   }catch(e){
-    alert("Không xuất được hình. Nếu avatar dùng ảnh ngoài domain, hãy đổi avatar sang ảnh trong folder avatars/ của GitHub.");
+    console.error(e);
+    alert("Không xuất được hình. Mình đã sửa bản này để tránh lỗi avatar/CORS; nếu vẫn lỗi, thử refresh trang rồi random lại.");
   }finally{
+    if(cloneWrap) cloneWrap.remove();
     text.style.display = oldDisplay;
   }
+}
+
+async function makeImagesExportSafe(root){
+  const imgs = Array.from(root.querySelectorAll("img"));
+  await Promise.all(imgs.map(async img => {
+    const originalSrc = img.getAttribute("src") || "";
+    try{
+      if(originalSrc.startsWith("data:")) return;
+
+      // Ưu tiên fetch ảnh rồi convert sang data URL để html2canvas không bị tainted canvas.
+      const absoluteUrl = new URL(originalSrc, window.location.href).href;
+      const res = await fetch(absoluteUrl, {mode:"cors", cache:"force-cache"});
+      if(!res.ok) throw new Error("image fetch failed");
+
+      const blob = await res.blob();
+      const dataUrl = await blobToDataURL(blob);
+      img.setAttribute("src", dataUrl);
+      img.removeAttribute("srcset");
+      img.crossOrigin = "anonymous";
+    }catch(e){
+      // Fallback avatar SVG nội bộ, luôn export được.
+      img.setAttribute("src", fallbackAvatarDataURL("DUFC"));
+      img.removeAttribute("srcset");
+    }
+  }));
+
+  // Chờ browser decode ảnh sau khi thay src.
+  await Promise.all(imgs.map(img => {
+    if(img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+      setTimeout(resolve, 1000);
+    });
+  }));
+}
+
+function blobToDataURL(blob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function fallbackAvatarDataURL(text){
+  const label = encodeURIComponent(String(text || "DUFC").slice(0,4));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+    <rect width="100%" height="100%" rx="40" fill="#0f172a"/>
+    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+      font-family="Arial" font-size="22" font-weight="700" fill="#ffffff">${label}</text>
+  </svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
 function showError(msg){const e=document.getElementById("error");e.textContent=msg;e.style.display="block"}
