@@ -130,13 +130,13 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.3.0</div>
+  <div class="buildVersion">Build v1.4.0</div>
   
   <div class="grid">
     <div class="card">
       <h2>1. Danh sách thành viên</h2>
       <input id="searchBox" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
-      <input id="screenshotInput" type="file" accept="image/*" onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
+      <input id="screenshotInput" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
       <button class="secondary" onclick="clearTodaySelection()">Bỏ chọn hôm nay</button>
       <div id="ocrStatus" class="ocrStatus"></div>
       <select id="formationSelectA" onchange="setFormation('A', this.value)">
@@ -372,8 +372,8 @@ function nameMatchScore(ocrText, playerName){
 async function detectPlayersFromScreenshot(evt){
   clearError();
   const status = document.getElementById("ocrStatus");
-  const file = evt.target.files[0];
-  if(!file) return;
+  const files = Array.from(evt.target.files || []);
+  if(!files.length) return;
 
   if(!players.length){
     showError("Danh sách thành viên chưa load xong. Chờ vài giây rồi thử lại.");
@@ -381,34 +381,42 @@ async function detectPlayersFromScreenshot(evt){
   }
 
   try{
-    status.textContent = "Đang đọc screenshot...";
-    const result = await Tesseract.recognize(file, "vie+eng", {
-      logger: m => {
-        if(m.status === "recognizing text"){
-          status.textContent = `Đang detect danh sách... ${Math.round((m.progress || 0) * 100)}%`;
+    const detectedSet = new Set();
+    status.textContent = `Đang đọc ${files.length} screenshot...`;
+
+    for(let fileIndex = 0; fileIndex < files.length; fileIndex++){
+      const file = files[fileIndex];
+
+      const result = await Tesseract.recognize(file, "vie+eng", {
+        logger: m => {
+          if(m.status === "recognizing text"){
+            status.textContent =
+              `Đang detect screenshot ${fileIndex + 1}/${files.length}... ${Math.round((m.progress || 0) * 100)}%`;
+          }
         }
-      }
-    });
+      });
 
-    const rawText = result?.data?.text || "";
-    const detected = [];
+      const rawText = result?.data?.text || "";
 
-    players.forEach(p => {
-      if(nameMatchScore(rawText, p.name)) detected.push(p.name);
-    });
+      players.forEach(p => {
+        if(nameMatchScore(rawText, p.name)) detectedSet.add(p.name);
+      });
+    }
 
-    pendingDetectedNames = new Set(detected);
-    status.textContent = detected.length
-      ? `Detect tạm ${detected.length} cầu thủ. Vui lòng xác nhận trong popup.`
-      : "Chưa detect chắc chắn tên nào. Anh có thể chọn thủ công trong popup.";
+    pendingDetectedNames = detectedSet;
+    status.textContent = detectedSet.size
+      ? `Detect tạm ${detectedSet.size} cầu thủ từ ${files.length} screenshot. Vui lòng xác nhận trong popup.`
+      : `Chưa detect chắc chắn tên nào từ ${files.length} screenshot. Anh có thể chọn thủ công trong popup.`;
 
     openConfirmModal();
+
+    // Reset input để lần sau có thể upload lại cùng bộ ảnh.
+    evt.target.value = "";
   }catch(e){
     status.textContent = "";
     showError("Không detect được screenshot. Kiểm tra mạng vì OCR cần tải thư viện/language từ CDN.");
   }
 }
-
 function openConfirmModal(){
   document.getElementById("confirmSearch").value = "";
   renderConfirmList();
