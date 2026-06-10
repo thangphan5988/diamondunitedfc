@@ -96,8 +96,8 @@
       width:18px;
       height:18px;
       border-radius:50%;
-      background:#facc15;
-      color:#000;
+      background:#38bdf8;
+      color:#00111f;
       font-size:10px;
       font-weight:900;
       display:flex;
@@ -106,7 +106,7 @@
       box-shadow:0 0 10px rgba(250,204,21,.75);
     }
     .cardPlayer.captainCard{box-shadow:0 0 0 2px #facc15,0 0 18px rgba(250,204,21,.45),0 10px 24px rgba(0,0,0,.36)!important}
-    .cardPlayer.captainCard .pname{color:#facc15}
+    .cardPlayer.captainCard .pname{color:#38bdf8;font-weight:800;text-shadow:0 0 10px rgba(56,189,248,.8)}
     .ratingBadge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
     .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
     .bench h3{margin:0 0 8px;font-size:15px}
@@ -153,7 +153,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.9.5</div>
+  <div class="buildVersion">Build v1.10.4</div>
   
   <div class="grid">
     <div class="card">
@@ -263,13 +263,13 @@ const FORMATIONS = {
   ],
   "2-3-1": [
     {pos:"GK", side:"CENTER"},
-    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"DEF", side:"CENTER"}, {pos:"DEF", side:"CENTER"},
     {pos:"MID", side:"LEFT"}, {pos:"MID", side:"CENTER"}, {pos:"MID", side:"RIGHT"},
     {pos:"FWD", side:"CENTER"}
   ],
   "2-2-2": [
     {pos:"GK", side:"CENTER"},
-    {pos:"DEF", side:"LEFT"}, {pos:"DEF", side:"RIGHT"},
+    {pos:"DEF", side:"CENTER"}, {pos:"DEF", side:"CENTER"},
     {pos:"MID", side:"LEFT"}, {pos:"MID", side:"RIGHT"},
     {pos:"FWD", side:"LEFT"}, {pos:"FWD", side:"RIGHT"}
   ]
@@ -759,10 +759,14 @@ function selectAll(v){players.forEach(p=>p.selected=v);renderPlayerPicker();upda
 function fit(p,pos){ if(p.main===pos)return 2; if(p.secondary.includes(pos))return 1; return 0; }
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
 
+function canCoverPosition(player, pos){
+  return player.main === pos || player.secondary.includes(pos);
+}
+
 function positionFitScore(player, pos){
-  if(player.main === pos) return 120;
-  if(player.secondary.includes(pos)) return 82;
-  return -65;
+  if(player.main === pos) return 10000;
+  if(player.secondary.includes(pos)) return 5200;
+  return -7000;
 }
 
 function fitLabelValue(player, pos){
@@ -771,82 +775,176 @@ function fitLabelValue(player, pos){
   return 0;
 }
 
+function sideMatchLevel(playerSide, slotSide){
+  const sides = Array.isArray(playerSide) ? playerSide : (playerSide ? [playerSide] : []);
+  if(!sides.length || !slotSide) return "NONE";
+
+  const exactIndex = sides.indexOf(slotSide);
+  if(exactIndex === 0) return "PRIMARY";
+  if(exactIndex > 0) return "SECONDARY";
+
+  const primary = sides[0];
+  if(primary === "CENTER" && (slotSide === "LEFT" || slotSide === "RIGHT")) return "SOFT";
+  if(slotSide === "CENTER" && (primary === "LEFT" || primary === "RIGHT")) return "BAD";
+  return "BAD";
+}
+
+function sidePriorityScore(playerSide, slotSide){
+  const level = sideMatchLevel(playerSide, slotSide);
+  if(level === "PRIMARY") return 1200;
+  if(level === "SECONDARY") return 650;
+  if(level === "SOFT") return 120;
+  if(level === "BAD") return -500;
+  return 0;
+}
+
 function assignmentScore(player, slot){
   const rating = Number(player.rating) || 5;
-  const posScore = positionFitScore(player, slot.pos);
-  const sideScore = sideFit(player.side, slot.side) * 2.2;
+  const isMain = player.main === slot.pos;
+  const isSecondary = player.secondary.includes(slot.pos);
+  const sideLevel = sideMatchLevel(player.side, slot.side);
 
-  // Rating có trọng số cao hơn nếu cầu thủ đang đá vị trí phụ.
-  // Mục tiêu: vẫn ưu tiên sở trường, nhưng cầu thủ rating cao ở vị trí phụ
-  // có thể được chọn thay cầu thủ rating thấp hơn ở đúng vị trí.
-  let ratingScore = rating * 4.2;
-  if(player.secondary.includes(slot.pos) && player.main !== slot.pos){
-    ratingScore = rating * 6.4;
+  let tier = 0;
+
+  // Luật ưu tiên mới:
+  // 1. Position chính + preferred_side chính -> rating cao thắng.
+  // 2. Position chính + preferred_side phụ -> rating cao thắng.
+  // 3. Position chính + lệch side -> rating cao thắng.
+  // 4. Position phụ -> rating cao thắng.
+  // 5. Trái vị trí -> rating cao thắng.
+  if(isMain && sideLevel === "PRIMARY"){
+    tier = 5;
+  }else if(isMain && sideLevel === "SECONDARY"){
+    tier = 4;
+  }else if(isMain){
+    tier = 3;
+  }else if(isSecondary){
+    tier = 2;
+  }else{
+    tier = 1;
   }
 
-  // GK vẫn là vị trí đặc biệt, tránh kéo non-GK xuống thủ môn.
-  let gkPenalty = 0;
+  let score = tier * 100000 + rating * 1000;
+
+  // Side chỉ dùng để phân hạng trong cùng position chính.
+  // Với position phụ, rating là yếu tố chính.
+  if(isMain){
+    if(sideLevel === "SOFT") score += 180;
+    if(sideLevel === "BAD") score -= 180;
+  }else if(isSecondary){
+    score += sidePriorityScore(player.side, slot.side) * 0.05;
+  }
+
+  // GK cực kỳ ưu tiên đúng người.
   if(slot.pos === "GK" && player.main !== "GK" && !player.secondary.includes("GK")){
-    gkPenalty = -120;
+    score -= 300000;
   }
 
-  return posScore + sideScore + ratingScore + gkPenalty + Math.random() * 0.05;
+  return score;
+}
+
+function slotOrderForFormation(formation){
+  return FORMATIONS[formation].map((slot, index) => ({...slot, index}));
 }
 
 function build(team, formation){
-  const av = [...team];
-  const starters = [];
-  let score = 0;
-  const shape = [...FORMATIONS[formation]];
+  const slots = slotOrderForFormation(formation);
+  const n = team.length;
   const forcedNames = ["minh phat", "thang phan"];
+  const forcedIndexes = [];
 
-  // Luật ẩn: Minh Phat và Thang Phan nếu tham gia thì luôn nằm trong đội hình chính.
-  for(const forcedName of forcedNames){
-    const idx = av.findIndex(p => normalizeName(p.name) === forcedName);
-    if(idx < 0) continue;
+  for(let i = 0; i < n; i++){
+    if(forcedNames.includes(normalizeName(team[i].name))){
+      forcedIndexes.push(i);
+    }
+  }
 
-    const p = av.splice(idx, 1)[0];
+  const forcedFullMask = forcedIndexes.reduce((mask, idx) => mask | (1 << idx), 0);
+  const memo = new Map();
 
-    let bestSlotIndex = -1;
-    let bestValue = -999;
+  function solve(slotIdx, usedMask){
+    if(slotIdx >= slots.length){
+      if((usedMask & forcedFullMask) !== forcedFullMask){
+        return {score:-1e15, picks:[]};
+      }
+      return {score:0, picks:[]};
+    }
 
-    for(let i = 0; i < shape.length; i++){
-      const slot = shape[i];
-      let value = assignmentScore(p, slot);
-      if(p.main === slot.pos) value += 25;
-      if(value > bestValue){
-        bestValue = value;
-        bestSlotIndex = i;
+    const key = slotIdx + "|" + usedMask;
+    if(memo.has(key)) return memo.get(key);
+
+    const slot = slots[slotIdx];
+    let best = {score:-1e15, picks:[]};
+
+    for(let i = 0; i < n; i++){
+      if(usedMask & (1 << i)) continue;
+
+      const player = team[i];
+      let score = assignmentScore(player, slot);
+
+      if(forcedNames.includes(normalizeName(player.name))){
+        score += 120;
+      }
+
+      const next = solve(slotIdx + 1, usedMask | (1 << i));
+      const total = score + next.score;
+
+      if(total > best.score){
+        best = {score: total, picks: [{playerIndex:i, slot}, ...next.picks]};
       }
     }
 
-    if(bestSlotIndex >= 0){
-      const slot = shape.splice(bestSlotIndex, 1)[0];
-      const f = fitLabelValue(p, slot.pos);
-      starters.push({...p, assigned:slot.pos, assignedSide:slot.side, fit:f, forcedStarter:true, captain:true});
-      score += f===2 ? 38 : f===1 ? 25 : -18;
-      score += sideFit(p.side, slot.side) * 1.8;
-      score += Math.min(12, p.rating || 5);
+    memo.set(key, best);
+    return best;
+  }
+
+  let solved = solve(0, 0);
+
+  if(!solved.picks || solved.picks.length < slots.length){
+    solved = {score:-9999, picks:[]};
+    const used = new Set();
+    for(const slot of slots){
+      let bestIndex = -1;
+      let bestValue = -1e15;
+      for(let i = 0; i < n; i++){
+        if(used.has(i)) continue;
+        const value = assignmentScore(team[i], slot);
+        if(value > bestValue){
+          bestValue = value;
+          bestIndex = i;
+        }
+      }
+      if(bestIndex >= 0){
+        used.add(bestIndex);
+        solved.picks.push({playerIndex:bestIndex, slot});
+      }
     }
   }
 
-  for(const slot of shape){
-    let bi=-1,bv=-999;
-    for(let i=0;i<av.length;i++){
-      let v = assignmentScore(av[i], slot);
-      if(v>bv){bv=v;bi=i}
-    }
-    if(bi>=0){
-      const p=av.splice(bi,1)[0];
-      const f=fitLabelValue(p,slot.pos);
-      starters.push({...p,assigned:slot.pos,assignedSide:slot.side,fit:f});
-      score += f===2?32:f===1?22:-22;
-      score += sideFit(p.side, slot.side) * 1.8;
-      score += Math.min(12, p.rating||5);
-    }
-  }
+  const usedIndexes = new Set(solved.picks.map(x => x.playerIndex));
+  const starters = solved.picks.map(({playerIndex, slot}) => {
+    const p = team[playerIndex];
+    const f = fitLabelValue(p, slot.pos);
+    const isCaptain = forcedNames.includes(normalizeName(p.name));
+    return {
+      ...p,
+      assigned: slot.pos,
+      assignedSide: slot.side,
+      fit: f,
+      forcedStarter: isCaptain,
+      captain: isCaptain
+    };
+  });
 
-  // Sắp lại thứ tự render theo đúng sơ đồ: GK, DEF, MID, FWD và trái/trung tâm/phải.
+  const bench = team.filter((_, idx) => !usedIndexes.has(idx));
+
+  let score = 0;
+  starters.forEach(p => {
+    const slot = {pos:p.assigned, side:p.assignedSide};
+    score += assignmentScore(p, slot) / 100;
+    score += p.fit === 2 ? 80 : p.fit === 1 ? 35 : -120;
+  });
+
   const order = {GK:0, DEF:1, MID:2, FWD:3};
   const sideOrder = {LEFT:0, CENTER:1, RIGHT:2};
   starters.sort((a,b) => {
@@ -854,58 +952,117 @@ function build(team, formation){
     return (sideOrder[a.assignedSide] ?? 1) - (sideOrder[b.assignedSide] ?? 1);
   });
 
-  return {starters,bench:av,score};
+  return {starters, bench, score:Math.round(score * 10) / 10};
 }
-function counts(team){const c={GK:0,DEF:0,MID:0,FWD:0};team.forEach(p=>c[p.main]++);return c}
-function evalSplit(a,b){
-  const la=build(a, formationA), lb=build(b, formationB); let s=la.score+lb.score;
-  const ca=counts(a), cb=counts(b);
-  POS.forEach(pos=>s-=Math.abs(ca[pos]-cb[pos])*6);
-  s-=Math.abs(a.length-b.length)*10;
-  s-=Math.abs(sumRating(a)-sumRating(b))*1.5;
-  s-=ratingDistributionPenalty(a,b);
-  if(a.some(p=>p.main==="GK"))s+=30;else s-=50;
-  if(b.some(p=>p.main==="GK"))s+=30;else s-=50;
-  return {teamA:a,teamB:b,lineupA:la,lineupB:lb,score:Math.round(s)};
-}
-function sumRating(t){return t.reduce((s,p)=>s+(p.rating||5),0)}
-function ratingBucket(rating){
-  const r = Number(rating) || 5;
-  if(r >= 9) return "elite";   // 9-10
-  if(r >= 7) return "strong";  // 7-8
-  if(r >= 5) return "normal";  // 5-6
-  return "low";                // 1-4
+function counts(team){
+  const c={GK:0,DEF:0,MID:0,FWD:0};
+  team.forEach(p=>c[p.main]++);
+  return c;
 }
 
-function ratingBucketCounts(team){
-  const c = {elite:0, strong:0, normal:0, low:0};
-  team.forEach(p => c[ratingBucket(p.rating)]++);
+function coverCounts(team){
+  const c={GK:0,DEF:0,MID:0,FWD:0};
+  team.forEach(p=>{
+    POS.forEach(pos=>{
+      if(canCoverPosition(p,pos)) c[pos]++;
+    });
+  });
+  return c;
+}
+
+function hasRequiredPositions(team){
+  const c = coverCounts(team);
+  return c.GK >= 1 && c.DEF >= 1 && c.MID >= 1 && c.FWD >= 1;
+}
+
+function evalSplit(a,b){
+  const la=build(a, formationA), lb=build(b, formationB);
+  let s=la.score+lb.score;
+
+  const ca=coverCounts(a), cb=coverCounts(b);
+  POS.forEach(pos=>{
+    s-=Math.abs((ca[pos]||0)-(cb[pos]||0))*18;
+  });
+
+  if(!hasRequiredPositions(a)) s-=5000;
+  if(!hasRequiredPositions(b)) s-=5000;
+
+  s-=Math.abs(a.length-b.length)*80;
+  s-=Math.abs(sumRating(a)-sumRating(b))*22;
+  s-=ratingDistributionPenalty(a,b);
+
+  return {teamA:a,teamB:b,lineupA:la,lineupB:lb,score:Math.round(s)};
+}
+
+function sumRating(t){return t.reduce((s,p)=>s+(Number(p.rating)||5),0)}
+
+function exactRatingCounts(team){
+  const c = {};
+  team.forEach(p => {
+    const r = Math.max(1, Math.min(10, Math.round(Number(p.rating) || 5)));
+    c[r] = (c[r] || 0) + 1;
+  });
   return c;
 }
 
 function ratingDistributionPenalty(teamA, teamB){
-  const a = ratingBucketCounts(teamA);
-  const b = ratingBucketCounts(teamB);
-
-  // Cân bằng theo số lượng cầu thủ từng nhóm rating,
-  // đặc biệt phạt nặng nếu một đội dồn nhiều rating 9-10.
-  const weights = {
-    elite: 42,
-    strong: 24,
-    normal: 10,
-    low: 8
-  };
+  const a = exactRatingCounts(teamA);
+  const b = exactRatingCounts(teamB);
+  const weights = {10:720,9:560,8:300,7:220,6:120,5:90,4:60,3:50,2:40,1:30};
 
   let penalty = 0;
-  Object.keys(weights).forEach(k => {
-    penalty += Math.abs(a[k] - b[k]) * weights[k];
-  });
-
-  // Phạt thêm nếu một đội có nhiều hơn đội kia từ 2 cầu thủ elite trở lên.
-  const eliteDiff = Math.abs(a.elite - b.elite);
-  if(eliteDiff >= 2) penalty += eliteDiff * 60;
+  for(let r = 1; r <= 10; r++){
+    const diff = Math.abs((a[r] || 0) - (b[r] || 0));
+    penalty += diff * (weights[r] || 50);
+    if(r >= 9 && diff >= 2) penalty += diff * 900;
+  }
 
   return penalty;
+}
+
+function ratingDistributionKey(team){
+  const c = exactRatingCounts(team);
+  return [10,9,8,7,6,5,4,3,2,1].map(r => `${r}:${c[r] || 0}`).join(" ");
+}
+
+function fastSplitScore(teamA, teamB){
+  let s = 0;
+  s -= Math.abs(teamA.length - teamB.length) * 250;
+  s -= Math.abs(sumRating(teamA) - sumRating(teamB)) * 35;
+  s -= ratingDistributionPenalty(teamA, teamB);
+
+  const ca = coverCounts(teamA), cb = coverCounts(teamB);
+  POS.forEach(pos=>{
+    s -= Math.abs((ca[pos]||0)-(cb[pos]||0)) * 70;
+  });
+
+  if(teamA.length >= 7 && !hasRequiredPositions(teamA)) s -= 3000;
+  if(teamB.length >= 7 && !hasRequiredPositions(teamB)) s -= 3000;
+
+  return s;
+}
+
+function splitByRatingBalanced(list){
+  const sorted = shuffle(list).sort((a,b)=>(Number(b.rating)||5)-(Number(a.rating)||5));
+  const teamA = [];
+  const teamB = [];
+
+  for(const p of sorted){
+    const scoreA = fastSplitScore([...teamA, p], teamB);
+    const scoreB = fastSplitScore(teamA, [...teamB, p]);
+    if(scoreA >= scoreB) teamA.push(p);
+    else teamB.push(p);
+  }
+
+  return [teamA, teamB];
+}
+
+function splitCandidateScore(teamA, teamB){
+  let s = fastSplitScore(teamA, teamB);
+  if(!hasRequiredPositions(teamA)) s -= 8000;
+  if(!hasRequiredPositions(teamB)) s -= 8000;
+  if(violatesHiddenRule(teamA, teamB)) s -= 9000;
+  return s;
 }
 
 function hasPlayer(team, targetName){
@@ -935,28 +1092,44 @@ function violatesHiddenRule(teamA, teamB){
 }
 
 function randomBest(list){
+  let candidateMap = new Map();
+
+  // Bước 1: random danh sách 2 đội dựa trên chất lượng/rating + đủ vị trí.
+  // Không chạy optimizer đội hình ở bước này để tránh bị stuck.
+  for(let i = 0; i < 900; i++){
+    const [teamA, teamB] = splitByRatingBalanced(list);
+    if(Math.abs(teamA.length - teamB.length) > 1) continue;
+
+    const key = teamA.map(p=>p.id).sort().join("|") + "___" + teamB.map(p=>p.id).sort().join("|");
+    const quickScore = splitCandidateScore(teamA, teamB);
+
+    if(!candidateMap.has(key) || candidateMap.get(key).quickScore < quickScore){
+      candidateMap.set(key, {teamA, teamB, quickScore});
+    }
+  }
+
+  let candidates = Array.from(candidateMap.values())
+    .sort((a,b)=>b.quickScore-a.quickScore)
+    .slice(0, 40);
+
+  if(!candidates.length){
+    for(let i = 0; i < 80; i++){
+      const sh = shuffle(list);
+      const half = Math.ceil(sh.length / 2);
+      candidates.push({teamA: sh.slice(0, half), teamB: sh.slice(half), quickScore: 0});
+    }
+  }
+
+  // Bước 2: sau khi đã có danh sách 2 đội, mới tối ưu đội hình chính theo sơ đồ.
   let best = null;
-
-  for(let i = 0; i < 12000; i++){
-    const sh = shuffle(list);
-    const half = Math.ceil(sh.length / 2);
-    const teamA = sh.slice(0, half);
-    const teamB = sh.slice(half);
-
-    if(violatesHiddenRule(teamA, teamB)) continue;
-
-    const res = evalSplit(teamA, teamB);
+  for(const c of candidates){
+    const res = evalSplit(c.teamA, c.teamB);
     if(!best || res.score > best.score) best = res;
   }
 
-  // Fallback cực hiếm: nếu không tìm được do danh sách quá ít/lệch, vẫn trả kết quả tốt nhất không áp luật.
-  if(!best){
-    for(let i = 0; i < 3000; i++){
-      const sh = shuffle(list);
-      const half = Math.ceil(sh.length / 2);
-      const res = evalSplit(sh.slice(0, half), sh.slice(half));
-      if(!best || res.score > best.score) best = res;
-    }
+  if(best){
+    console.log("Rating distribution A:", ratingDistributionKey(best.teamA));
+    console.log("Rating distribution B:", ratingDistributionKey(best.teamB));
   }
 
   return best;
@@ -964,32 +1137,61 @@ function randomBest(list){
 
 async function startRandom(){
   clearError();
-  const selected = players.filter(p=>p.selected);
-  if(selected.length<14){showError("Cần tối thiểu 14 cầu thủ để chia đủ 2 đội sân 7.");return;}
-  clearPitch("pitchA"); clearPitch("pitchB"); setBench("benchA",[]); setBench("benchB",[]);
-  await suspense(selected);
-  lastResult = randomBest(selected);
-  updateResultStats(lastResult, selected.length);
-  await revealBothLineups(lastResult.lineupA, lastResult.lineupB);
-  setBench("benchA", lastResult.lineupA.bench);
-  setBench("benchB", lastResult.lineupB.bench);
-  document.getElementById("textResult").textContent = textResult(lastResult);
+  const overlay = document.getElementById("overlay");
+
+  try{
+    const selected = players.filter(p=>p.selected);
+    if(selected.length<14){
+      showError("Cần tối thiểu 14 cầu thủ để chia đủ 2 đội sân 7.");
+      return;
+    }
+
+    clearPitch("pitchA");
+    clearPitch("pitchB");
+    setBench("benchA",[]);
+    setBench("benchB",[]);
+
+    await suspense(selected);
+    await wait(60);
+
+    lastResult = randomBest(selected);
+    if(!lastResult){
+      throw new Error("Không tìm được phương án chia đội phù hợp.");
+    }
+
+    updateResultStats(lastResult, selected.length);
+    await revealBothLineups(lastResult.lineupA, lastResult.lineupB);
+    setBench("benchA", lastResult.lineupA.bench);
+    setBench("benchB", lastResult.lineupB.bench);
+    document.getElementById("textResult").textContent = textResult(lastResult);
+  }catch(e){
+    console.error(e);
+    showError(e.message || "Có lỗi khi chia đội.");
+  }finally{
+    overlay.classList.remove("show");
+  }
 }
 async function suspense(list){
   const overlay=document.getElementById("overlay"), count=document.getElementById("count"), rolling=document.getElementById("rolling");
   overlay.classList.add("show");
+
   const seq=["3","2","1","DUFC!"];
-  for(const x of seq){count.textContent=x;rolling.innerHTML="";await wait(850);}
-  const end=Date.now()+3600; // random dài hơn, tăng hồi hộp
+  for(const x of seq){
+    count.textContent=x;
+    rolling.innerHTML="";
+    await wait(650);
+  }
+
+  const end=Date.now()+1200;
   while(Date.now()<end){
     const p=list[Math.floor(Math.random()*list.length)];
     count.textContent="Đang chia đội...";
     rolling.innerHTML=`<img src="${escapeAttr(p.avatar)}"><span>${escapeHtml(p.name)}</span>`;
-    await wait(135);
+    await wait(120);
   }
+
   overlay.classList.remove("show");
 }
-
 function renderLineupInstant(pitchId, lineup, formation, teamClass){
   const indexByPos = {};
   for(const p of lineup.starters){
@@ -1054,22 +1256,35 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation){
   const coordsByPos = FORMATION_COORDS[formation][assigned] || [];
   const slotsByPos = FORMATIONS[formation].filter(slot => slot.pos === assigned);
 
-  // Fix v1.8.1:
-  // Lấy tọa độ theo đúng khu vực LEFT / CENTER / RIGHT,
-  // không phụ thuộc thứ tự reveal cầu thủ.
+  const key = assigned + "_" + (assignedSide || "ANY");
+  const currentIndex = indexByPos[key] || 0;
+
+  // Nếu có nhiều slot cùng pos + same side, ví dụ 2-3-1 có DEF CENTER + DEF CENTER,
+  // lấy tọa độ theo thứ tự để không bị chồng lên nhau.
   if(assignedSide){
-    const sideIndex = slotsByPos.findIndex(slot => slot.side === assignedSide);
-    if(sideIndex >= 0 && coordsByPos[sideIndex]){
-      return coordsByPos[sideIndex];
+    const matchingIndexes = [];
+    slotsByPos.forEach((slot, idx) => {
+      if(slot.side === assignedSide) matchingIndexes.push(idx);
+    });
+
+    if(matchingIndexes.length > 1){
+      const coordIndex = matchingIndexes[Math.min(currentIndex, matchingIndexes.length - 1)];
+      indexByPos[key] = currentIndex + 1;
+      if(coordsByPos[coordIndex]) return coordsByPos[coordIndex];
+    }
+
+    if(matchingIndexes.length === 1 && coordsByPos[matchingIndexes[0]]){
+      indexByPos[key] = currentIndex + 1;
+      return coordsByPos[matchingIndexes[0]];
     }
   }
 
   // Fallback nếu thiếu assignedSide.
-  const idx = indexByPos[assigned] || 0;
-  indexByPos[assigned] = idx + 1;
+  const fallbackKey = assigned + "_fallback";
+  const idx = indexByPos[fallbackKey] || 0;
+  indexByPos[fallbackKey] = idx + 1;
   return coordsByPos[Math.min(idx, coordsByPos.length - 1)] || [50,50];
 }
-
 function cardHtml(p, teamClass){
   const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
   return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(p.name)}</div><div class="ppos">${p.assigned}</div><div class="fit">${p.fit===2?'✓ Đúng sở trường':p.fit===1?'↔ Vị trí phụ':'⚠ Trái vị trí'}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
