@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DUFC Randomizer - Sân 7</title>
+  <title>DIAMOND UNITED FC - SÂN 7</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{
@@ -90,11 +90,11 @@
 <body>
 <div class="wrap">
   <h1>DUFC Randomizer - Sân 7</h1>
-  <div class="sub">Import Excel → chọn cầu thủ hôm nay → chọn sơ đồ riêng từng đội → random hồi hộp → bốc từng cầu thủ vào sân.</div>
+  
   <div class="grid">
     <div class="card">
-      <h2>1. Load danh sách</h2>
-      <input id="file" type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+      <h2>1. Danh sách thành viên</h2>
+      <input id="searchBox" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
       <select id="formationSelectA" onchange="setFormation('A', this.value)">
         <option value="3-2-1">Đội A: Sơ đồ 3-2-1</option>
         <option value="3-1-2">Đội A: Sơ đồ 3-1-2</option>
@@ -111,10 +111,7 @@
       <button class="secondary" onclick="selectAll(false)">Bỏ chọn tất cả</button>
       <button class="gold" onclick="startRandom()">Random chia đội</button>
       <button onclick="copyResult()">Copy kết quả</button>
-      <div class="hint">
-        Excel cần sheet đầu tiên có cột: <b>name, main_position, secondary_positions, rating, avatar</b>.<br>
-        Avatar: nhập URL ảnh vào cột <b>avatar</b>. Nếu bỏ trống, app tự hiện avatar mặc định.
-      </div>
+      
       <div id="error" class="error"></div>
       <div id="players" class="players"></div>
     </div>
@@ -201,59 +198,78 @@ function setFormation(team, value){
   setBench("benchB", []);
   document.getElementById("textResult").textContent = "";
 }
-async function importExcel(evt){
+
+async function loadDefaultRoster(){
   clearError();
   try{
-    const file = evt.target.files[0];
-    if(!file) return;
-
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, {type:"array"});
+    const res = await fetch("members.csv?ts=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("Không tìm thấy file members.csv trên GitHub. Hãy upload members.csv cùng cấp với index.html.");
+    const text = await res.text();
+    const wb = XLSX.read(text, {type:"string"});
     const sheetName = wb.SheetNames[0];
-    if(!sheetName) throw new Error("Không tìm thấy sheet trong Excel.");
-
-    const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws, {defval:""});
-    if(!rows.length) throw new Error("File Excel chưa có dữ liệu cầu thủ.");
-
-    const list = rows.map((row, idx) => {
-      const lower = {};
-      Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
-
-      const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
-      const main = normalizePos(lower.main_position || lower.main || lower["vị trí chính"] || lower.vi_tri_chinh || "");
-      const secondaryValue = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
-      const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
-      const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
-
-      if(!name) return null;
-      if(!POS.includes(main)) return null;
-
-      return {
-        id: (idx + 2) + "_" + name,
-        name,
-        main,
-        secondary: splitSecond(secondaryValue),
-        rating: Number.isFinite(rating) ? rating : 5,
-        avatar: avatarText || defaultAvatar(name),
-        selected: true
-      };
-    }).filter(Boolean);
-
-    if(list.length < 1) {
-      throw new Error("Không đọc được cầu thủ. Cần cột name và main_position. Vị trí hợp lệ: GK, DEF, MID, FWD.");
-    }
-
-    players = list;
-    renderPlayerPicker();
-    updateStats();
+    if(!sheetName) throw new Error("Không đọc được members.csv.");
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:""});
+    applyRows(rows);
   }catch(e){
-    showError(e.message || "Không import được file Excel.");
+    showError(e.message || "Không load được danh sách từ GitHub.");
   }
 }
+
+function applyRows(rows){
+  if(!rows.length) throw new Error("File danh sách chưa có dữ liệu cầu thủ.");
+
+  const list = rows.map((row, idx) => {
+    const lower = {};
+    Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
+
+    const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
+    const main = normalizePos(lower.main_position || lower.main || lower["vị trí chính"] || lower.vi_tri_chinh || "");
+    const secondaryValue = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
+    const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
+    const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
+
+    if(!name) return null;
+    if(!POS.includes(main)) return null;
+
+    return {
+      id: (idx + 2) + "_" + name,
+      name,
+      main,
+      secondary: splitSecond(secondaryValue),
+      rating: Number.isFinite(rating) ? rating : 5,
+      avatar: avatarText || defaultAvatar(name),
+      selected: true
+    };
+  }).filter(Boolean);
+
+  if(list.length < 1) {
+    throw new Error("Không đọc được cầu thủ. Cần cột name và main_position. Vị trí hợp lệ: GK, DEF, MID, FWD.");
+  }
+
+  players = list;
+  renderPlayerPicker();
+  updateStats();
+}
+
+
 function renderPlayerPicker(){
   const el = document.getElementById("players");
-  el.innerHTML = players.map((p,i)=>`
+  const keyword = String(document.getElementById("searchBox")?.value || "").trim().toLowerCase();
+
+  const filtered = players
+    .map((p, i) => ({p, i}))
+    .filter(({p}) => {
+      if(!keyword) return true;
+      const haystack = `${p.name} ${p.main} ${p.secondary.join(" ")}`.toLowerCase();
+      return haystack.includes(keyword);
+    });
+
+  if(!filtered.length){
+    el.innerHTML = `<div class="row" style="grid-template-columns:1fr;color:#94a3b8">Không tìm thấy cầu thủ phù hợp.</div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(({p,i})=>`
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
@@ -407,6 +423,7 @@ function showError(msg){const e=document.getElementById("error");e.textContent=m
 function clearError(){const e=document.getElementById("error");e.textContent="";e.style.display="none"}
 function escapeHtml(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function escapeAttr(s){return escapeHtml(s)}
+window.addEventListener("DOMContentLoaded", loadDefaultRoster);
 </script>
 </body>
 </html>
