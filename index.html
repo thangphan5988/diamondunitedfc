@@ -237,7 +237,7 @@
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v1.19.0</div>
+  <div class="buildVersion">Build v2.0.0</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -2118,17 +2118,29 @@ function setFormation(team, value){
   updateResultStats(lastResult, players.filter(p=>p.selected).length);
   document.getElementById("textResult").textContent = textResult(lastResult);
 }
+// Cloudflare Worker API (D1) — ưu tiên khi đã deploy (xem cloudflare/README.md)
+const API_BASE_URL = "https://dufc-api.thangpt5988.workers.dev";
+const LEGACY_API_URL = "https://script.google.com/macros/s/AKfycbzBU3DIXutU2WkAKGgeBvUMaLllR_CowJtiPr92Flpdqo3qXaYCH_xZDDjOpMi0kvqH/exec";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU/gviz/tq?tqx=out:csv&gid=545791527";
-
-// Dán Apps Script Web App URL vào đây sau khi deploy.
-// Ví dụ: https://script.google.com/macros/s/AKfycb.../exec
-const MATCH_HISTORY_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzBU3DIXutU2WkAKGgeBvUMaLllR_CowJtiPr92Flpdqo3qXaYCH_xZDDjOpMi0kvqH/exec";
+const MATCH_HISTORY_WEB_APP_URL = API_BASE_URL || LEGACY_API_URL;
 
 async function loadDefaultRoster(){
   clearError();
+  if(API_BASE_URL){
+    try{
+      const data = await apiGet("get_roster");
+      if(data.players?.length){
+        applyRosterFromApi(data.players);
+        return;
+      }
+    }catch(e){
+      console.warn("Cloudflare roster failed, fallback Google Sheet:", e);
+    }
+  }
+
   try{
     const res = await fetch(GOOGLE_SHEET_CSV_URL + "&ts=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error("Không load được Google Sheet. Kiểm tra quyền share: Anyone with the link can view.");
+    if(!res.ok) throw new Error("Không load được Google Sheet.");
 
     const text = await res.text();
     const wb = XLSX.read(text, {type:"string"});
@@ -2138,8 +2150,49 @@ async function loadDefaultRoster(){
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:""});
     applyRows(rows);
   }catch(e){
-    showError(e.message || "Không load được danh sách từ Google Sheet.");
+    showError(e.message || "Không load được danh sách cầu thủ.");
   }
+}
+
+function applyRosterFromApi(rows){
+  if(!rows.length) throw new Error("Chưa có dữ liệu cầu thủ trên server.");
+
+  const list = rows.map((row, idx) => {
+    const name = String(row.name || "").trim();
+    const positionRaw = String(row.position || row.main_position || "").trim();
+    const positionList = splitPositions(positionRaw);
+    const main = positionList[0] || "";
+    let secondary = positionList.slice(1);
+    const secondaryRaw = String(row.secondary_positions || "").trim();
+    if(secondaryRaw){
+      const more = splitPositions(secondaryRaw);
+      secondary = [...new Set([...secondary, ...more].filter(x => x !== main))];
+    }
+    const rating = Number(row.rating || 5);
+    const mvpCount = Number(row.mvp_count || 0);
+    const avatarText = String(row.avatar || "").trim();
+    const side = normalizeSideList(row.preferred_side || "");
+
+    if(!name || !POS.includes(main)) return null;
+
+    return {
+      id: (idx + 1) + "_" + name,
+      name,
+      main,
+      secondary,
+      rating: Number.isFinite(rating) ? rating : 5,
+      mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
+      avatar: avatarText || defaultAvatar(name),
+      side,
+      selected: true
+    };
+  }).filter(Boolean);
+
+  if(!list.length) throw new Error("Không đọc được cầu thủ từ API.");
+  players = list;
+  renderPlayerPicker();
+  updateStats();
+  if(document.getElementById("statsView")?.style.display !== "none") renderStats();
 }
 
 function applyRows(rows){
@@ -3441,7 +3494,7 @@ async function saveMatchHistoryToSheet(imageFilename){
   if(!lastResult) throw new Error("Chưa có kết quả chia đội.");
 
   if(!MATCH_HISTORY_WEB_APP_URL){
-    throw new Error("MATCH_HISTORY_WEB_APP_URL chưa được cấu hình.");
+    throw new Error("API chưa được cấu hình.");
   }
 
   const now = new Date();
