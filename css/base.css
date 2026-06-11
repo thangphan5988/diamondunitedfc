@@ -1,0 +1,48 @@
+/* Base: variables, layout, forms, cards */
+
+:root{
+  --bg:#07111f;--card:#0f172a;--line:#243244;--text:#e5e7eb;--muted:#94a3b8;
+  --green:#16a34a;--green2:#0f7a35;--white:rgba(255,255,255,.85);--blue:#38bdf8;
+  --red:#ef4444;--yellow:#f59e0b;
+  /* Chuẩn sân — theo tab Chia đội (HLV) */
+  --pitch-width:520px;
+  --pitch-height:650px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
+.wrap{max-width:1440px;margin:auto;padding:22px}
+h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:10px;margin-bottom:12px}.ocrStatus{font-size:10px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
+.sub{color:var(--muted);margin-bottom:16px}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+.card{background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+#exportArea{background:#0f172a}
+input,button,select{width:100%;border-radius:12px;border:1px solid var(--line);background:#020617;color:var(--text);padding:11px 12px;font-size:11px}
+button{background:#0284c7;border:0;font-weight:800;cursor:pointer;margin-top:10px}
+button:hover{filter:brightness(1.12)}
+button:disabled{opacity:.55;cursor:not-allowed;filter:none}
+button.btnDone{background:#065f46;opacity:.75;cursor:default}
+button.secondary{background:#334155}
+button.gold{background:#b45309}
+button.danger{background:#b91c1c}
+button.danger:hover{filter:brightness(1.15)}
+.hint{font-size:13px;color:var(--muted);line-height:1.45;margin-top:10px}
+.players{max-height:390px;overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:14px}
+.row{display:grid;grid-template-columns:32px 42px 1fr auto;gap:9px;align-items:center;padding:9px;border-bottom:1px solid rgba(255,255,255,.08)}
+.row:last-child{border-bottom:0}
+.row img,.miniAvatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1e293b;border:1px solid rgba(255,255,255,.2)}
+.name{font-weight:800}
+.meta{font-size:10px;color:var(--muted)}
+.badge{font-size:11px;border:1px solid var(--line);padding:4px 6px;border-radius:999px;color:#cbd5e1}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metric{background:#020617;border:1px solid var(--line);border-radius:14px;padding:10px}
+.metric b{font-size:20px;display:block}.metric span{font-size:10px;color:var(--muted)}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.teamHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.teamHead h2{margin:0;font-size:22px}
+.formationControl{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin:0 0 8px}
+.formationControl label{font-size:10px;color:#94a3b8;font-weight:800}
+.formationControl select{padding:8px 10px;font-size:11px}
+.formationReadonly{
+  padding:8px 10px;font-size:11px;background:#020617;border:1px solid var(--line);
+  border-radius:12px;color:var(--text);font-weight:800
+}

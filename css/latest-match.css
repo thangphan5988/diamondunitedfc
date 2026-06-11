@@ -1,0 +1,86 @@
+/* Latest match view, scoreboard, responsive */
+
+.lrHeader{margin-bottom:12px}
+.lrHeader h3{margin:0 0 4px;font-size:18px}
+.lrMvpBar{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);color:#fde68a;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;margin-bottom:14px}
+.lrMvpBar b{color:#facc15}
+.lrScoreBoard{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 18px;padding:18px 12px;background:linear-gradient(180deg,#020617,#0b1224);border:1px solid var(--line);border-radius:20px}
+.lrTeamScore{text-align:center;flex:1;min-width:0}
+.lrTeamLabel{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.lrScoreNum{font-size:44px;font-weight:900;line-height:1}
+.lrVs{font-size:13px;font-weight:900;color:#64748b;padding:0 4px}
+.lrTeamScore.red .lrScoreNum{color:#ef4444}
+.lrTeamScore.yellow .lrScoreNum{color:#facc15}
+.lrTeamScore.blue .lrScoreNum{color:#38bdf8}
+.lrTeamScore.opp .lrScoreNum{color:#cbd5e1}
+.lmTeams{
+  max-width:min(1020px,calc(100vw - 44px - 376px));
+  margin:0 auto;width:100%
+}
+.lmTeamsCapDone{max-width:min(580px,calc(100vw - 44px))}
+.lmTeams .lineupBody .slot{transform:translate(-50%,-50%)}
+.lmPhaseBar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.35);color:#bae6fd;
+  padding:12px 14px;border-radius:14px;margin-bottom:14px;font-size:12px;font-weight:800
+}
+.lmPhaseBar.done{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.35);color:#bbf7d0}
+.lmPhaseBar.wait{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);color:#fde68a}
+.lmPhaseDetail{font-size:11px;color:#cbd5e1;font-weight:700}
+.lmConfirmBadge{font-size:10px;font-weight:900;border-radius:999px;padding:3px 8px;border:1px solid var(--line)}
+.lmConfirmBadge.done{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);color:#86efac}
+.lmConfirmBadge.pending{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:#fde68a}
+.lmTeams .lineupBody{margin-top:6px}
+.pitch.lrPitch{overflow:visible}
+.lrPitch .slot,.lmTeams .lineupBody .slot{transform:translate(-50%,-50%)}
+.lrBenchList{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.lrBenchEmpty{font-size:11px;color:var(--muted)}
+.lrCard{
+  width:86px;min-height:108px;border-radius:14px;padding:6px 4px 8px;text-align:center;
+  background:rgba(2,6,23,.94);border:2px solid rgba(255,255,255,.22);
+  box-shadow:0 10px 22px rgba(0,0,0,.38);position:relative;backdrop-filter:blur(4px)
+}
+.lrPitch .lrCard{
+  width:74px;min-height:84px;border-radius:12px;padding:5px 3px 6px;
+  box-shadow:0 8px 18px rgba(0,0,0,.35)
+}
+.lrCard.redTeam{border-color:#ef4444;box-shadow:0 0 0 1px rgba(239,68,68,.4),0 10px 22px rgba(239,68,68,.18)}
+.lrCard.yellowTeam{border-color:#facc15;box-shadow:0 0 0 1px rgba(250,204,21,.4),0 10px 22px rgba(250,204,21,.18)}
+.lrCard.capTeam{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.4),0 10px 22px rgba(56,189,248,.18)}
+.lrCard.capSubTeam{border-color:#a78bfa;box-shadow:0 0 0 1px rgba(167,139,250,.4),0 10px 22px rgba(167,139,250,.18)}
+.lrCard img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.35)}
+.lrPitch .lrCard img{width:34px;height:34px}
+.lrPitch .lrName{font-size:9px;margin-top:4px}
+.lrPitch .lrScore{font-size:11px;margin-top:2px}
+.lrPitch .lrDelta{font-size:8px;padding:1px 5px;margin-top:3px}
+.lrPitch .lrStatRow{font-size:8px;margin-top:2px}
+.lrName{font-size:10px;font-weight:900;margin-top:5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrScore{font-size:12px;font-weight:900;color:#7dd3fc;margin-top:3px}
+.lrMvpBadge{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#facc15;color:#00111f;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.lrDelta{font-size:9px;font-weight:900;border-radius:999px;padding:2px 6px;margin-top:4px;display:inline-block}
+.lrDelta.up{background:rgba(34,197,94,.22);color:#86efac}
+.lrDelta.down{background:rgba(239,68,68,.22);color:#fca5a5}
+.lrDelta.zero{background:rgba(148,163,184,.15);color:#cbd5e1}
+.lrStatRow{display:flex;justify-content:center;gap:5px;font-size:9px;font-weight:900;margin-top:3px}
+.lrStatRow .goals{color:#86efac}
+.lrStatRow .assists{color:#c4b5fd}
+.lrBenchCard{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:12px;background:#020617;min-width:160px;flex:1 1 180px;max-width:240px;position:relative
+}
+.lrBenchCard.redTeam{border-color:rgba(239,68,68,.45)}
+.lrBenchCard.yellowTeam{border-color:rgba(250,204,21,.45)}
+.lrBenchCard.capTeam{border-color:rgba(56,189,248,.45)}
+.lrBenchCard.capSubTeam{border-color:rgba(167,139,250,.45)}
+.lrBenchCard img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.lrBenchMeta{flex:1;min-width:0}
+.lrBenchMeta .lrName{margin:0;font-size:11px;white-space:normal}
+.lrBenchMeta .lrScore{font-size:11px;margin-top:2px;text-align:left}
+@media(max-width:1100px){
+  .lmTeams{max-width:min(1020px,calc(100vw - 44px))}
+  .lrScoreNum{font-size:36px}
+}
+@media(max-width:760px){
+  .hlvPanel .benchSide .benchList{flex-direction:row;flex-wrap:wrap;max-height:none}
+  .hlvPanel .benchSide .benchItem{width:auto}
+}

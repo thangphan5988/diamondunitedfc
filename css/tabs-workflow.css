@@ -1,0 +1,96 @@
+/* Tabs, workflow, history, stats, auth bar */
+
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:10px 16px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0}
+.tab.active{background:#0284c7;color:#fff;border-color:#0284c7}
+.lockBanner{display:none;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.45);color:#fde68a;padding:12px 14px;border-radius:14px;margin-bottom:14px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lockBanner.show{display:flex}
+.lockBanner b{color:#fff}
+.lockBannerMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.hlvResultStatus,.resultHlvStatus{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hlvResultBadge{font-size:10px;font-weight:900;border-radius:999px;padding:4px 10px;border:1px solid var(--line)}
+.hlvResultBadge.done{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);color:#86efac}
+.hlvResultBadge.pending{background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.35);color:#cbd5e1}
+.hlvResultBadge.hostNote{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.35);color:#bae6fd}
+.scoreWrap.scorePrimary input{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.35)}
+.scoreWrap.scoreMuted input{opacity:.72}
+.scoreWrap input:disabled{opacity:.42;cursor:not-allowed;background:#0a1020}
+.resultPlayer select:disabled{opacity:.55;cursor:not-allowed}
+.resultPlayer.resultLocked{opacity:.92}
+.scoreRow{display:grid;grid-template-columns:1fr 80px 1fr;gap:10px;align-items:center;margin-bottom:14px}
+.scoreRow input{text-align:center;font-size:22px;font-weight:900;padding:8px}
+.scoreTeamLabel{text-align:center;font-weight:900;font-size:14px}
+.resultTeam{margin-bottom:14px}
+.resultTeam h3{margin:0 0 8px;font-size:16px}
+.resultPlayer{display:grid;grid-template-columns:38px 1fr 58px 46px 46px 40px;gap:6px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px;background:#020617;margin-bottom:6px}
+.resultPlayer.noStats{grid-template-columns:38px 1fr 70px 52px}
+.resultPlayerHead{background:transparent;border:0;padding:0 8px 4px;margin-bottom:2px;font-size:9px;color:var(--muted);font-weight:800}
+.resultPlayer img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.resultPlayer select{padding:8px;font-size:12px}
+.resultStatInput{padding:7px 4px;font-size:12px;text-align:center}
+.resultColHead{text-align:center;font-size:9px;color:var(--muted)}
+.deltaBadge{font-size:11px;font-weight:900;text-align:center;border-radius:999px;padding:4px 0}
+.deltaBadge.up{background:rgba(34,197,94,.2);color:#86efac}
+.deltaBadge.down{background:rgba(239,68,68,.2);color:#fca5a5}
+.deltaBadge.zero{background:rgba(148,163,184,.15);color:#cbd5e1}
+.mvpTag{font-size:10px;font-weight:900;color:#facc15;text-align:center}
+.historyList{display:grid;gap:10px}
+.historyItem{border:1px solid var(--line);border-radius:14px;padding:12px;background:#020617;cursor:pointer}
+.historyItem:hover{border-color:#38bdf8}
+.historyItemHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.historyItemHead h3{margin:0 0 6px;font-size:16px;flex:1;min-width:0}
+.historyDeleteBtn{width:auto;margin:0;padding:6px 10px;font-size:10px;flex-shrink:0}
+.roleTaskBanner{
+  margin:0 0 14px;padding:10px 14px;border-radius:14px;
+  background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.35);
+  color:#bae6fd;font-size:12px;font-weight:800
+}
+.teamActions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.teamActions button{width:auto;margin:0;padding:8px 12px;font-size:11px}
+.teamConfirmBadge{
+  display:inline-block;margin-left:8px;padding:3px 8px;border-radius:999px;
+  font-size:10px;font-weight:900;background:rgba(34,197,94,.18);color:#86efac
+}
+.teamConfirmBadge.pending{background:rgba(148,163,184,.15);color:#cbd5e1}
+#lineupGrid.singleTeam,#lineupGrid.hlvRoleView,#lineupGrid.capHlvRoleView{grid-template-columns:1fr}
+#lineupGrid.singleTeam #exportArea,#lineupGrid.hlvRoleView #exportArea{max-width:min(920px,100%);margin:0 auto}
+#lineupGrid.capHlvRoleView #exportArea{max-width:100%;width:100%;margin:0;padding:16px 18px 20px}
+#internalTeams.singleTeam,#internalTeams.hlvRoleView{grid-template-columns:1fr;width:fit-content;max-width:100%;margin:0 auto}
+#capTeams.capHlvView{width:100%;max-width:none;margin:0}
+.historyMeta{font-size:11px;color:var(--muted);line-height:1.5}
+.historyDetail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none;cursor:default}
+.historyDetail.show{display:block}
+.historyDetail .lmTeams{
+  max-width:min(1020px,100%);margin:0 auto;width:100%
+}
+.historyDetail .lrScoreBoard{margin-bottom:12px;padding:12px}
+.historyDetail .lrScoreNum{font-size:32px}
+.historyDetail .lrMvpBar{margin-bottom:10px;font-size:11px}
+.locked .lockable{opacity:.45;pointer-events:none}
+#lineupGrid.coordinatorLocked #formationSelectA,
+#lineupGrid.coordinatorLocked #formationSelectB,
+#lineupGrid.coordinatorLocked #searchBox,
+#lineupGrid.coordinatorLocked #screenshotInput,
+#lineupGrid.coordinatorLocked #players,
+#lineupGrid.coordinatorLocked #playerCard .secondary.lockable{opacity:.45;pointer-events:none}
+.statsTabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.statsTab{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
+.statsTab.active{background:#0284c7;color:#fff;border-color:#0284c7}
+.statList{display:grid;gap:6px;max-height:70vh;overflow:auto;margin-top:10px}
+.statRow{display:grid;grid-template-columns:36px 38px 1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617}
+.statRow img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.statRank{font-weight:900;color:#94a3b8;font-size:12px;text-align:center}
+.statValue{font-weight:900;font-size:12px;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.statMvp{background:rgba(250,204,21,.2);color:#facc15}
+.statRating{background:rgba(56,189,248,.15);color:#7dd3fc}
+.statGoals{background:rgba(34,197,94,.18);color:#86efac}
+.statAssists{background:rgba(167,139,250,.18);color:#c4b5fd}
+@media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.resultPlayer{grid-template-columns:32px 1fr 50px 40px 40px 36px}.resultPlayer.noStats{grid-template-columns:34px 1fr 64px 44px}}
+.authBar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.authBar .meta{margin:0}
+.authActions{display:flex;gap:8px;align-items:center}
+.authActions button{width:auto;margin:0;padding:8px 14px}
+.permGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.permItem{display:flex;gap:8px;align-items:center;font-size:11px;background:#020617;border:1px solid var(--line);border-radius:10px;padding:8px}
+.adminUserRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617;margin-bottom:8px;font-size:11px}

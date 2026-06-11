@@ -5,10 +5,14 @@ import {
   calcRatingDelta,
   clampRating,
   clampStatCount,
+  clampPositiveIntScore,
+  formatSummaryScore,
   boolish,
   applyTeamMvpRules,
   mapHistoryPlayer,
   mapSummary,
+  hasPermission,
+  parseCustomCoord,
   json,
   corsPreflight
 } from "./utils.js";
@@ -52,7 +56,7 @@ export default {
           version: APP_VERSION,
           storage: "cloudflare-d1",
           actions: [
-            "save_match_history", "save_match_result", "cancel_match", "delete_match",
+            "save_match_history", "save_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats",
@@ -93,11 +97,20 @@ export default {
           const session = await requireAuth(db, token, ["manage_users"]);
           return json(await adminDeleteUser(db, session, payload.username));
         case "save_match_history":
-          await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap"]);
+          await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
-        case "save_match_result":
-          await requireAuth(db, token, ["match_result"]);
-          return json(await saveMatchResult(db, payload));
+        case "confirm_team_lineup": {
+          const confirmSession = await requireAuth(db, token, [
+            "lineup_team_a", "lineup_team_b", "lineup_internal", "lineup_cap", "lineup_cap_hlv", "all"
+          ]);
+          return json(await confirmTeamLineup(db, payload, confirmSession));
+        }
+        case "save_match_result": {
+          const resultSession = await requireAuth(db, token, [
+            "match_result", "match_result_a", "match_result_b", "lineup_cap_hlv"
+          ]);
+          return json(await saveMatchResult(db, payload, resultSession));
+        }
         case "cancel_match":
           await requireAuth(db, token, ["cancel_match"]);
           return json(await cancelMatch(db, payload));
@@ -134,8 +147,8 @@ async function getMatchList(db, params) {
     match_date: r.match_date,
     match_type: r.match_type,
     opponent_name: r.opponent_name,
-    team_a_score: r.team_a_score,
-    team_b_score: r.team_b_score,
+    team_a_score: formatSummaryScore(r.team_a_score),
+    team_b_score: formatSummaryScore(r.team_b_score),
     mvp_players: r.mvp_players,
     formation_a: r.formation_a,
     formation_b: r.formation_b,
@@ -167,7 +180,7 @@ async function getMatchDetail(db, params) {
 
 async function getPendingMatch(db) {
   const summary = await db.prepare(
-    `SELECT * FROM match_summary WHERE status = 'lineup_exported'
+    `SELECT * FROM match_summary WHERE status IN ('lineup_published', 'lineup_exported')
      ORDER BY created_at DESC LIMIT 1`
   ).first();
 
@@ -249,23 +262,37 @@ async function saveMatchHistory(db, payload) {
 
   const matchDate = String(rows[0].match_date || "").trim();
   const matchDateNorm = normalizeMatchDate(matchDate);
+  const prevSummary = await db.prepare(
+    "SELECT team_a_lineup_confirmed, team_b_lineup_confirmed FROM match_summary WHERE match_id = ?"
+  ).bind(matchId).first();
   const deleted = await deletePendingByDate(db, matchDate);
 
   const matchType = String(payload.match_type || "internal").trim().toLowerCase();
+  const summaryStatus = String(payload.status || rows[0]?.status || "lineup_exported").trim();
   const now = new Date().toISOString();
+  let teamAConfirmed = Number(prevSummary?.team_a_lineup_confirmed) || 0;
+  let teamBConfirmed = Number(prevSummary?.team_b_lineup_confirmed) || 0;
+  if (payload.team_a_lineup_confirmed != null) {
+    teamAConfirmed = boolish(payload.team_a_lineup_confirmed) ? 1 : 0;
+  }
+  if (payload.team_b_lineup_confirmed != null) {
+    teamBConfirmed = boolish(payload.team_b_lineup_confirmed) ? 1 : 0;
+  }
 
   const insert = db.prepare(`
     INSERT INTO match_history (
       match_id, match_date, match_date_norm, created_at, team, shirt, formation,
       player_name, player_name_norm, rating, starter, lineup_order,
       assigned_position, assigned_side, main_position, secondary_positions,
-      preferred_side, fit_label, captain, image_filename, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      preferred_side, fit_label, captain, image_filename, status, custom_x, custom_y
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const stmts = [];
   for (const row of rows) {
-    const status = row.status || "lineup_exported";
+    const status = row.status || summaryStatus;
+    const customX = parseCustomCoord(row.custom_x);
+    const customY = parseCustomCoord(row.custom_y);
     stmts.push(insert.bind(
       matchId,
       matchDate,
@@ -287,7 +314,9 @@ async function saveMatchHistory(db, payload) {
       row.fit_label || "",
       boolish(row.captain) ? 1 : 0,
       row.image_filename || payload.image_filename || "",
-      status
+      status,
+      customX,
+      customY
     ));
   }
   await db.batch(stmts);
@@ -295,8 +324,9 @@ async function saveMatchHistory(db, payload) {
   await db.prepare(`
     INSERT INTO match_summary (
       match_id, match_label, match_date, match_date_norm, created_at, match_type,
-      opponent_name, formation_a, formation_b, player_count, status, image_filename
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'lineup_exported', ?)
+      opponent_name, formation_a, formation_b, player_count, status, image_filename,
+      team_a_lineup_confirmed, team_b_lineup_confirmed
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     matchId,
     payload.match_label || "",
@@ -308,7 +338,10 @@ async function saveMatchHistory(db, payload) {
     payload.formation_a || "",
     payload.formation_b || "",
     rows.length,
-    rows[0]?.image_filename || ""
+    summaryStatus,
+    rows[0]?.image_filename || payload.image_filename || "",
+    teamAConfirmed,
+    teamBConfirmed
   ).run();
 
   return {
@@ -320,23 +353,146 @@ async function saveMatchHistory(db, payload) {
     deleted_old_rows: deleted.deletedRows,
     deleted_pending_summary: deleted.deletedSummary,
     inserted_rows: rows.length,
-    status: "lineup_exported"
+    status: summaryStatus,
+    team_a_lineup_confirmed: !!teamAConfirmed,
+    team_b_lineup_confirmed: !!teamBConfirmed
   };
 }
 
-async function saveMatchResult(db, payload) {
+async function confirmTeamLineup(db, payload, session) {
   const matchId = String(payload.match_id || "").trim();
-  const teamAScore = Number(payload.team_a_score);
-  const teamBScore = Number(payload.team_b_score);
+  const team = String(payload.team || "").trim().toUpperCase();
+  const confirmed = payload.confirmed == null ? true : boolish(payload.confirmed);
+  const formation = String(payload.formation || "").trim();
+  const rows = Array.isArray(payload.rows) ? payload.rows : [];
+
+  if (!matchId) throw new Error("match_id is required");
+  if (team !== "A" && team !== "B" && team !== "MAIN" && team !== "SUB") {
+    throw new Error("team must be A, B, MAIN or SUB");
+  }
+
+  const perms = session?.permissions || [];
+  const canAll = hasPermission(perms, ["all", "lineup_internal"]);
+  const canCoordinator = hasPermission(perms, ["lineup_split"]);
+  const canCap = canAll || hasPermission(perms, ["lineup_cap", "lineup_cap_hlv"]) || canCoordinator;
+  const canA = canAll || hasPermission(perms, ["lineup_team_a"]) || canCoordinator;
+  const canB = canAll || hasPermission(perms, ["lineup_team_b"]) || canCoordinator;
+  if (team === "A" && !canA) throw new Error("Không có quyền chốt Đội A");
+  if (team === "B" && !canB) throw new Error("Không có quyền chốt Đội B");
+  if ((team === "MAIN" || team === "SUB") && !canCap) throw new Error("Không có quyền chốt đội hình Cáp");
+
+  const summary = await db.prepare(
+    "SELECT * FROM match_summary WHERE match_id = ?"
+  ).bind(matchId).first();
+  if (!summary) throw new Error("Không tìm thấy trận để cập nhật");
+
+  if (confirmed && rows.length) {
+    const matchDate = String(rows[0].match_date || summary.match_date || "").trim();
+    const matchDateNorm = normalizeMatchDate(matchDate || summary.match_date_norm);
+    const now = new Date().toISOString();
+    const status = String(rows[0].status || summary.status || "lineup_published").trim();
+
+    await db.prepare(
+      "DELETE FROM match_history WHERE match_id = ? AND team = ?"
+    ).bind(matchId, team).run();
+
+    const insert = db.prepare(`
+      INSERT INTO match_history (
+        match_id, match_date, match_date_norm, created_at, team, shirt, formation,
+        player_name, player_name_norm, rating, starter, lineup_order,
+        assigned_position, assigned_side, main_position, secondary_positions,
+        preferred_side, fit_label, captain, image_filename, status, custom_x, custom_y
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const stmts = [];
+    for (const row of rows) {
+      const customX = parseCustomCoord(row.custom_x);
+      const customY = parseCustomCoord(row.custom_y);
+      stmts.push(insert.bind(
+        matchId,
+        matchDate || summary.match_date,
+        matchDateNorm || summary.match_date_norm,
+        row.created_at || now,
+        team,
+        row.shirt || (team === "A" ? "Áo Đỏ" : team === "B" ? "Áo Vàng" : team === "MAIN" ? "Chính" : "Phụ"),
+        row.formation || formation || (team === "A" || team === "MAIN" ? summary.formation_a : summary.formation_b),
+        row.player_name || "",
+        normalizeName(row.player_name),
+        Number(row.rating) || 5,
+        boolish(row.starter) ? 1 : 0,
+        Number(row.lineup_order) || 0,
+        row.assigned_position || "",
+        row.assigned_side || "",
+        row.main_position || "",
+        row.secondary_positions || "",
+        row.preferred_side || "",
+        row.fit_label || "",
+        boolish(row.captain) ? 1 : 0,
+        row.image_filename || summary.image_filename || "",
+        row.status || status,
+        customX,
+        customY
+      ));
+    }
+    await db.batch(stmts);
+
+    const formCol = team === "A" || team === "MAIN" ? "formation_a" : "formation_b";
+    const formValue = formation || rows[0]?.formation || (team === "A" || team === "MAIN" ? summary.formation_a : summary.formation_b);
+    await db.prepare(
+      `UPDATE match_summary SET ${formCol} = ? WHERE match_id = ?`
+    ).bind(formValue, matchId).run();
+
+    const countRow = await db.prepare(
+      "SELECT COUNT(*) AS total FROM match_history WHERE match_id = ?"
+    ).bind(matchId).first();
+    await db.prepare(
+      "UPDATE match_summary SET player_count = ? WHERE match_id = ?"
+    ).bind(Number(countRow?.total) || rows.length, matchId).run();
+  }
+
+  const col = team === "A" || team === "MAIN" ? "team_a_lineup_confirmed" : "team_b_lineup_confirmed";
+  await db.prepare(
+    `UPDATE match_summary SET ${col} = ? WHERE match_id = ?`
+  ).bind(confirmed ? 1 : 0, matchId).run();
+
+  const updated = await db.prepare(
+    "SELECT team_a_lineup_confirmed, team_b_lineup_confirmed, formation_a, formation_b FROM match_summary WHERE match_id = ?"
+  ).bind(matchId).first();
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    match_id: matchId,
+    team,
+    confirmed,
+    formation: team === "A" || team === "MAIN" ? updated?.formation_a : updated?.formation_b,
+    saved_rows: confirmed ? rows.length : 0,
+    team_a_lineup_confirmed: !!updated?.team_a_lineup_confirmed,
+    team_b_lineup_confirmed: !!updated?.team_b_lineup_confirmed
+  };
+}
+
+async function saveMatchResult(db, payload, session) {
+  const matchId = String(payload.match_id || "").trim();
   let players = Array.isArray(payload.players) ? payload.players : [];
 
   if (!matchId) throw new Error("match_id is required");
-  if (!Number.isFinite(teamAScore) || !Number.isFinite(teamBScore)) {
-    throw new Error("team_a_score and team_b_score are required");
-  }
-  if (!players.length) throw new Error("players is required");
 
+  const perms = session?.permissions || [];
+  const canHost = hasPermission(perms, ["all", "match_result"]);
+  const canAOnly = hasPermission(perms, ["match_result_a"]) && !canHost;
+  const canBOnly = hasPermission(perms, ["match_result_b"]) && !canHost;
   const matchType = String(payload.match_type || "internal").trim().toLowerCase();
+  const isCapMatch = matchType === "cap";
+  const canCapHlvOnly = isCapMatch && hasPermission(perms, ["lineup_cap_hlv"]) && !canHost;
+  const canCapResult = isCapMatch && (canCapHlvOnly || canHost);
+  if (!canHost && !canAOnly && !canBOnly && !canCapResult) {
+    throw new Error("Tài khoản không có quyền nhập kết quả.");
+  }
+
+  const finalizeMatch = payload.finalize_match === true && canHost;
+  if (!players.length && !finalizeMatch) throw new Error("players is required");
   players = applyTeamMvpRules(players, matchType);
 
   let summary = await db.prepare("SELECT * FROM match_summary WHERE match_id = ?").bind(matchId).first();
@@ -373,24 +529,131 @@ async function saveMatchResult(db, payload) {
 
   if (summary.status === "completed") throw new Error("Match already completed and cannot be edited");
 
-  const mvpNames = players.filter((p) => p.is_mvp).map((p) => p.player_name);
   const savedAt = new Date().toISOString();
   const matchDate = summary.match_date || "";
-
-  await db.prepare(`
-    UPDATE match_summary SET
-      team_a_score = ?, team_b_score = ?, mvp_players = ?, status = 'completed',
-      result_saved_at = ?, opponent_name = COALESCE(?, opponent_name),
-      match_type = COALESCE(?, match_type)
-    WHERE match_id = ?
-  `).bind(
-    teamAScore, teamBScore, mvpNames.join(", "),
-    savedAt, payload.opponent_name || null, matchType || null, matchId
-  ).run();
-
   const historyRows = await db.prepare("SELECT * FROM match_history WHERE match_id = ?").bind(matchId).all();
   const playerMap = {};
   players.forEach((p) => { playerMap[normalizeName(p.player_name)] = p; });
+
+  const prevAScore = clampPositiveIntScore(summary.team_a_score, 0);
+  const prevBScore = clampPositiveIntScore(summary.team_b_score, 0);
+  let nextAScore = payload.team_a_score == null || String(payload.team_a_score).trim() === ""
+    ? prevAScore
+    : clampPositiveIntScore(payload.team_a_score, prevAScore);
+  let nextBScore = payload.team_b_score == null || String(payload.team_b_score).trim() === ""
+    ? prevBScore
+    : clampPositiveIntScore(payload.team_b_score, prevBScore);
+  if (canAOnly) nextBScore = prevBScore;
+  if (canBOnly) nextAScore = prevAScore;
+  if (finalizeMatch) {
+    if (payload.team_a_score == null || String(payload.team_a_score).trim() === "") nextAScore = prevAScore;
+    if (payload.team_b_score == null || String(payload.team_b_score).trim() === "") nextBScore = prevBScore;
+  }
+
+  let teamAFlag = summary.team_a_result_saved || 0;
+  let teamBFlag = summary.team_b_result_saved || 0;
+  if (canAOnly) teamAFlag = 1;
+  if (canBOnly) teamBFlag = 1;
+  if (canCapHlvOnly) teamAFlag = 1;
+
+  if (finalizeMatch && isCapMatch && !teamAFlag) {
+    throw new Error("Chờ HLV Cáp xác nhận trước khi kết thúc trận.");
+  }
+  if (finalizeMatch && !isCapMatch && (!teamAFlag || !teamBFlag)) {
+    throw new Error("Chờ cả 2 HLV xác nhận trước khi kết thúc trận.");
+  }
+
+  const updatePartialHist = db.prepare(`
+    UPDATE match_history SET
+      team_a_score = ?, team_b_score = ?, match_score = ?,
+      goals = ?, assists = ?, is_mvp = ?
+    WHERE id = ?
+  `);
+
+  const partialStmts = [];
+  for (const row of historyRows.results || []) {
+    const teamKey = String(row.team || "").toUpperCase();
+    const allowed = isCapMatch && canCapHlvOnly
+      ? (teamKey === "MAIN" || teamKey === "SUB")
+      : ((teamKey === "A" && canAOnly) || (teamKey === "B" && canBOnly));
+    if (!allowed) continue;
+    const item = playerMap[normalizeName(row.player_name)];
+    if (!item) continue;
+    partialStmts.push(updatePartialHist.bind(
+      nextAScore, nextBScore, item.match_score,
+      clampStatCount(item.goals), clampStatCount(item.assists),
+      item.is_mvp ? 1 : 0, row.id
+    ));
+  }
+  if (partialStmts.length) await db.batch(partialStmts);
+
+  const nextAFlag = teamAFlag;
+  const nextBFlag = teamBFlag;
+  const finalize = finalizeMatch;
+
+  await db.prepare(`
+    UPDATE match_summary SET
+      team_a_score = ?, team_b_score = ?,
+      team_a_result_saved = ?, team_b_result_saved = ?,
+      opponent_name = COALESCE(?, opponent_name),
+      match_type = COALESCE(?, match_type)
+    WHERE match_id = ?
+  `).bind(
+    String(nextAScore), String(nextBScore), nextAFlag, nextBFlag,
+    payload.opponent_name || null, matchType || null, matchId
+  ).run();
+
+  if (!finalize) {
+    const waiting = [];
+    if (isCapMatch) {
+      if (!nextAFlag) waiting.push("HLV Cáp");
+    } else {
+      if (!nextAFlag) waiting.push("Đội A");
+      if (!nextBFlag) waiting.push("Đội B");
+    }
+    return {
+      ok: true,
+      version: APP_VERSION,
+      match_id: matchId,
+      match_label: summary.match_label,
+      status: "lineup_exported",
+      partial: true,
+      team_a_result_saved: !!nextAFlag,
+      team_b_result_saved: !!nextBFlag,
+      waiting_teams: waiting,
+      saved_at: savedAt
+    };
+  }
+
+  const capHlvConfirmed = isCapMatch && !!summary.team_a_result_saved;
+  const mergedPlayers = [];
+  for (const row of historyRows.results || []) {
+    const incoming = playerMap[normalizeName(row.player_name)];
+    const teamKey = String(row.team || "").toUpperCase();
+    const teamHlvLocked = (teamKey === "A" && summary.team_a_result_saved) ||
+      (teamKey === "B" && summary.team_b_result_saved);
+    const ratingLocked = capHlvConfirmed || teamHlvLocked;
+    const statsLocked = !finalize && (capHlvConfirmed || teamHlvLocked);
+    const matchScore = ratingLocked
+      ? Number(row.match_score) || 7
+      : (incoming ? Number(incoming.match_score) : Number(row.match_score) || 7);
+    mergedPlayers.push({
+      player_name: row.player_name,
+      team: teamKey,
+      starter: !!row.starter,
+      match_score: matchScore,
+      goals: incoming && !statsLocked ? clampStatCount(incoming.goals) : Number(row.goals) || 0,
+      assists: incoming && !statsLocked ? clampStatCount(incoming.assists) : Number(row.assists) || 0,
+      rating_before: incoming ? clampRating(incoming.rating_before) : clampRating(row.rating_before || row.rating),
+      mvp_count_before: incoming ? Math.max(0, Math.round(Number(incoming.mvp_count_before) || 0)) : Math.max(0, Math.round(Number(row.mvp_count) || 0)),
+      is_mvp: ratingLocked ? !!row.is_mvp : (incoming ? !!incoming.is_mvp : !!row.is_mvp)
+    });
+  }
+
+  const finalized = applyTeamMvpRules(mergedPlayers, matchType);
+  const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
+  const playerMapFinal = {};
+  finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
 
   const updateHist = db.prepare(`
     UPDATE match_history SET
@@ -402,20 +665,26 @@ async function saveMatchResult(db, payload) {
 
   const histStmts = [];
   for (const row of historyRows.results || []) {
-    const item = playerMap[normalizeName(row.player_name)];
+    const item = playerMapFinal[normalizeName(row.player_name)];
     if (!item) continue;
     const ratingBefore = clampRating(item.rating_before);
     const delta = calcRatingDelta(item.match_score);
     const ratingAfter = clampRating(ratingBefore + delta);
     histStmts.push(updateHist.bind(
-      teamAScore, teamBScore, item.match_score,
+      nextAScore, nextBScore, item.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
       item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt, row.id
     ));
   }
   if (histStmts.length) await db.batch(histStmts);
 
-  await updateRosterFromResult(db, players, matchId, matchDate, savedAt);
+  await db.prepare(`
+    UPDATE match_summary SET
+      mvp_players = ?, status = 'completed', result_saved_at = ?
+    WHERE match_id = ?
+  `).bind(mvpNames.join(", "), savedAt, matchId).run();
+
+  await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
 
   return {
     ok: true,
@@ -423,6 +692,8 @@ async function saveMatchResult(db, payload) {
     match_id: matchId,
     match_label: summary.match_label,
     status: "completed",
+    team_a_score: nextAScore,
+    team_b_score: nextBScore,
     mvp_players: mvpNames,
     saved_at: savedAt
   };

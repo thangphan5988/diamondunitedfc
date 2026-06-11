@@ -13,13 +13,30 @@ export async function hashPassword(password, pepper) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const ROLE_USERS = [
+  { username: "admin", display_name: "Admin", permissions: "all", password: "dufc2026" },
+  { username: "anhphuong", display_name: "Anh Phuong", permissions: "roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
+  { username: "chikha", display_name: "Chi Kha", permissions: "roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
+  { username: "thangphan", display_name: "Thang Phan", permissions: "lineup_team_a,match_result_a", password: "dufc2026" },
+  { username: "minhphat", display_name: "Minh Phat", permissions: "lineup_team_b,match_result_b", password: "dufc2026" },
+  { username: "tuongbang", display_name: "Tuong Bang", permissions: "lineup_cap_hlv", password: "dufc2026" }
+];
+
 export async function ensureDefaultAdmin(db, pepper) {
-  const row = await db.prepare("SELECT username FROM admin_users WHERE username = ?").bind("admin").first();
-  if (row) return;
-  const hash = await hashPassword("dufc2026", pepper);
-  await db.prepare(
-    "INSERT INTO admin_users (username, password_hash, display_name, permissions, active) VALUES (?, ?, ?, ?, 1)"
-  ).bind("admin", hash, "Admin", "all").run();
+  for (const user of ROLE_USERS) {
+    const row = await db.prepare("SELECT username, permissions FROM admin_users WHERE username = ?").bind(user.username).first();
+    if (row) {
+      if (String(row.permissions || "") !== user.permissions) {
+        await db.prepare("UPDATE admin_users SET permissions = ? WHERE username = ?")
+          .bind(user.permissions, user.username).run();
+      }
+      continue;
+    }
+    const hash = await hashPassword(user.password, pepper);
+    await db.prepare(
+      "INSERT INTO admin_users (username, password_hash, display_name, permissions, active) VALUES (?, ?, ?, ?, 1)"
+    ).bind(user.username, hash, user.display_name, user.permissions).run();
+  }
 }
 
 export async function pruneExpiredSessions(db) {
@@ -103,13 +120,18 @@ export async function adminValidateSession(db, token) {
   const user = await db.prepare("SELECT * FROM admin_users WHERE username = ?").bind(session.username).first();
   if (!user || !user.active) return { ok: true, version: APP_VERSION, valid: false };
 
+  const permissions = parsePermissions(user.permissions);
+  if (permissions.join(",") !== (session.permissions || []).join(",")) {
+    await db.prepare("UPDATE admin_sessions SET permissions = ? WHERE token = ?")
+      .bind(permissions.join(","), session.token).run();
+  }
   return {
     ok: true,
     version: APP_VERSION,
     valid: true,
     username: user.username,
     display_name: user.display_name || user.username,
-    permissions: session.permissions,
+    permissions,
     expires_at: session.expires_at
   };
 }

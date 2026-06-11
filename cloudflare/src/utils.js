@@ -50,6 +50,30 @@ export function clampStatCount(value) {
   return Math.max(0, Math.min(99, Math.round(Number(value) || 0)));
 }
 
+export function clampPositiveIntScore(value, fallback = 0) {
+  if (value == null || String(value).trim() === "") {
+    const fb = Number(fallback);
+    return Number.isFinite(fb) && fb >= 0 ? Math.min(99, Math.floor(fb)) : 0;
+  }
+  const s = String(value).trim().replace(",", ".");
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.min(99, n);
+  }
+  const f = Number(s);
+  if (!Number.isFinite(f) || f < 0) {
+    const fb = Number(fallback);
+    return Number.isFinite(fb) && fb >= 0 ? Math.min(99, Math.floor(fb)) : 0;
+  }
+  return Math.min(99, Math.floor(f));
+}
+
+export function formatSummaryScore(value) {
+  if (value == null || String(value).trim() === "") return "";
+  return clampPositiveIntScore(value, 0);
+}
+
 export function parsePermissions(value) {
   if (Array.isArray(value)) return value.map((x) => String(x).trim().toLowerCase()).filter(Boolean);
   const raw = String(value || "").trim().toLowerCase();
@@ -67,6 +91,12 @@ export function hasPermission(permissions, required) {
 
 export function boolish(v) {
   return v === true || v === 1 || String(v).toUpperCase() === "TRUE";
+}
+
+export function parseCustomCoord(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function json(data, status = 200) {
@@ -161,7 +191,9 @@ export function mapHistoryPlayer(row) {
     rating_before: row.rating_before,
     rating_delta: row.rating_delta,
     rating_after: row.rating_after,
-    captain: boolish(row.captain)
+    captain: boolish(row.captain),
+    custom_x: row.custom_x != null ? Number(row.custom_x) : null,
+    custom_y: row.custom_y != null ? Number(row.custom_y) : null
   };
 }
 
@@ -176,12 +208,16 @@ export function mapSummary(row) {
     opponent_name: row.opponent_name,
     formation_a: row.formation_a,
     formation_b: row.formation_b,
-    team_a_score: row.team_a_score,
-    team_b_score: row.team_b_score,
+    team_a_score: formatSummaryScore(row.team_a_score),
+    team_b_score: formatSummaryScore(row.team_b_score),
     mvp_players: row.mvp_players,
     player_count: row.player_count,
     status: row.status,
     image_filename: row.image_filename,
-    result_saved_at: row.result_saved_at
+    result_saved_at: row.result_saved_at,
+    team_a_result_saved: !!row.team_a_result_saved,
+    team_b_result_saved: !!row.team_b_result_saved,
+    team_a_lineup_confirmed: !!row.team_a_lineup_confirmed,
+    team_b_lineup_confirmed: !!row.team_b_lineup_confirmed
   };
 }
