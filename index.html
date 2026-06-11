@@ -7,16 +7,16 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.4.0">
-  <link rel="stylesheet" href="css/lineup.css?v=2.4.0">
+  <link rel="stylesheet" href="css/base.css?v=2.4.9">
+  <link rel="stylesheet" href="css/lineup.css?v=2.4.10">
   <link rel="stylesheet" href="css/modals.css?v=2.4.0">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.2">
-  <link rel="stylesheet" href="css/latest-match.css?v=2.4.7">
+  <link rel="stylesheet" href="css/latest-match.css?v=2.4.11">
 </head>
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v2.4.7</div>
+  <div class="buildVersion">Build v2.4.11</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -51,15 +51,23 @@
   <div class="grid" id="lineupGrid">
     <div class="card" id="playerCard">
       <h2 id="playerCardTitle">1. Danh sách thành viên</h2>
-      <input id="searchBox" class="lockable" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()" style="margin-bottom:10px">
-      <input id="screenshotInput" class="lockable" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)" style="margin-bottom:10px">
+      <div class="playerCardTools">
+        <input id="searchBox" class="lockable playerSearch" type="text" placeholder="Tìm tên cầu thủ..." oninput="renderPlayerPicker()">
+        <label class="fileUploadBtn lockable" id="screenshotLabel">
+          <span class="fileUploadIcon">📷</span>
+          <span>Import ảnh Zalo</span>
+          <input id="screenshotInput" class="lockable" type="file" accept="image/*" multiple onchange="detectPlayersFromScreenshot(event)">
+        </label>
+      </div>
       <div id="ocrStatus" class="ocrStatus"></div>
-      <button class="secondary lockable" onclick="selectAll(false)">Bỏ chọn tất cả</button>
-      <button class="gold lockable" id="btnRandom" onclick="startRandom()">Random chia đội</button>
-      <button class="gold lockable" id="btnPublish" onclick="publishLineupDraft()" style="display:none">Gửi HLV</button>
-      <button class="gold lockable" id="btnForceExport" onclick="forceConfirmAndExport()" style="display:none">Chốt & xuất hình</button>
-      <button class="gold lockable" id="btnOptimizeCap" onclick="startOptimizeCap()" style="display:none">Sắp xếp đội hình tối ưu</button>
-      <button class="gold" id="btnExport" onclick="exportImage()">Xuất hình đội hình</button>
+      <div class="playerCardActions">
+        <button class="secondary lockable" onclick="selectAll(false)">Bỏ chọn tất cả</button>
+        <button class="gold lockable" id="btnRandom" onclick="startRandom()">Random chia đội</button>
+        <button class="gold lockable" id="btnPublish" onclick="publishLineupDraft()" style="display:none">Gửi HLV</button>
+        <button class="gold lockable" id="btnForceExport" onclick="forceConfirmAndExport()" style="display:none">Chốt & xuất hình</button>
+        <button class="gold lockable" id="btnOptimizeCap" onclick="startOptimizeCap()" style="display:none">Sắp xếp đội hình tối ưu</button>
+        <button class="gold" id="btnExport" onclick="exportImage()">Xuất hình đội hình</button>
+      </div>
       
       <div id="error" class="error"></div>
       <div id="players" class="players"></div>
@@ -79,8 +87,13 @@
         <div class="metric"><b id="scoreCap">0</b><span>Điểm đội hình</span></div>
       </div>
 
-      <div class="teams" id="internalTeams">
-        <div id="teamPanelA">
+      <div class="lmTeamsWrap" id="internalTeamsWrap">
+        <div class="lmTeamSeg" role="tablist" id="internalTeamSeg">
+          <button type="button" class="lmSegBtn active" data-team="A">🔴 Đội A</button>
+          <button type="button" class="lmSegBtn" data-team="B">🟡 Đội B</button>
+        </div>
+      <div class="teams lineupTeams lmTeams lmTeams--switchable" id="internalTeams">
+        <div id="teamPanelA" class="lmTeamPanel" data-lm-team="A">
           <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A (Áo Đỏ)</h2><span id="teamConfirmBadgeA" class="teamConfirmBadge pending" style="display:none">Chưa chốt</span><span id="scoreA" class="meta"></span></div>
           <div class="teamActions" id="teamActionsA">
             <button type="button" class="gold" id="btnConfirmA" onclick="confirmTeamLineup('A')" style="display:none">✓ Chốt đội hình</button>
@@ -110,7 +123,7 @@
           </div>
         </div>
 
-        <div id="teamPanelB">
+        <div id="teamPanelB" class="lmTeamPanel" data-lm-team="B">
           <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B (Áo Vàng)</h2><span id="teamConfirmBadgeB" class="teamConfirmBadge pending" style="display:none">Chưa chốt</span><span id="scoreB" class="meta"></span></div>
           <div class="teamActions" id="teamActionsB">
             <button type="button" class="gold" id="btnConfirmB" onclick="confirmTeamLineup('B')" style="display:none">✓ Chốt đội hình</button>
@@ -140,13 +153,20 @@
           </div>
         </div>
       </div>
+      </div>
 
-      <div class="teams" id="capTeams" style="display:none">
+      <div id="capTeams" style="display:none">
         <div id="capHlvActions" class="capHlvActions" style="display:none">
           <button type="button" class="gold" id="btnConfirmCap" onclick="confirmCapLineup()" style="display:none">✓ Chốt đội hình</button>
           <button type="button" class="gold" id="btnResultCap" onclick="openResultModal()" style="display:none">Nhập kết quả trận</button>
         </div>
-        <div id="teamPanelCapMain">
+        <div class="lmTeamsWrap" id="capTeamsWrap">
+          <div class="lmTeamSeg" role="tablist" id="capTeamSeg">
+            <button type="button" class="lmSegBtn active" data-team="main">⚽ Chính</button>
+            <button type="button" class="lmSegBtn" data-team="sub">🔄 Phụ</button>
+          </div>
+        <div class="lineupTeams capTeamsGrid lmTeams lmTeams--switchable">
+        <div id="teamPanelCapMain" class="lmTeamPanel" data-lm-team="main">
           <div class="teamHead"><h2 style="color:#38bdf8">⚽ Đội hình ra sân</h2><span id="scoreCapMain" class="meta"></span></div>
           <p id="hlvLockedCapMain" class="hlvLockedNote">✓ Đã chốt đội hình — chế độ xem</p>
           <div class="formationControl">
@@ -172,7 +192,7 @@
           </div>
         </div>
 
-        <div id="teamPanelCapSub">
+        <div id="teamPanelCapSub" class="lmTeamPanel" data-lm-team="sub">
           <div class="teamHead"><h2 style="color:#a78bfa">🔄 Đội hình Phụ</h2><span id="scoreCapSub" class="meta"></span></div>
           <p id="hlvLockedCapSub" class="hlvLockedNote">✓ Đã chốt đội hình — chế độ xem</p>
           <div class="formationControl">
@@ -196,6 +216,8 @@
               </div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
       <pre id="textResult"></pre>
@@ -368,14 +390,14 @@
 
   <script src="js/config.js?v=2.4.0"></script>
   <script src="js/utils.js?v=2.4.0"></script>
-  <script src="js/permissions.js?v=2.4.0"></script>
+  <script src="js/permissions.js?v=2.4.8"></script>
   <script src="js/api.js?v=2.4.0"></script>
   <script src="js/match-data.js?v=2.4.0"></script>
   <script src="js/match-result.js?v=2.4.0"></script>
   <script src="js/stats.js?v=2.4.0"></script>
   <script src="js/auth-admin.js?v=2.4.0"></script>
   <script src="js/roster-admin.js?v=2.4.2"></script>
-  <script src="js/latest-match.js?v=2.4.7"></script>
+  <script src="js/latest-match.js?v=2.4.10"></script>
   <script src="js/tabs-history.js?v=2.4.0"></script>
   <script src="js/player-helpers.js?v=2.4.2"></script>
   <script src="js/lineup-confirm.js?v=2.4.0"></script>
@@ -383,10 +405,10 @@
   <script src="js/lineup-algorithm.js?v=2.4.0"></script>
   <script src="js/lineup-random.js?v=2.4.0"></script>
   <script src="js/lineup-hlv.js?v=2.4.0"></script>
-  <script src="js/workflow.js?v=2.4.0"></script>
-  <script src="js/lineup-render.js?v=2.4.0"></script>
+  <script src="js/workflow.js?v=2.4.9"></script>
+  <script src="js/lineup-render.js?v=2.4.11"></script>
   <script src="js/lineup-export.js?v=2.4.0"></script>
-  <script src="js/app.js?v=2.4.0"></script>
+  <script src="js/app.js?v=2.4.9"></script>
 
 </body>
 </html>

@@ -211,6 +211,16 @@
   .lrMvpBadgeIcon{font-size:7px}
   .lrMvpBadgeText{font-size:7px}
   .lrCaptainBadge{width:14px;height:14px;font-size:8px;top:-3px;left:-3px}
+  .lmMatchWrap .lrPitch .cardPlayer{
+    width:min(60px,17vw);min-height:auto;padding:4px 2px 4px;box-sizing:border-box
+  }
+  .lmMatchWrap .lrPitch .cardPlayer img{width:26px;height:26px}
+  .lmMatchWrap .lrPitch .cardPlayer .pname{font-size:8px;margin-top:2px;line-height:1.15}
+  .lmMatchWrap .lrPitch .cardPlayer .ppos{font-size:7px;margin-top:1px;line-height:1.1}
+  .lmMatchWrap .lrPitch .cardPlayer .fit{font-size:7px;margin-top:2px;line-height:1.15}
+  .lmMatchWrap .lrPitch .cardPlayer .fit.fitOk{display:none}
+  .lmMatchWrap .lrPitch .cardPlayer .ratingBadge{width:14px;height:14px;font-size:8px;top:-2px;right:-2px}
+  .lmMatchWrap .lrPitch .cardPlayer .captainBadge{width:14px;height:14px;font-size:8px}
   #latestResultView .card{overflow:hidden}
   #latestResultView .latestMatchCardHead h2{font-size:15px}
   #latestResultView .latestMatchCardHead button{padding:7px 10px;font-size:10px}

@@ -34,20 +34,24 @@
   padding:7px 10px;background:rgba(6,95,70,.2);border:1px solid rgba(52,211,153,.28);border-radius:10px
 }
 .hlvPanel.hlvConfirmed .hlvLockedNote{display:block}
-#capTeams.capHlvView{
+#capTeams.capHlvView .capHlvActions{
+  display:flex;justify-content:flex-end;margin-bottom:4px
+}
+#capTeams.capHlvView .capHlvActions .gold{width:auto;margin:0;padding:10px 18px}
+#capTeams.capHlvView .capHlvActions .gold + .gold{margin-left:8px}
+#capTeams.capHlvView .capTeamsGrid{
   display:grid !important;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:20px;width:100%;max-width:none;align-items:start
 }
-#capTeams.capHlvView .capHlvActions{
-  grid-column:1/-1;display:flex;justify-content:flex-end;margin-bottom:4px
-}
-#capTeams.capHlvView .capHlvActions .gold{width:auto;margin:0;padding:10px 18px}
-#capTeams.capHlvView .capHlvActions .gold + .gold{margin-left:8px}
 #capTeams.capHlvView #teamPanelCapMain,
 #capTeams.capHlvView #teamPanelCapSub{
-  min-width:0;display:flex;flex-direction:column;height:100%
+  min-width:0;flex-direction:column;height:100%
 }
+#capTeams.capHlvView .lmTeamPanel:not(.lmTeamHidden){
+  display:flex
+}
+#capTeams.capHlvView .lmTeamPanel.lmTeamHidden{display:none !important}
 #capTeams.capHlvView .teamHead{margin-bottom:6px}
 #capTeams.capHlvView .formationControl{margin-bottom:8px}
 #capTeams.capHlvView .hlvPanel .lineupBody{
@@ -63,7 +67,7 @@
 }
 #capTeams.capHlvView .hlvEditHint{margin-top:0}
 @media(max-width:1180px){
-  #capTeams.capHlvView{grid-template-columns:1fr}
+  #capTeams.capHlvView .capTeamsGrid{grid-template-columns:1fr}
 }
 .slotLocked{cursor:default;z-index:4}
 .slotLocked .cardPlayer{opacity:.98}
@@ -144,6 +148,126 @@
 .lineupModes{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .lineupMode{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
 .lineupMode.active{background:#0f766e;color:#fff;border-color:#0f766e}
+
+/* Player picker toolbar */
+.playerCardTools{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.playerCardActions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.playerCardActions button{flex:1 1 calc(50% - 4px);margin:0;min-width:0;padding:10px 12px}
+.playerCardActions button.gold{flex:1 1 100%}
+.playerSearch{margin:0}
+.fileUploadBtn{
+  position:relative;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 12px;border-radius:12px;border:1px dashed rgba(148,163,184,.45);
+  background:rgba(2,6,23,.65);color:#cbd5e1;font-size:11px;font-weight:800;
+  cursor:pointer;margin:0
+}
+.fileUploadBtn:hover{border-color:rgba(56,189,248,.55);background:rgba(56,189,248,.08);color:#e2e8f0}
+.fileUploadBtn input[type=file]{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer
+}
+.fileUploadIcon{font-size:14px;line-height:1}
+
+#lineupView .lineupModes{
+  padding:4px;background:rgba(2,6,23,.55);border:1px solid var(--line);border-radius:14px
+}
+#lineupView .lineupMode{flex:1;margin:0;text-align:center}
+
+#lineupView .lineupTeams.lmTeams{
+  max-width:100%;margin:0;width:100%
+}
+#internalTeamsWrap.lmTeamsWrap,#capTeamsWrap.lmTeamsWrap{margin-top:0}
+#capTeams:not(.capHlvView) .capTeamsGrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%
+}
+#capTeams .capHlvActions{margin-bottom:10px}
+
+@media(max-width:760px){
+  #lineupGrid{grid-template-columns:1fr;gap:12px}
+  #exportArea{max-width:100%;overflow-x:clip}
+  #lineupView .lmTeamPanel{overflow:visible}
+  #lineupView .lineupBody{overflow:visible}
+  #lineupView .pitchCol{overflow:visible}
+  #lineupView .roleTaskBanner{
+    font-size:10px;line-height:1.45;padding:8px 10px;margin-bottom:10px
+  }
+  #lineupView .lineupModes{gap:6px;margin-bottom:10px}
+  #lineupView .lineupMode{padding:10px 8px;font-size:10px}
+  #exportArea .summary{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+  #exportArea .summary .metric{padding:8px 10px;border-radius:12px}
+  #exportArea .summary .metric b{font-size:17px}
+  #exportArea .summary .metric span{font-size:9px;line-height:1.35}
+  #exportArea .teamHead{flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  #exportArea .teamHead h2{font-size:15px;min-width:0;flex:1 1 auto}
+  #exportArea .formationControl{
+    grid-template-columns:1fr;gap:6px;margin-bottom:6px
+  }
+  #exportArea .formationControl select{
+    position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;margin:0;padding:0;border:0
+  }
+  #exportArea .formationSeg{display:flex}
+  #exportArea .teamActions{margin:4px 0 6px}
+  #exportArea .teamActions button{padding:8px 12px;font-size:10px}
+
+  #lineupView .pitch{
+    width:100%;max-width:100%;border-radius:18px;border-width:3px
+  }
+  #lineupView .pitch:before{inset:16px}
+  #lineupView .centerCircle{width:84px;height:84px}
+  #lineupView .boxTop,#lineupView .boxBottom{width:150px;height:62px}
+  #lineupView .cardPlayer{
+    width:min(68px,18.5vw);min-height:68px;padding:4px 2px 5px
+  }
+  #lineupView .cardPlayer img{width:30px;height:30px}
+  #lineupView .cardPlayer .pname{font-size:9px;margin-top:3px}
+  #lineupView .cardPlayer .ppos{font-size:8px}
+  #lineupView .cardPlayer .fit{display:none}
+  #lineupView .ratingBadge{width:15px;height:15px;font-size:8px}
+
+  #lineupView .lineupBody .pitchCol{
+    width:100%;max-width:100%;min-width:0;display:flex;justify-content:center
+  }
+  #lineupView .benchSide{margin-top:8px;padding-top:8px}
+  #lineupView .benchSide h3{font-size:12px;margin:0 0 6px}
+  #lineupView .benchList{display:flex;flex-wrap:wrap;gap:6px}
+  #lineupView .benchItem{font-size:9px;padding:4px 8px 4px 4px}
+  #lineupView .benchItem img{width:22px;height:22px}
+
+  #lineupView .hlvPanel .lineupBody{
+    display:flex;flex-direction:column;grid-template-columns:unset;
+    width:100%;max-width:100%;padding:10px
+  }
+  #lineupView .hlvPanel .lineupBody .pitchCol{order:1;width:100%;min-width:0;flex:unset}
+  #lineupView .hlvPanel .lineupBody .benchSide{
+    order:2;margin-top:10px;border-top:1px solid var(--line);padding-top:10px
+  }
+  #lineupView .hlvPanel .benchSide .benchList{
+    flex-direction:row;flex-wrap:wrap;max-height:none;overflow:visible;gap:6px
+  }
+  #lineupView .hlvPanel .benchSide .benchItem{width:auto;max-width:100%}
+  #lineupView .hlvEditHint{font-size:9px;padding:7px 8px;margin-bottom:6px}
+
+  #playerCard h2{font-size:15px;margin:0 0 10px}
+  #playerCard .players{
+    max-height:min(52vh,420px);margin-top:8px;border-radius:12px
+  }
+  #playerCard .row{
+    grid-template-columns:28px 36px 1fr;gap:8px;padding:8px 10px
+  }
+  #playerCard .row .badge{display:none}
+  #playerCard .row .meta{
+    font-size:9px;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+  }
+  #playerCard .row img{width:34px;height:34px}
+  #playerCard .name{font-size:12px}
+  #playerCard .playerCardActions button{font-size:10px}
+
+  #internalTeams.singleTeam,#internalTeams.hlvRoleView{
+    width:100%;max-width:100%;margin:0
+  }
+  #capTeams:not(.capHlvView) .capTeamsGrid{grid-template-columns:1fr;gap:0}
+  #capTeams.capHlvView .capTeamsGrid{grid-template-columns:1fr;gap:0}
+}
 .opponentField{margin-bottom:14px}
 .opponentField label{display:block;font-size:11px;color:#94a3b8;font-weight:800;margin-bottom:6px}
 .cardPlayer img{width:39px;height:39px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.45)}

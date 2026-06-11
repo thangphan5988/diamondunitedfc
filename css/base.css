@@ -42,6 +42,13 @@ button.danger:hover{filter:brightness(1.15)}
 .formationControl{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin:0 0 8px}
 .formationControl label{font-size:10px;color:#94a3b8;font-weight:800}
 .formationControl select{padding:8px 10px;font-size:11px}
+.formationSeg{display:none;gap:6px;flex-wrap:wrap;width:100%;grid-column:1/-1}
+.formationSegBtn{
+  flex:1 1 calc(25% - 5px);min-width:58px;margin:0;padding:9px 6px;border-radius:10px;
+  border:1px solid var(--line);background:#020617;color:#94a3b8;font-size:11px;font-weight:900;cursor:pointer
+}
+.formationSegBtn.active{background:#0284c7;border-color:#0284c7;color:#fff}
+.formationSegBtn:disabled{opacity:.45;cursor:not-allowed}
 .formationReadonly{
   padding:8px 10px;font-size:11px;background:#020617;border:1px solid var(--line);
   border-radius:12px;color:var(--text);font-weight:800

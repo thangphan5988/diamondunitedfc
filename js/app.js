@@ -11,6 +11,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     startConfirmPolling();
   }
   applyLineupRoleUI();
+  initFormationSegControls();
+  initLineupTeamSwitchers();
 });
 document.addEventListener("visibilitychange", () => {
   if(document.visibilityState === "visible" && shouldPollPendingMatch() &&

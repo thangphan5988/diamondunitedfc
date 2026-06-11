@@ -134,21 +134,25 @@ function initLmTeamSwitcher(root){
   function apply(){
     const mobile = mq.matches;
     wrap.classList.toggle("lmTeamsWrap--mobile", mobile);
-    if(!mobile){
+    const visiblePanels = [...panels].filter(p => p.style.display !== "none");
+    if(!mobile || visiblePanels.length < 2){
       panels.forEach(p => p.classList.remove("lmTeamHidden"));
       return;
     }
-    const active = seg.querySelector(".lmSegBtn.active")?.dataset.team || panels[0]?.dataset.lmTeam;
+    const active = seg.querySelector(".lmSegBtn.active")?.dataset.team || visiblePanels[0]?.dataset.lmTeam;
     panels.forEach(p => p.classList.toggle("lmTeamHidden", p.dataset.lmTeam !== active));
   }
 
-  seg.querySelectorAll(".lmSegBtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      seg.querySelectorAll(".lmSegBtn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      apply();
+  if(!wrap._lmSwitcherBound){
+    wrap._lmSwitcherBound = true;
+    seg.querySelectorAll(".lmSegBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        seg.querySelectorAll(".lmSegBtn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        apply();
+      });
     });
-  });
+  }
 
   wrap._lmApply = apply;
   if(!window._lmSwitcherMqBound){

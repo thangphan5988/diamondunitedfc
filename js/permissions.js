@@ -53,7 +53,7 @@ function switchLineupMode(mode, silent){
 
   document.getElementById("summaryInternal").style.display = lineupMode === "internal" ? "" : "none";
   document.getElementById("summaryCap").style.display = lineupMode === "cap" ? "" : "none";
-  document.getElementById("internalTeams").style.display = lineupMode === "internal" ? "" : "none";
+  document.getElementById("internalTeamsWrap").style.display = lineupMode === "internal" ? "" : "none";
   document.getElementById("capTeams").style.display = lineupMode === "cap" ? "" : "none";
 
   document.getElementById("playerCardTitle").textContent =

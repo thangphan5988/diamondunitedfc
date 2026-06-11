@@ -115,8 +115,9 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation, coordsMap){
   return coordsByPos[Math.min(idx, coordsByPos.length - 1)] || [50,50];
 }
 function cardHtml(p, teamClass){
-  const ft = p.forcedStarter ? "⭐ đá chính" : (p.fit===2?"đúng sở trường":p.fit===1?"vị trí phụ":"trái vị trí");
-  return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(playerDisplayName(p))}</div><div class="ppos">${p.assigned}</div><div class="fit">${p.fit===2?'✓ Đúng sở trường':p.fit===1?'↔ Vị trí phụ':'⚠ Trái vị trí'}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
+  const fitClass = p.fit === 2 ? "fitOk" : p.fit === 1 ? "fitAlt" : "fitBad";
+  const fitText = p.fit === 2 ? "✓ Đúng sở trường" : p.fit === 1 ? "↔ Vị trí phụ" : "⚠ Trái vị trí";
+  return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(playerDisplayName(p))}</div><div class="ppos">${p.assigned}</div><div class="fit ${fitClass}">${fitText}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
 }
 function setBench(id,bench,editTeam){
   const root = document.getElementById(id);
@@ -338,4 +339,71 @@ function textResult(r){
     return `${title}\nĐội hình ra sân:\n${l.starters.map(p=>`${p.assigned}${p.assignedSide ? " " + sideLabel(p.assignedSide) : ""}: ${p.name}${p.captain ? " (Đội trưởng)" : ""}`).join("\n")}\nDự bị: ${l.bench.length?l.bench.map(p=>`${p.name} (${p.main})`).join(", "):"Không có"}`;
   }
   return `SƠ ĐỒ ĐỘI A: ${formationA}\nSƠ ĐỒ ĐỘI B: ${formationB}\n\n` + block("🔴 ĐỘI A (ÁO ĐỎ)",r.lineupA)+"\n\n"+block("🟡 ĐỘI B (ÁO VÀNG)",r.lineupB);
+}
+
+function updateLineupSegVisibility(wrap){
+  if(!wrap) return;
+  const seg = wrap.querySelector(".lmTeamSeg");
+  const visible = [...wrap.querySelectorAll(".lmTeamPanel[data-lm-team]")].filter(p => p.style.display !== "none");
+  if(seg) seg.style.display = visible.length >= 2 ? "" : "none";
+  wrap._lmApply?.();
+}
+
+function initLineupTeamSwitchers(){
+  ["internalTeamsWrap", "capTeamsWrap"].forEach(id => {
+    const wrap = document.getElementById(id);
+    if(!wrap) return;
+    initLmTeamSwitcher(wrap);
+    updateLineupSegVisibility(wrap);
+  });
+}
+
+function syncFormationSeg(ctrl, value){
+  if(!ctrl) return;
+  ctrl.querySelectorAll(".formationSegBtn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.value === value);
+  });
+}
+
+function syncAllFormationSegs(){
+  document.querySelectorAll(".formationControl").forEach(ctrl => {
+    const sel = ctrl.querySelector("select");
+    if(!sel) return;
+    syncFormationSeg(ctrl, sel.value);
+    ctrl.querySelectorAll(".formationSegBtn").forEach(btn => {
+      btn.disabled = sel.disabled;
+    });
+  });
+}
+
+function initFormationSegControls(){
+  document.querySelectorAll(".formationControl").forEach(ctrl => {
+    const sel = ctrl.querySelector("select");
+    if(!sel || ctrl.querySelector(".formationSeg")) return;
+
+    const seg = document.createElement("div");
+    seg.className = "formationSeg";
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", ctrl.querySelector("label")?.textContent || "Sơ đồ");
+
+    [...sel.options].forEach(opt => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "formationSegBtn";
+      btn.textContent = opt.value;
+      btn.dataset.value = opt.value;
+      if(opt.selected) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        if(sel.disabled || sel.value === opt.value) return;
+        sel.value = opt.value;
+        sel.dispatchEvent(new Event("change", {bubbles: true}));
+        syncFormationSeg(ctrl, opt.value);
+      });
+      seg.appendChild(btn);
+    });
+
+    sel.insertAdjacentElement("afterend", seg);
+    sel.addEventListener("change", () => syncFormationSeg(ctrl, sel.value));
+  });
+  syncAllFormationSegs();
 }

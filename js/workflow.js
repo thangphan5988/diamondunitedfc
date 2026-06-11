@@ -549,11 +549,13 @@ function applyLineupRoleUI(){
   const coordinatorLocked = (splitOk || (canCoordinateCap() && isCapMode())) && lineupPublishedToHlv && !matchLocked;
   if(lineupGrid) lineupGrid.classList.toggle("coordinatorLocked", coordinatorLocked);
 
-  const importControls = ["searchBox", "screenshotInput"];
+  const importControls = ["searchBox"];
   importControls.forEach(id => {
     const el = document.getElementById(id);
     if(el) el.style.display = importOk ? "" : "none";
   });
+  const screenshotLabel = document.getElementById("screenshotLabel");
+  if(screenshotLabel) screenshotLabel.style.display = importOk ? "" : "none";
   const selectAllBtn = document.querySelector("#playerCard .secondary.lockable");
   const hideAfterLineupReady = !!lastResult && !matchLocked &&
     ((splitOk && lineupMode === "internal") || (canCoordinateCap() && lineupMode === "cap"));
@@ -697,6 +699,8 @@ function applyLineupRoleUI(){
 
   updateHlvResultStatusUI();
   updateResultModalPerms();
+  initLineupTeamSwitchers();
+  syncAllFormationSegs();
 }
 
 function canUseLineupTab(){
