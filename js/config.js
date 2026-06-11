@@ -77,7 +77,8 @@ const PERMS = {
   MATCH_RESULT_B: "match_result_b",
   CANCEL_MATCH: "cancel_match",
   DELETE_MATCH: "delete_match",
-  MANAGE_USERS: "manage_users"
+  MANAGE_USERS: "manage_users",
+  MANAGE_ROSTER: "manage_roster"
 };
 const PERM_OPTIONS = [
   { id: PERMS.LINEUP_INTERNAL, label: "Chia đội nội bộ (toàn quyền)" },
@@ -94,6 +95,7 @@ const PERM_OPTIONS = [
   { id: PERMS.CANCEL_MATCH, label: "Hủy trận" },
   { id: PERMS.DELETE_MATCH, label: "Xóa trận lịch sử" },
   { id: PERMS.MANAGE_USERS, label: "Quản lý tài khoản" },
+  { id: PERMS.MANAGE_ROSTER, label: "Quản lý danh sách cầu thủ" },
   { id: PERMS.ALL, label: "Toàn quyền (all)" }
 ];
 let teamConfirmState = { A: false, B: false, Main: false, Sub: false };

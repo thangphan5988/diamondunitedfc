@@ -192,6 +192,18 @@ function canEnterAnyResult(){
   return canResultTeamA() || canResultTeamB() || canResultCap();
 }
 
+function canManageRoster(){
+  return hasPerm(PERMS.ALL) || hasPerm(PERMS.MANAGE_ROSTER);
+}
+
+function canManageUsers(){
+  return hasPerm(PERMS.ALL) || hasPerm(PERMS.MANAGE_USERS);
+}
+
+function canAccessAdminTab(){
+  return canManageUsers() || canManageRoster();
+}
+
 function canFinalizeMatch(){
   return hasPerm(PERMS.ALL) || hasPerm(PERMS.MATCH_RESULT);
 }

@@ -70,7 +70,8 @@ export default {
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats",
-            "admin_validate_session", "admin_list_users", "import_data"
+            "admin_validate_session", "admin_list_users", "admin_list_players",
+            "admin_save_player", "admin_delete_player", "import_data"
           ]
         });
       }
@@ -106,6 +107,15 @@ export default {
         case "admin_delete_user":
           const session = await requireAuth(db, token, ["manage_users"]);
           return json(await adminDeleteUser(db, session, payload.username));
+        case "admin_list_players":
+          await requireAuth(db, token, ["manage_roster"]);
+          return json(await adminListPlayers(db));
+        case "admin_save_player":
+          await requireAuth(db, token, ["manage_roster"]);
+          return json(await adminSavePlayer(db, payload));
+        case "admin_delete_player":
+          await requireAuth(db, token, ["manage_roster"]);
+          return json(await adminDeletePlayer(db, payload));
         case "save_match_history":
           await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
@@ -141,7 +151,7 @@ export default {
 async function getRoster(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
-    `SELECT name, position, secondary_positions, preferred_side, rating, base_rating,
+    `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating,
       mvp_count, avatar, last_match_at, joined_at
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
@@ -157,6 +167,7 @@ async function getRoster(db) {
     const meta = inactivityMetaForPlayer(row, lastMatchMap);
     return {
       name: row.name,
+      display_name: row.display_name || "",
       position: row.position,
       secondary_positions: row.secondary_positions,
       preferred_side: row.preferred_side,
@@ -171,6 +182,154 @@ async function getRoster(db) {
     };
   });
   return { ok: true, version: APP_VERSION, players };
+}
+
+function mapPlayerRow(row) {
+  const meta = row._inactivityMeta;
+  const base = {
+    id: row.id,
+    name: row.name,
+    display_name: row.display_name || "",
+    position: row.position,
+    secondary_positions: row.secondary_positions || "",
+    preferred_side: row.preferred_side || "",
+    base_rating: row.base_rating != null ? row.base_rating : row.rating,
+    mvp_count: row.mvp_count,
+    avatar: row.avatar || "",
+    joined_at: row.joined_at || "",
+    last_match_at: row.last_match_at || ""
+  };
+  if (meta) {
+    return {
+      ...base,
+      rating: meta.rating,
+      inactivity_penalty: meta.inactivity_penalty,
+      days_inactive: meta.days_inactive,
+      last_match_at: meta.last_match_at
+    };
+  }
+  return {
+    ...base,
+    rating: row.rating,
+    inactivity_penalty: 0,
+    days_inactive: 0
+  };
+}
+
+async function adminListPlayers(db) {
+  await applyInactivityDecay(db);
+  const rows = await db.prepare(
+    `SELECT id, name, display_name, position, secondary_positions, preferred_side,
+      rating, base_rating, mvp_count, avatar, last_match_at, joined_at
+     FROM players ORDER BY name COLLATE NOCASE`
+  ).all();
+  const lastRows = await db.prepare(`
+    SELECT player_name_norm, MAX(COALESCE(NULLIF(result_saved_at, ''), created_at)) AS last_at
+    FROM match_history WHERE status = 'completed' GROUP BY player_name_norm
+  `).all();
+  const lastMatchMap = new Map(
+    (lastRows.results || []).map((row) => [row.player_name_norm, String(row.last_at || "")])
+  );
+
+  const players = (rows.results || []).map((row) => {
+    const meta = inactivityMetaForPlayer(row, lastMatchMap);
+    return mapPlayerRow({ ...row, _inactivityMeta: meta });
+  });
+  return { ok: true, version: APP_VERSION, players };
+}
+
+async function adminSavePlayer(db, payload) {
+  const id = payload.id != null && String(payload.id).trim() !== "" ? Number(payload.id) : null;
+  const name = String(payload.name || "").trim();
+  const displayName = String(payload.display_name || "").trim();
+  const position = String(payload.position || payload.main || "").trim().toUpperCase();
+  const secondaryPositions = String(payload.secondary_positions || "").trim();
+  const preferredSide = String(payload.preferred_side || "").trim();
+  const baseRating = clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
+  const mvpCount = Math.max(0, Math.round(Number(payload.mvp_count) || 0));
+  const avatar = String(payload.avatar || "").trim();
+  const joinedAt = String(payload.joined_at || "").trim();
+  const lastMatchAt = String(payload.last_match_at || "").trim();
+  const nowIso = new Date().toISOString();
+
+  if (!name) throw new Error("Tên cầu thủ (name) là bắt buộc.");
+  if (!position) throw new Error("Vị trí chính là bắt buộc.");
+
+  const nameNorm = normalizeName(name);
+
+  if (id) {
+    const existing = await db.prepare("SELECT * FROM players WHERE id = ?").bind(id).first();
+    if (!existing) throw new Error("Không tìm thấy cầu thủ.");
+
+    if (nameNorm !== existing.name_norm) {
+      const dup = await db.prepare("SELECT id FROM players WHERE name_norm = ? AND id != ?").bind(nameNorm, id).first();
+      if (dup) throw new Error("Tên cầu thủ đã tồn tại.");
+
+      await db.prepare(
+        "UPDATE match_history SET player_name = ?, player_name_norm = ? WHERE player_name_norm = ?"
+      ).bind(name, nameNorm, existing.name_norm).run();
+      await db.prepare(
+        "UPDATE rating_log SET player_name = ? WHERE player_name = ?"
+      ).bind(name, existing.name).run();
+    }
+
+    await db.prepare(`
+      UPDATE players SET
+        name = ?, name_norm = ?, display_name = ?, position = ?,
+        secondary_positions = ?, preferred_side = ?,
+        rating = ?, base_rating = ?, mvp_count = ?, avatar = ?,
+        joined_at = CASE WHEN ? != '' THEN ? ELSE joined_at END,
+        last_match_at = ?
+      WHERE id = ?
+    `).bind(
+      name, nameNorm, displayName, position,
+      secondaryPositions, preferredSide,
+      baseRating, baseRating, mvpCount, avatar,
+      joinedAt, joinedAt, lastMatchAt, id
+    ).run();
+
+    return { ok: true, version: APP_VERSION, id, name };
+  }
+
+  const dup = await db.prepare("SELECT id FROM players WHERE name_norm = ?").bind(nameNorm).first();
+  if (dup) throw new Error("Tên cầu thủ đã tồn tại.");
+
+  const result = await db.prepare(`
+    INSERT INTO players (
+      name, name_norm, display_name, position, secondary_positions, preferred_side,
+      rating, base_rating, mvp_count, avatar, joined_at, last_match_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    name, nameNorm, displayName, position,
+    secondaryPositions, preferredSide,
+    baseRating, baseRating, mvpCount, avatar,
+    joinedAt || nowIso, lastMatchAt
+  ).run();
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    id: result.meta?.last_row_id,
+    name
+  };
+}
+
+async function adminDeletePlayer(db, payload) {
+  const id = Number(payload.id);
+  if (!Number.isFinite(id) || id <= 0) throw new Error("id cầu thủ không hợp lệ.");
+
+  const existing = await db.prepare("SELECT * FROM players WHERE id = ?").bind(id).first();
+  if (!existing) throw new Error("Không tìm thấy cầu thủ.");
+
+  const hist = await db.prepare(
+    "SELECT COUNT(*) AS c FROM match_history WHERE player_name_norm = ?"
+  ).bind(existing.name_norm).first();
+  if (Number(hist?.c) > 0) {
+    throw new Error("Không thể xóa cầu thủ đã tham gia trận đấu.");
+  }
+
+  await db.prepare("DELETE FROM players WHERE id = ?").bind(id).run();
+  return { ok: true, version: APP_VERSION, id, name: existing.name };
 }
 
 async function getMatchList(db, params) {
@@ -888,15 +1047,16 @@ async function importData(db, payload, secret, pepper) {
     const nowIso = new Date().toISOString();
     const ins = db.prepare(`
       INSERT OR REPLACE INTO players (
-        name, name_norm, position, secondary_positions, preferred_side,
+        name, name_norm, display_name, position, secondary_positions, preferred_side,
         rating, base_rating, mvp_count, avatar, joined_at, last_match_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const stmts = payload.players.map((p) => {
       const base = clampBaseRating(p.rating || 5);
       return ins.bind(
         p.name,
         normalizeName(p.name),
+        String(p.display_name || "").trim(),
         p.position || p.main || "MID",
         p.secondary_positions || "",
         p.preferred_side || "",

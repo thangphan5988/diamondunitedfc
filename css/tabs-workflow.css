@@ -114,4 +114,27 @@
 .authActions button{width:auto;margin:0;padding:8px 14px}
 .permGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
 .permItem{display:flex;gap:8px;align-items:center;font-size:11px;background:#020617;border:1px solid var(--line);border-radius:10px;padding:8px}
+.rosterAdminToolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.rosterAdminToolbar h2{margin:0 0 4px}
+.rosterAdminCard{border:1px solid var(--line);border-radius:14px;background:#020617;margin-bottom:8px;overflow:hidden}
+.rosterAdminCard.expanded{border-color:rgba(56,189,248,.45);box-shadow:0 0 0 1px rgba(56,189,248,.18)}
+.rosterAdminCard--new{border-color:rgba(180,83,9,.55)}
+.rosterAdminCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;cursor:pointer}
+.rosterAdminCardHead:hover{background:rgba(51,65,85,.22)}
+.rosterExpandIcon{color:#94a3b8;font-size:12px;font-weight:900;flex-shrink:0;padding:0 4px}
+.rosterAdminInlineForm{padding:0 12px 12px;border-top:1px solid rgba(148,163,184,.14)}
+.rosterAdminInlineForm input,.rosterAdminInlineForm select{width:100%;margin:0}
+.rosterFieldGroup{display:block;margin-top:10px}
+.rosterFieldLabel{display:block;font-size:10px;font-weight:800;color:#cbd5e1;margin-bottom:5px;line-height:1.35}
+.rosterFieldHint{display:block;font-size:9px;font-weight:700;color:#64748b;margin-top:2px}
+.rosterAdminFormRow .rosterFieldGroup{margin-top:10px}
+.rosterInlineActions{margin-top:12px}
 .adminUserRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617;margin-bottom:8px;font-size:11px}
+.adminFormActions{display:flex;gap:8px;flex-wrap:wrap}
+.rosterAdminFormRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rosterAdminRow{align-items:center}
+.rosterAdminRowMain{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.rosterAdminRowMain img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#1e293b}
+.adminSectionTabs{margin-bottom:12px}
+.metaCanon{opacity:.75}
+@media(max-width:760px){.rosterAdminFormRow{grid-template-columns:1fr}}

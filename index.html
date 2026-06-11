@@ -7,16 +7,16 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.3.8">
-  <link rel="stylesheet" href="css/lineup.css?v=2.3.8">
-  <link rel="stylesheet" href="css/modals.css?v=2.3.8">
-  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.3.8">
-  <link rel="stylesheet" href="css/latest-match.css?v=2.3.8">
+  <link rel="stylesheet" href="css/base.css?v=2.4.0">
+  <link rel="stylesheet" href="css/lineup.css?v=2.4.0">
+  <link rel="stylesheet" href="css/modals.css?v=2.4.0">
+  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.2">
+  <link rel="stylesheet" href="css/latest-match.css?v=2.4.7">
 </head>
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v2.3.8</div>
+  <div class="buildVersion">Build v2.4.7</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -253,7 +253,12 @@
   </div>
 
   <div id="adminView" style="display:none">
-    <div class="card">
+    <div class="adminSectionTabs statsTabs" id="adminSectionTabs">
+      <button id="adminTabUsers" class="statsTab active" type="button" onclick="switchAdminSection('users')">Tài khoản</button>
+      <button id="adminTabRoster" class="statsTab" type="button" onclick="switchAdminSection('roster')">Cầu thủ</button>
+    </div>
+
+    <div id="adminUsersPanel" class="card">
       <h2>Quản lý tài khoản</h2>
       <div class="meta">Phân quyền: chia đội nội bộ · đá Cáp · xuất ảnh · nhập kết quả · hủy trận · quản lý user</div>
       <div id="adminUserList"></div>
@@ -264,6 +269,18 @@
       <div id="adminPermGrid" class="permGrid"></div>
       <label class="permItem"><input id="adminActive" type="checkbox" checked> Kích hoạt</label>
       <button onclick="saveAdminUser()" style="width:auto;margin-top:10px">Lưu tài khoản</button>
+    </div>
+
+    <div id="adminRosterPanel" class="card" style="display:none">
+      <div class="rosterAdminToolbar">
+        <div>
+          <h2>Quản lý cầu thủ</h2>
+          <div class="meta">Bấm dòng cầu thủ để xổ form · Vị trí/cánh: <b>mục đầu</b> = sở trường (VD: MID, DEF · RIGHT, LEFT)</div>
+        </div>
+        <button type="button" class="gold" style="width:auto;margin:0" onclick="openNewRosterPlayer()">+ Thêm cầu thủ</button>
+      </div>
+      <input id="rosterAdminSearch" type="text" placeholder="Tìm cầu thủ..." oninput="renderAdminPlayerList()" style="margin-bottom:10px">
+      <div id="adminPlayerList"></div>
     </div>
   </div>
 </div>
@@ -349,26 +366,27 @@
 </div>
 
 
-  <script src="js/config.js?v=2.3.6"></script>
-  <script src="js/utils.js?v=2.3.6"></script>
-  <script src="js/permissions.js?v=2.3.6"></script>
-  <script src="js/api.js?v=2.3.6"></script>
-  <script src="js/match-data.js?v=2.3.6"></script>
-  <script src="js/match-result.js?v=2.3.6"></script>
-  <script src="js/stats.js?v=2.3.6"></script>
-  <script src="js/auth-admin.js?v=2.3.6"></script>
-  <script src="js/latest-match.js?v=2.3.7"></script>
-  <script src="js/tabs-history.js?v=2.3.6"></script>
-  <script src="js/player-helpers.js?v=2.3.6"></script>
-  <script src="js/lineup-confirm.js?v=2.3.6"></script>
-  <script src="js/roster.js?v=2.3.6"></script>
-  <script src="js/lineup-algorithm.js?v=2.3.6"></script>
-  <script src="js/lineup-random.js?v=2.3.6"></script>
-  <script src="js/lineup-hlv.js?v=2.3.6"></script>
-  <script src="js/workflow.js?v=2.3.6"></script>
-  <script src="js/lineup-render.js?v=2.3.6"></script>
-  <script src="js/lineup-export.js?v=2.3.6"></script>
-  <script src="js/app.js?v=2.3.6"></script>
+  <script src="js/config.js?v=2.4.0"></script>
+  <script src="js/utils.js?v=2.4.0"></script>
+  <script src="js/permissions.js?v=2.4.0"></script>
+  <script src="js/api.js?v=2.4.0"></script>
+  <script src="js/match-data.js?v=2.4.0"></script>
+  <script src="js/match-result.js?v=2.4.0"></script>
+  <script src="js/stats.js?v=2.4.0"></script>
+  <script src="js/auth-admin.js?v=2.4.0"></script>
+  <script src="js/roster-admin.js?v=2.4.2"></script>
+  <script src="js/latest-match.js?v=2.4.7"></script>
+  <script src="js/tabs-history.js?v=2.4.0"></script>
+  <script src="js/player-helpers.js?v=2.4.2"></script>
+  <script src="js/lineup-confirm.js?v=2.4.0"></script>
+  <script src="js/roster.js?v=2.4.0"></script>
+  <script src="js/lineup-algorithm.js?v=2.4.0"></script>
+  <script src="js/lineup-random.js?v=2.4.0"></script>
+  <script src="js/lineup-hlv.js?v=2.4.0"></script>
+  <script src="js/workflow.js?v=2.4.0"></script>
+  <script src="js/lineup-render.js?v=2.4.0"></script>
+  <script src="js/lineup-export.js?v=2.4.0"></script>
+  <script src="js/app.js?v=2.4.0"></script>
 
 </body>
 </html>

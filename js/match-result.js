@@ -259,7 +259,7 @@ function renderResultForm(){
       return `<div class="resultPlayer${cap ? "" : " noStats"}${ratingLocked ? " resultLocked" : ""}">
         <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
         <div>
-          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="name">${escapeHtml(playerDisplayName(p))}</div>
           <div class="meta">${roleMeta} · rating ${ratingBefore}${mvpTotal ? ` · 🏆 ${mvpTotal} MVP` : ""}${lockNote}</div>
         </div>
         <select ${ratingLocked ? "disabled" : ""} onchange="setPlayerMatchScore(decodeURIComponent('${encodedName}'), this.value)">
@@ -522,7 +522,7 @@ function statRowHtml(p, rank, mode){
     <span class="statRank">#${rank}</span>
     <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div>
-      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="name">${escapeHtml(playerDisplayName(p))}</div>
       <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}${inactiveNote}</div>
     </div>
     <span class="statValue ${badgeClass}">${label}</span>

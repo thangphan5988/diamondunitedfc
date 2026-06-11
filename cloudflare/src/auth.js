@@ -15,8 +15,8 @@ export async function hashPassword(password, pepper) {
 
 const ROLE_USERS = [
   { username: "admin", display_name: "Admin", permissions: "all", password: "dufc2026" },
-  { username: "anhphuong", display_name: "Anh Phuong", permissions: "roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
-  { username: "chikha", display_name: "Chi Kha", permissions: "roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
+  { username: "anhphuong", display_name: "Anh Phuong", permissions: "manage_roster,roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
+  { username: "chikha", display_name: "Chi Kha", permissions: "manage_roster,roster_import,lineup_split,lineup_cap,export,match_result,cancel_match", password: "dufc2026" },
   { username: "thangphan", display_name: "Thang Phan", permissions: "lineup_team_a,match_result_a", password: "dufc2026" },
   { username: "minhphat", display_name: "Minh Phat", permissions: "lineup_team_b,match_result_b", password: "dufc2026" },
   { username: "tuongbang", display_name: "Tuong Bang", permissions: "lineup_cap_hlv", password: "dufc2026" }

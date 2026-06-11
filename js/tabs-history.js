@@ -19,7 +19,7 @@ function switchTab(tab){
   if(isLineup && !canUseLineupTab()){
     tab = "latest";
   }
-  if(isAdmin && !(isLoggedIn() && hasPerm(PERMS.MANAGE_USERS))){
+  if(isAdmin && !(isLoggedIn() && canAccessAdminTab())){
     tab = "latest";
   }
 
@@ -42,7 +42,10 @@ function switchTab(tab){
     switchStatsTab(currentStatsTab);
     renderStats();
   }
-  if(tab === "admin") loadAdminUsers();
+  if(tab === "admin"){
+    if(canManageUsers()) switchAdminSection("users");
+    else if(canManageRoster()) switchAdminSection("roster");
+  }
   if(tab === "lineup" && shouldRestorePending()) restorePendingMatchIfAny();
   if(shouldPollPendingMatch()) startConfirmPolling();
   else stopConfirmPolling();

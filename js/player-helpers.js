@@ -1,5 +1,19 @@
 /* Position/side normalization helpers */
 
+function playerDisplayName(pOrName){
+  if(pOrName && typeof pOrName === "object"){
+    const dn = String(pOrName.display_name || "").trim();
+    if(dn) return dn;
+    return String(pOrName.name || "").trim();
+  }
+  const key = normalizeName(pOrName);
+  if(typeof players !== "undefined" && Array.isArray(players)){
+    const found = players.find(p => normalizeName(p.name) === key);
+    if(found) return playerDisplayName(found);
+  }
+  return String(pOrName || "").trim();
+}
+
 function defaultAvatar(name){
   const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());
   return `https://ui-avatars.com/api/?name=${initials}&background=0f172a&color=ffffff&bold=true`;
@@ -12,6 +26,35 @@ function splitPositions(v){
     .split(/[\/,;|]/)
     .map(x => x.trim())
     .filter(x => POS.includes(x));
+}
+
+function formatPositionChain(position, secondary){
+  const main = normalizePos(position);
+  const secList = splitPositions(secondary).filter(x => x !== main);
+  const seen = new Set();
+  const all = [main, ...secList].filter(x => {
+    if(!x || !POS.includes(x) || seen.has(x)) return false;
+    seen.add(x);
+    return true;
+  });
+  return all.join(", ");
+}
+
+function parsePositionChain(raw){
+  const list = splitPositions(raw);
+  if(!list.length) return { position: "", secondary_positions: "" };
+  return {
+    position: list[0],
+    secondary_positions: list.slice(1).join(", ")
+  };
+}
+
+function formatSideChain(preferredSide){
+  return normalizeSideList(preferredSide).join(", ");
+}
+
+function parseSideChain(raw){
+  return normalizeSideList(raw).join(", ");
 }
 
 function splitSecond(v){

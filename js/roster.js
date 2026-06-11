@@ -52,8 +52,9 @@ function applyRosterFromApi(rows){
     if(!name || !POS.includes(main)) return null;
 
     return {
-      id: (idx + 1) + "_" + name,
+      id: row.id || (idx + 1) + "_" + name,
       name,
+      display_name: String(row.display_name || "").trim(),
       main,
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
@@ -80,6 +81,7 @@ function applyRows(rows){
     Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
 
     const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
+    const displayName = String(lower.display_name || lower["tên hiển thị"] || lower.ten_hien_thi || "").trim();
 
     // Format mới:
     // position = "MID, FWD, DEF"
@@ -129,6 +131,7 @@ function applyRows(rows){
     return {
       id: (idx + 2) + "_" + name,
       name,
+      display_name: displayName,
       main,
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
@@ -161,7 +164,7 @@ function renderPlayerPicker(){
     .map((p, i) => ({p, i}))
     .filter(({p}) => {
       if(!keyword) return true;
-      const haystack = normalizeName(`${p.name} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`);
+      const haystack = normalizeName(`${p.name} ${p.display_name || ""} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`);
       return haystack.includes(keyword);
     })
     .sort((a, b) => {
@@ -178,7 +181,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
-      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
+      <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }
@@ -376,7 +379,7 @@ function renderConfirmList(){
     return `<label class="confirmPlayer">
       <input type="checkbox" ${checked} onchange="togglePendingPlayer('${escapeAttr(p.name)}', this.checked)">
       <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
-      <div><div class="name">${escapeHtml(p.name)}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""}</div></div>
+      <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""}</div></div>
     </label>`;
   }).join("");
 }

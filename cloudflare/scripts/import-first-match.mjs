@@ -160,8 +160,8 @@ async function main() {
   const rosterMap = new Map((rosterData.players || []).map((p) => [p.name, p]));
 
   const rows = buildHistoryRows(rosterMap);
-  const teamAScore = 4;
-  const teamBScore = 3;
+  const teamAScore = 3;
+  const teamBScore = 4;
   const playersA = buildResultPlayers("A", TEAM_A, rosterMap);
   const playersB = buildResultPlayers("B", TEAM_B, rosterMap);
 

@@ -150,7 +150,7 @@ function updateDraggedCardMeta(el, player, assigned){
 }
 
 function benchItemInnerHtml(p){
-  return `<span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(p.name)} · ${p.main}`;
+  return `<span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}`;
 }
 
 function isPointerOnPitch(team, clientX, clientY){

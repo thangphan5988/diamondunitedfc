@@ -250,7 +250,7 @@ function applyAuthUI(){
     tabLineup.style.display = showLineup ? "" : "none";
     tabLineup.textContent = getLineupTabLabel();
   }
-  tabAdmin.style.display = loggedIn && hasPerm(PERMS.MANAGE_USERS) ? "" : "none";
+  tabAdmin.style.display = loggedIn && canAccessAdminTab() ? "" : "none";
 
   if(showLineup){
     const showInternal = isFullLineupRole() || canSplitTeams() || canManageTeamA() || canManageTeamB();
@@ -272,7 +272,22 @@ function applyAuthUI(){
   }
 
   if(document.getElementById("tabLineup").classList.contains("active") && !showLineup) switchTab("latest");
-  if(document.getElementById("tabAdmin").classList.contains("active") && !(loggedIn && hasPerm(PERMS.MANAGE_USERS))) switchTab("latest");
+  if(document.getElementById("tabAdmin").classList.contains("active") && !canAccessAdminTab()) switchTab("latest");
+
+  const adminTabs = document.getElementById("adminSectionTabs");
+  const adminUsersPanel = document.getElementById("adminUsersPanel");
+  const adminRosterPanel = document.getElementById("adminRosterPanel");
+  const adminTabUsers = document.getElementById("adminTabUsers");
+  const adminTabRoster = document.getElementById("adminTabRoster");
+  if(adminTabs){
+    const showUsers = canManageUsers();
+    const showRoster = canManageRoster();
+    adminTabs.style.display = showUsers && showRoster ? "" : "none";
+    if(adminTabUsers) adminTabUsers.style.display = showUsers ? "" : "none";
+    if(adminTabRoster) adminTabRoster.style.display = showRoster ? "" : "none";
+    if(adminUsersPanel) adminUsersPanel.style.display = showUsers ? "" : "none";
+    if(adminRosterPanel && showRoster && !showUsers) adminRosterPanel.style.display = "";
+  }
 
   updateResultModalPerms();
   if(matchLocked) applyLockUI(true);

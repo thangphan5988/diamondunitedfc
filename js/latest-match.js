@@ -41,14 +41,25 @@ function latestResultCapStatsHtml(stat){
   return `<div class="lrStatRow">${g}${a}</div>`;
 }
 
+function latestResultMvpBadgeHtml(){
+  return `<div class="lrMvpBadge"><span class="lrMvpBadgeIcon">🏆</span><span class="lrMvpBadgeText">MVP</span></div>`;
+}
+
+function latestResultCaptainBadgeHtml(){
+  return `<div class="lrCaptainBadge">C</div>`;
+}
+
 function latestResultPitchCardHtml(p, teamClass, stat, isCap){
-  const mvp = stat.is_mvp ? `<div class="lrMvpBadge">⭐</div>` : "";
+  const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
+  const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
+  const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
   const avatar = p.avatar || defaultAvatar(p.name);
-  return `<div class="lrCard ${teamClass}">
+  return `<div class="lrCard ${teamClass}${captainClass}">
+    ${captain}
     ${mvp}
     <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
-    <div class="lrName">${escapeHtml(p.name)}</div>
+    <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
     <div class="lrScore">${escapeHtml(String(score))} điểm</div>
     ${isCap ? latestResultCapStatsHtml(stat) : ""}
     ${latestResultDeltaHtml(stat.rating_delta)}
@@ -56,16 +67,19 @@ function latestResultPitchCardHtml(p, teamClass, stat, isCap){
 }
 
 function latestResultBenchCardHtml(p, teamClass, stat, isCap){
-  const mvp = stat.is_mvp ? `<div class="lrMvpBadge">⭐</div>` : "";
+  const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
+  const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
+  const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
   const avatar = p.avatar || defaultAvatar(p.name);
   const capStats = isCap ? latestResultCapStatsHtml(stat) : "";
   const delta = latestResultDeltaHtml(stat.rating_delta);
-  return `<div class="lrBenchCard ${teamClass}">
+  return `<div class="lrBenchCard ${teamClass}${captainClass}">
+    ${captain}
     ${mvp}
     <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div class="lrBenchMeta">
-      <div class="lrName">${escapeHtml(p.name)}</div>
+      <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
       <div class="lrScore">${escapeHtml(String(score))} điểm · dự bị</div>
       ${capStats}
       ${delta}
@@ -198,7 +212,7 @@ function renderPreviewBench(benchId, bench){
     return;
   }
   el.innerHTML = bench.map(p =>
-    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(p.name)} · ${p.main}</div>`
+    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
   ).join("");
 }
 
@@ -320,7 +334,11 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
     ? String(summary.mvp_players)
     : mvps.map(p => p.player_name).join(", ");
 
-  const mvpBar = lrMvpSummaryHtml(mvpNames);
+  const mvpBar = lrMvpSummaryHtml(
+    mvpNames
+      ? String(mvpNames).split(",").map(n => playerDisplayName(n.trim())).filter(Boolean).join(", ")
+      : ""
+  );
   const completedBar = embed ? "" : lrCompletedSummaryHtml();
 
   const capResultMeta = `⚽ Trận Cáp · ${escapeHtml(fMain)}`;
