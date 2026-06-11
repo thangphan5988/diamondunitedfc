@@ -192,12 +192,16 @@
     .historyList{display:grid;gap:10px}
     .historyItem{border:1px solid var(--line);border-radius:14px;padding:12px;background:#020617;cursor:pointer}
     .historyItem:hover{border-color:#38bdf8}
-    .historyItem h3{margin:0 0 6px;font-size:16px}
+    .historyItemHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .historyItemHead h3{margin:0 0 6px;font-size:16px;flex:1;min-width:0}
+    .historyDeleteBtn{width:auto;margin:0;padding:6px 10px;font-size:10px;flex-shrink:0}
     .historyMeta{font-size:11px;color:var(--muted);line-height:1.5}
-    .historyDetail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none}
+    .historyDetail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:none;cursor:default}
     .historyDetail.show{display:block}
-    .historyPlayerRow{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px}
-    .historyPlayerRow:last-child{border-bottom:0}
+    .historyDetail .lrPitch{height:480px}
+    .historyDetail .lrScoreBoard{margin-bottom:12px;padding:12px}
+    .historyDetail .lrScoreNum{font-size:32px}
+    .historyDetail .lrMvpBar{margin-bottom:10px;font-size:11px}
     .locked .lockable{opacity:.45;pointer-events:none}
     .statsTabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
     .statsTab{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
@@ -220,24 +224,72 @@
     .permGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
     .permItem{display:flex;gap:8px;align-items:center;font-size:11px;background:#020617;border:1px solid var(--line);border-radius:10px;padding:8px}
     .adminUserRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#020617;margin-bottom:8px;font-size:11px}
-    .latestResultHead{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
-    .latestResultHead .metric b{font-size:24px}
-    .latestResultSection{margin-top:18px}
-    .latestResultSection h3{margin:0 0 8px;font-size:15px}
-    .latestStatChip{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#020617;margin-bottom:6px;font-size:12px}
-    .latestStatChip b{font-size:14px}
-    .latestPlayerTable{margin-top:18px}
-    .latestPlayerHead,.latestPlayerRow{display:grid;grid-template-columns:1.4fr .7fr .5fr .5fr .5fr .5fr .6fr;gap:8px;align-items:center;font-size:11px}
-    .latestPlayerHead{color:var(--muted);font-weight:800;padding:0 8px 6px;border-bottom:1px solid var(--line)}
-    .latestPlayerRow{padding:8px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .latestPlayerRow:last-child{border-bottom:0}
-    @media(max-width:900px){.latestResultHead{grid-template-columns:1fr}.latestPlayerHead,.latestPlayerRow{grid-template-columns:1fr 1fr;gap:4px}}
+    .lrHeader{margin-bottom:12px}
+    .lrHeader h3{margin:0 0 4px;font-size:18px}
+    .lrMvpBar{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);color:#fde68a;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;margin-bottom:14px}
+    .lrMvpBar b{color:#facc15}
+    .lrScoreBoard{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 18px;padding:18px 12px;background:linear-gradient(180deg,#020617,#0b1224);border:1px solid var(--line);border-radius:20px}
+    .lrTeamScore{text-align:center;flex:1;min-width:0}
+    .lrTeamLabel{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .lrScoreNum{font-size:44px;font-weight:900;line-height:1}
+    .lrVs{font-size:13px;font-weight:900;color:#64748b;padding:0 4px}
+    .lrTeamScore.red .lrScoreNum{color:#ef4444}
+    .lrTeamScore.yellow .lrScoreNum{color:#facc15}
+    .lrTeamScore.blue .lrScoreNum{color:#38bdf8}
+    .lrTeamScore.opp .lrScoreNum{color:#cbd5e1}
+    .lrPitch{height:600px}
+    .pitch.lrPitch{overflow:visible}
+    .lrPitch .slot{transform:translate(-50%,-50%)}
+    .lrBenchList{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .lrBenchEmpty{font-size:11px;color:var(--muted)}
+    .lrCard{
+      width:86px;min-height:108px;border-radius:14px;padding:6px 4px 8px;text-align:center;
+      background:rgba(2,6,23,.94);border:2px solid rgba(255,255,255,.22);
+      box-shadow:0 10px 22px rgba(0,0,0,.38);position:relative;backdrop-filter:blur(4px)
+    }
+    .lrPitch .lrCard{
+      width:74px;min-height:84px;border-radius:12px;padding:5px 3px 6px;
+      box-shadow:0 8px 18px rgba(0,0,0,.35)
+    }
+    .lrCard.redTeam{border-color:#ef4444;box-shadow:0 0 0 1px rgba(239,68,68,.4),0 10px 22px rgba(239,68,68,.18)}
+    .lrCard.yellowTeam{border-color:#facc15;box-shadow:0 0 0 1px rgba(250,204,21,.4),0 10px 22px rgba(250,204,21,.18)}
+    .lrCard.capTeam{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.4),0 10px 22px rgba(56,189,248,.18)}
+    .lrCard.capSubTeam{border-color:#a78bfa;box-shadow:0 0 0 1px rgba(167,139,250,.4),0 10px 22px rgba(167,139,250,.18)}
+    .lrCard img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.35)}
+    .lrPitch .lrCard img{width:34px;height:34px}
+    .lrPitch .lrName{font-size:9px;margin-top:4px}
+    .lrPitch .lrScore{font-size:11px;margin-top:2px}
+    .lrPitch .lrDelta{font-size:8px;padding:1px 5px;margin-top:3px}
+    .lrPitch .lrStatRow{font-size:8px;margin-top:2px}
+    .lrName{font-size:10px;font-weight:900;margin-top:5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lrScore{font-size:12px;font-weight:900;color:#7dd3fc;margin-top:3px}
+    .lrMvpBadge{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#facc15;color:#00111f;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .lrDelta{font-size:9px;font-weight:900;border-radius:999px;padding:2px 6px;margin-top:4px;display:inline-block}
+    .lrDelta.up{background:rgba(34,197,94,.22);color:#86efac}
+    .lrDelta.down{background:rgba(239,68,68,.22);color:#fca5a5}
+    .lrDelta.zero{background:rgba(148,163,184,.15);color:#cbd5e1}
+    .lrStatRow{display:flex;justify-content:center;gap:5px;font-size:9px;font-weight:900;margin-top:3px}
+    .lrStatRow .goals{color:#86efac}
+    .lrStatRow .assists{color:#c4b5fd}
+    .lrBenchCard{
+      display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);
+      border-radius:12px;background:#020617;min-width:160px;flex:1 1 180px;max-width:240px;position:relative
+    }
+    .lrBenchCard.redTeam{border-color:rgba(239,68,68,.45)}
+    .lrBenchCard.yellowTeam{border-color:rgba(250,204,21,.45)}
+    .lrBenchCard.capTeam{border-color:rgba(56,189,248,.45)}
+    .lrBenchCard.capSubTeam{border-color:rgba(167,139,250,.45)}
+    .lrBenchCard img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .lrBenchMeta{flex:1;min-width:0}
+    .lrBenchMeta .lrName{margin:0;font-size:11px;white-space:normal}
+    .lrBenchMeta .lrScore{font-size:11px;margin-top:2px;text-align:left}
+    @media(max-width:1100px){.lrPitch{height:520px}.lrScoreNum{font-size:36px}}
   </style>
 </head>
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v2.0.0</div>
+  <div class="buildVersion">Build v2.0.1</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -582,6 +634,7 @@ const PERMS = {
   EXPORT: "export",
   MATCH_RESULT: "match_result",
   CANCEL_MATCH: "cancel_match",
+  DELETE_MATCH: "delete_match",
   MANAGE_USERS: "manage_users"
 };
 const PERM_OPTIONS = [
@@ -590,6 +643,7 @@ const PERM_OPTIONS = [
   { id: PERMS.EXPORT, label: "Xuất ảnh & lưu lineup" },
   { id: PERMS.MATCH_RESULT, label: "Nhập & lưu kết quả" },
   { id: PERMS.CANCEL_MATCH, label: "Hủy trận" },
+  { id: PERMS.DELETE_MATCH, label: "Xóa trận lịch sử" },
   { id: PERMS.MANAGE_USERS, label: "Quản lý tài khoản" },
   { id: PERMS.ALL, label: "Toàn quyền (all)" }
 ];
@@ -1748,6 +1802,7 @@ function applyAuthUI(){
 
   updateResultModalPerms();
   if(matchLocked) applyLockUI(true);
+  if(document.getElementById("tabHistory").classList.contains("active")) loadMatchHistory();
 }
 
 async function initAuth(){
@@ -1780,14 +1835,221 @@ async function initAuth(){
   applyAuthUI();
 }
 
-function latestResultScoreText(summary){
-  const isCap = String(summary?.match_type || "").toLowerCase() === "cap";
+const LR_PITCH_MARKINGS = `<div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div><div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>`;
+
+function buildLatestStatMap(historyPlayers){
+  const map = new Map();
+  (historyPlayers || []).forEach(p => {
+    map.set(normalizeName(p.player_name), {
+      match_score: p.match_score,
+      goals: Number(p.goals) || 0,
+      assists: Number(p.assists) || 0,
+      is_mvp: p.is_mvp === true || p.is_mvp === "TRUE",
+      rating_delta: Number(p.rating_delta),
+      rating_before: p.rating_before,
+      rating_after: p.rating_after
+    });
+  });
+  return map;
+}
+
+function latestResultDeltaHtml(delta){
+  if(!Number.isFinite(delta) || delta === 0) return "";
+  return `<div class="lrDelta ${deltaClass(delta)}">${deltaLabel(delta)} rating</div>`;
+}
+
+function latestResultCapStatsHtml(stat){
+  const goals = Number(stat.goals) || 0;
+  const assists = Number(stat.assists) || 0;
+  if(!goals && !assists) return "";
+  const g = goals ? `<span class="goals">⚽${goals}</span>` : "";
+  const a = assists ? `<span class="assists">🅰️${assists}</span>` : "";
+  return `<div class="lrStatRow">${g}${a}</div>`;
+}
+
+function latestResultPitchCardHtml(p, teamClass, stat, isCap){
+  const mvp = stat.is_mvp ? `<div class="lrMvpBadge">⭐</div>` : "";
+  const score = stat.match_score ?? "—";
+  const avatar = p.avatar || defaultAvatar(p.name);
+  return `<div class="lrCard ${teamClass}">
+    ${mvp}
+    <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
+    <div class="lrName">${escapeHtml(p.name)}</div>
+    <div class="lrScore">${escapeHtml(String(score))} điểm</div>
+    ${isCap ? latestResultCapStatsHtml(stat) : ""}
+    ${latestResultDeltaHtml(stat.rating_delta)}
+  </div>`;
+}
+
+function latestResultBenchCardHtml(p, teamClass, stat, isCap){
+  const mvp = stat.is_mvp ? `<div class="lrMvpBadge">⭐</div>` : "";
+  const score = stat.match_score ?? "—";
+  const avatar = p.avatar || defaultAvatar(p.name);
+  const capStats = isCap ? latestResultCapStatsHtml(stat) : "";
+  const delta = latestResultDeltaHtml(stat.rating_delta);
+  return `<div class="lrBenchCard ${teamClass}">
+    ${mvp}
+    <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
+    <div class="lrBenchMeta">
+      <div class="lrName">${escapeHtml(p.name)}</div>
+      <div class="lrScore">${escapeHtml(String(score))} điểm · dự bị</div>
+      ${capStats}
+      ${delta}
+    </div>
+  </div>`;
+}
+
+function renderLatestResultLineup(pitchId, lineup, formation, teamClass, statMap, isCap){
+  if(!lineup?.starters?.length) return;
+  const safeFormation = resolveFormation(formation, "3-1-2");
+  const indexByPos = {};
+  const pitch = document.getElementById(pitchId);
+  if(!pitch) return;
+
+  for(const p of lineup.starters){
+    const stat = statMap.get(normalizeName(p.name)) || {};
+    const [x, y] = getPosCoord(p.assigned, p.assignedSide, indexByPos, safeFormation);
+    const el = document.createElement("div");
+    el.className = "slot show";
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    el.style.zIndex = String(Math.round(100 - y));
+    el.innerHTML = latestResultPitchCardHtml(p, teamClass, stat, isCap);
+    pitch.appendChild(el);
+  }
+}
+
+function renderLatestResultBench(benchId, bench, teamClass, statMap, isCap){
+  const el = document.getElementById(benchId);
+  if(!el) return;
+  if(!bench?.length){
+    el.innerHTML = `<div class="lrBenchEmpty">Không có dự bị</div>`;
+    return;
+  }
+  el.innerHTML = bench.map(p => {
+    const stat = statMap.get(normalizeName(p.name)) || {};
+    return latestResultBenchCardHtml(p, teamClass, stat, isCap);
+  }).join("");
+}
+
+function latestResultScoreBoardHtml(summary, isCap){
   const a = summary?.team_a_score ?? "?";
   const b = summary?.team_b_score ?? "?";
   if(isCap){
-    return `DUFC <b>${escapeHtml(String(a))}</b> - <b>${escapeHtml(String(b))}</b> ${escapeHtml(String(summary.opponent_name || "Đối thủ"))}`;
+    return `<div class="lrScoreBoard">
+      <div class="lrTeamScore blue">
+        <span class="lrTeamLabel">DUFC</span>
+        <span class="lrScoreNum">${escapeHtml(String(a))}</span>
+      </div>
+      <div class="lrVs">VS</div>
+      <div class="lrTeamScore opp">
+        <span class="lrTeamLabel">${escapeHtml(String(summary.opponent_name || "Đối thủ"))}</span>
+        <span class="lrScoreNum">${escapeHtml(String(b))}</span>
+      </div>
+    </div>`;
   }
-  return `🔴 <b>${escapeHtml(String(a))}</b> - <b>${escapeHtml(String(b))}</b> 🟡`;
+  return `<div class="lrScoreBoard">
+    <div class="lrTeamScore red">
+      <span class="lrTeamLabel">🔴 Đội A</span>
+      <span class="lrScoreNum">${escapeHtml(String(a))}</span>
+    </div>
+    <div class="lrVs">VS</div>
+    <div class="lrTeamScore yellow">
+      <span class="lrTeamLabel">🟡 Đội B</span>
+      <span class="lrScoreNum">${escapeHtml(String(b))}</span>
+    </div>
+  </div>`;
+}
+
+function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, opts = {}){
+  if(!containerEl || !summary || !historyPlayers?.length) return;
+
+  const embed = opts.embed === true;
+  const isCap = isCapMatchFromDetail(summary, historyPlayers);
+  const statMap = buildLatestStatMap(historyPlayers);
+  const result = rebuildLastResultFromDetail(historyPlayers, summary);
+  const fMain = resolveFormation(summary.formation_a, "3-1-2");
+  const fSub = resolveFormation(summary.formation_b, "3-1-2");
+
+  const mvps = historyPlayers.filter(p => p.is_mvp === true || p.is_mvp === "TRUE");
+  const mvpNames = summary.mvp_players
+    ? String(summary.mvp_players)
+    : mvps.map(p => p.player_name).join(", ");
+
+  const mvpBar = mvpNames
+    ? `<div class="lrMvpBar">🏆 MVP: <b>${escapeHtml(mvpNames)}</b></div>`
+    : "";
+
+  const headerHtml = embed
+    ? `<div class="meta">${isCap
+        ? `⚽ Trận Cáp · ${escapeHtml(fMain)} / ${escapeHtml(fSub)}`
+        : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>`
+    : `<div class="lrHeader">
+        <h3>${escapeHtml(displayMatchLabel(summary))}</h3>
+        <div class="meta">${isCap
+          ? `⚽ Trận Cáp · ${escapeHtml(fMain)} / ${escapeHtml(fSub)}`
+          : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>
+      </div>`;
+
+  const pMain = idPrefix + "PitchMain";
+  const pSub = idPrefix + "PitchSub";
+  const pA = idPrefix + "PitchA";
+  const pB = idPrefix + "PitchB";
+  const bMain = idPrefix + "BenchMain";
+  const bSub = idPrefix + "BenchSub";
+  const bA = idPrefix + "BenchA";
+  const bB = idPrefix + "BenchB";
+
+  if(isCap){
+    containerEl.innerHTML = `
+      ${headerHtml}
+      ${mvpBar}
+      ${latestResultScoreBoardHtml(summary, true)}
+      <div class="teams">
+        <div>
+          <div class="teamHead"><h2 style="color:#38bdf8">⚽ Đội hình Chính</h2></div>
+          <div class="pitch lrPitch" id="${pMain}">${LR_PITCH_MARKINGS}</div>
+          <div class="bench"><h3>Dự bị</h3><div id="${bMain}" class="lrBenchList"></div></div>
+        </div>
+        <div>
+          <div class="teamHead"><h2 style="color:#a78bfa">🔄 Đội hình Phụ</h2></div>
+          <div class="pitch lrPitch" id="${pSub}">${LR_PITCH_MARKINGS}</div>
+          <div class="bench"><h3>Dự bị</h3><div id="${bSub}" class="lrBenchList"></div></div>
+        </div>
+      </div>
+    `;
+    clearPitch(pMain);
+    clearPitch(pSub);
+    renderLatestResultLineup(pMain, result.lineupMain || result.lineupA, fMain, "capTeam", statMap, true);
+    renderLatestResultLineup(pSub, result.lineupSub || result.lineupB, fSub, "capSubTeam", statMap, true);
+    renderLatestResultBench(bMain, (result.lineupMain || result.lineupA).bench || [], "capTeam", statMap, true);
+    renderLatestResultBench(bSub, (result.lineupSub || result.lineupB).bench || [], "capSubTeam", statMap, true);
+    return;
+  }
+
+  containerEl.innerHTML = `
+    ${headerHtml}
+    ${mvpBar}
+    ${latestResultScoreBoardHtml(summary, false)}
+    <div class="teams">
+      <div>
+        <div class="teamHead"><h2 style="color:#ef4444">🔴 Đội A</h2></div>
+        <div class="pitch lrPitch" id="${pA}">${LR_PITCH_MARKINGS}</div>
+        <div class="bench"><h3>Dự bị</h3><div id="${bA}" class="lrBenchList"></div></div>
+      </div>
+      <div>
+        <div class="teamHead"><h2 style="color:#facc15">🟡 Đội B</h2></div>
+        <div class="pitch lrPitch" id="${pB}">${LR_PITCH_MARKINGS}</div>
+        <div class="bench"><h3>Dự bị</h3><div id="${bB}" class="lrBenchList"></div></div>
+      </div>
+    </div>
+  `;
+  clearPitch(pA);
+  clearPitch(pB);
+  renderLatestResultLineup(pA, result.lineupA, fMain, "redTeam", statMap, false);
+  renderLatestResultLineup(pB, result.lineupB, fSub, "yellowTeam", statMap, false);
+  renderLatestResultBench(bA, result.lineupA.bench || [], "redTeam", statMap, false);
+  renderLatestResultBench(bB, result.lineupB.bench || [], "yellowTeam", statMap, false);
 }
 
 function renderLatestResult(data){
@@ -1799,81 +2061,7 @@ function renderLatestResult(data){
     return;
   }
 
-  const summary = data.summary;
-  const isCap = String(summary.match_type || "").toLowerCase() === "cap";
-  const players = (data.players || []).slice();
-
-  const scorers = players
-    .filter(p => Number(p.goals) > 0)
-    .sort((a, b) => Number(b.goals) - Number(a.goals) || String(a.player_name).localeCompare(String(b.player_name), "vi"));
-
-  const assisters = players
-    .filter(p => Number(p.assists) > 0)
-    .sort((a, b) => Number(b.assists) - Number(a.assists) || String(a.player_name).localeCompare(String(b.player_name), "vi"));
-
-  const mvps = players.filter(p => p.is_mvp === true || p.is_mvp === "TRUE");
-
-  const sortedPlayers = players.sort((a, b) => {
-    if(a.team !== b.team) return String(a.team).localeCompare(String(b.team));
-    if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
-    return String(a.player_name).localeCompare(String(b.player_name), "vi");
-  });
-
-  const scorersHtml = scorers.length
-    ? scorers.map(p => `<div class="latestStatChip"><span>${escapeHtml(String(p.player_name))} <span class="meta">(${escapeHtml(String(p.team || ""))})</span></span><b>⚽ ${Number(p.goals)}</b></div>`).join("")
-    : `<div class="meta">Không có bàn thắng ghi nhận.</div>`;
-
-  const assistsHtml = assisters.length
-    ? assisters.map(p => `<div class="latestStatChip"><span>${escapeHtml(String(p.player_name))} <span class="meta">(${escapeHtml(String(p.team || ""))})</span></span><b>🅰️ ${Number(p.assists)}</b></div>`).join("")
-    : `<div class="meta">Không có kiến tạo ghi nhận.</div>`;
-
-  const mvpNames = summary.mvp_players
-    ? String(summary.mvp_players)
-    : mvps.map(p => p.player_name).join(", ");
-
-  const playerRows = sortedPlayers.map(p => {
-    const mvp = p.is_mvp === true || p.is_mvp === "TRUE" ? "⭐" : "";
-    const goals = Number(p.goals);
-    const assists = Number(p.assists);
-    const goalsText = Number.isFinite(goals) && goals > 0 ? goals : "—";
-    const assistsText = Number.isFinite(assists) && assists > 0 ? assists : "—";
-    const delta = Number(p.rating_delta);
-    const deltaText = Number.isFinite(delta) ? deltaLabel(delta) : "—";
-    return `<div class="latestPlayerRow">
-      <span>${escapeHtml(String(p.player_name || ""))} ${mvp}</span>
-      <span class="meta">${escapeHtml(String(p.team || ""))}${p.starter ? "" : " · dự bị"}</span>
-      <span>Điểm <b>${escapeHtml(String(p.match_score ?? "—"))}</b></span>
-      <span>⚽ ${escapeHtml(String(goalsText))}</span>
-      <span>🅰️ ${escapeHtml(String(assistsText))}</span>
-      <span>${escapeHtml(String(p.rating_before ?? "—"))}→${escapeHtml(String(p.rating_after ?? "—"))}</span>
-      <span class="deltaBadge ${deltaClass(delta)}">${deltaText}</span>
-    </div>`;
-  }).join("");
-
-  el.innerHTML = `
-    <div class="meta">${escapeHtml(displayMatchLabel(summary))} · ${isCap ? "⚽ Cáp" : "Nội bộ"}</div>
-    <div style="font-size:22px;font-weight:900;margin:8px 0">${latestResultScoreText(summary)}</div>
-    <div class="latestResultHead">
-      <div class="metric"><b>${escapeHtml(String(mvpNames || "—"))}</b><span>MVP</span></div>
-      <div class="metric"><b>${scorers.reduce((n, p) => n + Number(p.goals || 0), 0)}</b><span>Tổng bàn thắng</span></div>
-      <div class="metric"><b>${assisters.reduce((n, p) => n + Number(p.assists || 0), 0)}</b><span>Tổng kiến tạo</span></div>
-    </div>
-    <div class="latestResultSection">
-      <h3>⚽ Danh sách ghi bàn</h3>
-      ${scorersHtml}
-    </div>
-    <div class="latestResultSection">
-      <h3>🅰️ Danh sách kiến tạo</h3>
-      ${assistsHtml}
-    </div>
-    <div class="latestPlayerTable">
-      <h3 style="margin:0 0 8px;font-size:15px">📋 Điểm & thống kê từng cầu thủ</h3>
-      <div class="latestPlayerHead">
-        <span>Cầu thủ</span><span>Đội</span><span>Điểm</span><span>BT</span><span>KT</span><span>Rating</span><span>Δ</span>
-      </div>
-      ${playerRows}
-    </div>
-  `;
+  renderMatchResultView(el, data.summary, data.players, "lr");
 }
 
 async function loadLatestResult(){
@@ -1952,15 +2140,47 @@ function renderMatchHistoryList(matches){
       ? `${escapeHtml(String(m.formation_a || ""))} / ${escapeHtml(String(m.formation_b || ""))}`
       : `${escapeHtml(String(m.formation_a || ""))} vs ${escapeHtml(String(m.formation_b || ""))}`;
     const typeTag = isCap ? " · ⚽ Cáp" : "";
+    const deleteBtn = hasPerm(PERMS.DELETE_MATCH)
+      ? `<button type="button" class="danger historyDeleteBtn" onclick="deleteHistoryMatch(${idx}, event)">🗑 Xóa</button>`
+      : "";
     return `<div class="historyItem" onclick="toggleHistoryDetail(${idx})">
-      <h3>${escapeHtml(displayMatchLabel(m))}${typeTag} · ${score}</h3>
+      <div class="historyItemHead">
+        <h3>${escapeHtml(displayMatchLabel(m))}${typeTag} · ${score}</h3>
+        ${deleteBtn}
+      </div>
       <div class="historyMeta">
         MVP: <b>${escapeHtml(String(m.mvp_players || "—"))}</b> ·
         ${formationText}
       </div>
-      <div id="histDetail_${idx}" class="historyDetail"></div>
+      <div id="histDetail_${idx}" class="historyDetail" onclick="event.stopPropagation()"></div>
     </div>`;
   }).join("");
+}
+
+async function deleteHistoryMatch(idx, ev){
+  if(ev) ev.stopPropagation();
+  if(!hasPerm(PERMS.DELETE_MATCH)){
+    showError("Bạn không có quyền xóa trận.");
+    return;
+  }
+
+  const match = cachedHistoryMatches[idx];
+  if(!match?.match_id) return;
+
+  const label = displayMatchLabel(match);
+  if(!confirm(`Xóa trận "${label}" khỏi lịch sử?\nRating và MVP sẽ được tính lại. Hành động này không thể hoàn tác.`)){
+    return;
+  }
+
+  try{
+    await apiPost("delete_match", { match_id: match.match_id });
+    await loadDefaultRoster();
+    await loadMatchHistory();
+    if(document.getElementById("tabLatest").classList.contains("active")) loadLatestResult();
+    if(document.getElementById("tabStats").classList.contains("active")) renderStats();
+  }catch(e){
+    showError(e.message || "Không xóa được trận.");
+  }
 }
 
 async function toggleHistoryDetail(idx){
@@ -1984,29 +2204,11 @@ async function toggleHistoryDetail(idx){
 
   try{
     const data = await apiGet("get_match_detail", {match_id: matchId});
-    const players = (data.players || []).slice().sort((a, b) => {
-      if(a.team !== b.team) return String(a.team).localeCompare(String(b.team));
-      if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
-      return String(a.player_name).localeCompare(String(b.player_name), "vi");
-    });
-
-    detailEl.innerHTML = players.map(p => {
-      const delta = Number(p.rating_delta);
-      const deltaText = Number.isFinite(delta) ? deltaLabel(delta) : "—";
-      const mvp = p.is_mvp === true || p.is_mvp === "TRUE" ? " ⭐MVP" : "";
-      const goals = Number(p.goals);
-      const assists = Number(p.assists);
-      const goalsText = Number.isFinite(goals) && goals > 0 ? goals : "—";
-      const assistsText = Number.isFinite(assists) && assists > 0 ? assists : "—";
-      return `<div class="historyPlayerRow">
-        <span>${escapeHtml(String(p.player_name || ""))}${mvp} <span class="meta">(${escapeHtml(String(p.team || ""))}${p.starter ? "" : " · dự bị"})</span></span>
-        <span>⚽ BT <b>${escapeHtml(String(goalsText))}</b></span>
-        <span>🅰️ KT <b>${escapeHtml(String(assistsText))}</b></span>
-        <span>Điểm: <b>${escapeHtml(String(p.match_score ?? "—"))}</b></span>
-        <span>Rating: ${escapeHtml(String(p.rating_before ?? "—"))} → ${escapeHtml(String(p.rating_after ?? "—"))}</span>
-        <span class="deltaBadge ${deltaClass(delta)}">${deltaText}</span>
-      </div>`;
-    }).join("") || `<div class="meta">Không có dữ liệu cầu thủ.</div>`;
+    if(!data.summary || !data.players?.length){
+      detailEl.innerHTML = `<div class="meta">Không có dữ liệu chi tiết.</div>`;
+      return;
+    }
+    renderMatchResultView(detailEl, data.summary, data.players, `hist${idx}`, {embed: true});
   }catch(e){
     detailEl.innerHTML = `<div class="error" style="display:block">${escapeHtml(e.message || "Không tải được chi tiết.")}</div>`;
   }
@@ -3203,10 +3405,11 @@ async function addPlayerToPitch(pitchId, p, indexByPos, formation, teamClass){
   el.classList.add("show");
 }
 
-function getPosCoord(assigned, assignedSide, indexByPos, formation){
+function getPosCoord(assigned, assignedSide, indexByPos, formation, coordsMap){
   const safeFormation = resolveFormation(formation, "3-1-2");
   const pos = normalizePos(assigned || "MID");
-  const coordsByPos = (FORMATION_COORDS[safeFormation] && FORMATION_COORDS[safeFormation][pos]) || [];
+  const coords = coordsMap || FORMATION_COORDS;
+  const coordsByPos = (coords[safeFormation] && coords[safeFormation][pos]) || [];
   const slotsByPos = FORMATIONS[safeFormation].filter(slot => slot.pos === pos);
 
   const key = pos + "_" + (assignedSide || "ANY");

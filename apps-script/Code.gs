@@ -122,6 +122,8 @@ function doPost(e) {
         return jsonResponse(saveMatchResult_(payload));
       case "cancel_match":
         return jsonResponse(cancelMatch_(payload));
+      case "delete_match":
+        return jsonResponse(deleteMatch_(payload));
       case "admin_login":
         return jsonResponse(adminLogin_(payload));
       case "admin_logout":
@@ -175,7 +177,7 @@ function doGet(e) {
     spreadsheet_id: SPREADSHEET_ID,
     target_gid: TARGET_GID,
     mode: "replace_same_match_date_pending_only",
-    actions: ["save_match_history", "save_match_result", "cancel_match", "admin_login", "admin_logout", "admin_save_user", "admin_delete_user", "get_match_list", "get_match_detail", "get_pending_match", "get_latest_lineup", "get_latest_result", "get_player_stats", "admin_validate_session", "admin_list_users"],
+    actions: ["save_match_history", "save_match_result", "cancel_match", "delete_match", "admin_login", "admin_logout", "admin_save_user", "admin_delete_user", "get_match_list", "get_match_detail", "get_pending_match", "get_latest_lineup", "get_latest_result", "get_player_stats", "admin_validate_session", "admin_list_users"],
     updated_at: "2026-06-10"
   });
 }
@@ -901,6 +903,153 @@ function findHeaderColumn_(headers, headerName, fallbackIndex) {
   });
   const idx = normalized.indexOf(headerName.toLowerCase());
   return idx >= 0 ? idx + 1 : fallbackIndex;
+}
+
+function deleteMatch_(payload) {
+  requireAuth_(payload, ["delete_match"]);
+  const matchId = String(payload.match_id || "").trim();
+  if (!matchId) throw new Error("match_id is required");
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const summarySheet = getOrCreateSheet_(ss, MATCH_SUMMARY_SHEET, MATCH_SUMMARY_HEADERS);
+  const summaryHeaders = ensureSheetHeaders_(summarySheet, MATCH_SUMMARY_HEADERS);
+  const sMap = headerIndexMap_(summaryHeaders);
+  const summaryData = summarySheet.getDataRange().getValues();
+
+  let found = false;
+  let isCompleted = false;
+  for (let r = 1; r < summaryData.length; r++) {
+    if (String(summaryData[r][sMap.match_id] || "") !== matchId) continue;
+    found = true;
+    isCompleted = String(summaryData[r][sMap.status] || "").trim().toLowerCase() === "completed";
+    break;
+  }
+  if (!found) throw new Error("Không tìm thấy trận: " + matchId);
+  if (!isCompleted) throw new Error("Chỉ xóa được trận đã hoàn tất trong lịch sử.");
+
+  const ratingLogSheet = getOrCreateSheet_(ss, RATING_LOG_SHEET, RATING_LOG_HEADERS);
+  const ratingLogHeaders = ensureSheetHeaders_(ratingLogSheet, RATING_LOG_HEADERS);
+  const rMap = headerIndexMap_(ratingLogHeaders);
+  const logData = ratingLogSheet.getLastRow() > 1 ? ratingLogSheet.getDataRange().getValues() : [];
+
+  const removedLogs = [];
+  const logRowsToDelete = [];
+  for (let r = logData.length - 1; r >= 1; r--) {
+    if (String(logData[r][rMap.match_id] || "") !== matchId) continue;
+    removedLogs.push({
+      player_name: logData[r][rMap.player_name],
+      rating_before: logData[r][rMap.rating_before],
+      mvp_count_before: logData[r][rMap.mvp_count_before]
+    });
+    logRowsToDelete.push(r + 1);
+  }
+  logRowsToDelete.forEach(function(row) {
+    ratingLogSheet.deleteRow(row);
+  });
+
+  const historySheet = getSheetByGid_(ss, TARGET_GID);
+  const deletedHistory = historySheet ? deleteAllRowsByMatchId_(historySheet, matchId) : 0;
+
+  let deletedSummary = 0;
+  for (let i = summaryData.length - 1; i >= 1; i--) {
+    if (String(summaryData[i][sMap.match_id] || "") !== matchId) continue;
+    summarySheet.deleteRow(i + 1);
+    deletedSummary++;
+  }
+
+  recalculateRosterFromLogs_(ss, removedLogs);
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    match_id: matchId,
+    deleted_history_rows: deletedHistory,
+    deleted_summary_rows: deletedSummary,
+    status: "deleted"
+  };
+}
+
+function recalculateRosterFromLogs_(ss, removedLogs) {
+  const rosterSheet = getSheetByGid_(ss, ROSTER_GID);
+  if (!rosterSheet) return;
+
+  const ratingLogSheet = getOrCreateSheet_(ss, RATING_LOG_SHEET, RATING_LOG_HEADERS);
+  const ratingLogHeaders = ensureSheetHeaders_(ratingLogSheet, RATING_LOG_HEADERS);
+  const rMap = headerIndexMap_(ratingLogHeaders);
+
+  const rosterData = rosterSheet.getDataRange().getValues();
+  const rosterHeaders = rosterData[0].map(function(h) {
+    return String(h || "").trim().toLowerCase();
+  });
+  const nameCol = findColumn_(rosterHeaders, ["name", "tên", "ten"]);
+  const ratingCol = findColumn_(rosterHeaders, ["rating", "điểm", "diem"]);
+  if (nameCol === -1 || ratingCol === -1) return;
+
+  const mvpCountCol = ensureRosterMvpCountColumn_(rosterSheet, rosterHeaders);
+  const freshData = rosterSheet.getDataRange().getValues();
+  const logData = ratingLogSheet.getLastRow() > 1 ? ratingLogSheet.getDataRange().getValues() : [];
+
+  const logsByPlayer = {};
+  for (let r = 1; r < logData.length; r++) {
+    const key = normalizeName_(logData[r][rMap.player_name]);
+    if (!logsByPlayer[key]) logsByPlayer[key] = [];
+    logsByPlayer[key].push({
+      saved_at: String(logData[r][rMap.saved_at] || ""),
+      rating_after: clampRating_(logData[r][rMap.rating_after]),
+      mvp_count_after: Math.max(0, Math.round(Number(logData[r][rMap.mvp_count_after]) || 0))
+    });
+  }
+
+  const removedByPlayer = {};
+  (removedLogs || []).forEach(function(log) {
+    const key = normalizeName_(log.player_name);
+    if (!removedByPlayer[key]) removedByPlayer[key] = log;
+  });
+
+  for (let r = 1; r < freshData.length; r++) {
+    const key = normalizeName_(freshData[r][nameCol]);
+    const logs = logsByPlayer[key] || [];
+    let rating;
+    let mvpCount;
+
+    if (logs.length) {
+      logs.sort(function(a, b) {
+        return String(a.saved_at).localeCompare(String(b.saved_at));
+      });
+      const last = logs[logs.length - 1];
+      rating = last.rating_after;
+      mvpCount = last.mvp_count_after;
+    } else if (removedByPlayer[key]) {
+      rating = clampRating_(removedByPlayer[key].rating_before);
+      mvpCount = Math.max(0, Math.round(Number(removedByPlayer[key].mvp_count_before) || 0));
+    } else {
+      continue;
+    }
+
+    rosterSheet.getRange(r + 1, ratingCol + 1).setValue(rating);
+    rosterSheet.getRange(r + 1, mvpCountCol + 1).setValue(mvpCount);
+  }
+}
+
+function deleteAllRowsByMatchId_(sheet, matchId) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return 0;
+
+  const allHeaders = getMatchHistoryHeaderRow_(sheet);
+  const hMap = headerIndexMap_(allHeaders);
+  const data = sheet.getDataRange().getValues();
+  const rowsToDelete = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][hMap.match_id] || "") !== matchId) continue;
+    rowsToDelete.push(i + 1);
+  }
+
+  rowsToDelete.reverse().forEach(function(rowNumber) {
+    sheet.deleteRow(rowNumber);
+  });
+
+  return rowsToDelete.length;
 }
 
 function cancelMatch_(payload) {

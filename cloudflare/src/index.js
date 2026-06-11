@@ -52,7 +52,7 @@ export default {
           version: APP_VERSION,
           storage: "cloudflare-d1",
           actions: [
-            "save_match_history", "save_match_result", "cancel_match",
+            "save_match_history", "save_match_result", "cancel_match", "delete_match",
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats",
@@ -101,6 +101,9 @@ export default {
         case "cancel_match":
           await requireAuth(db, token, ["cancel_match"]);
           return json(await cancelMatch(db, payload));
+        case "delete_match":
+          await requireAuth(db, token, ["delete_match"]);
+          return json(await deleteCompletedMatch(db, payload));
         case "import_data":
           return json(await importData(db, payload, env.MIGRATE_SECRET, pepper));
         default:
@@ -461,6 +464,79 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
     ));
   }
   if (stmts.length) await db.batch(stmts);
+}
+
+async function recalculateRosterFromLogs(db, removedLogs = []) {
+  const rosterRows = await db.prepare("SELECT * FROM players").all();
+  const remainingLogs = await db.prepare(
+    "SELECT * FROM rating_log ORDER BY saved_at ASC, id ASC"
+  ).all();
+
+  const logsByPlayer = {};
+  for (const log of remainingLogs.results || []) {
+    const key = normalizeName(log.player_name);
+    if (!logsByPlayer[key]) logsByPlayer[key] = [];
+    logsByPlayer[key].push(log);
+  }
+
+  const removedByPlayer = {};
+  for (const log of removedLogs) {
+    const key = normalizeName(log.player_name);
+    if (!removedByPlayer[key]) removedByPlayer[key] = log;
+  }
+
+  const updatePlayer = db.prepare("UPDATE players SET rating = ?, mvp_count = ? WHERE id = ?");
+  const stmts = [];
+
+  for (const r of rosterRows.results || []) {
+    const key = normalizeName(r.name);
+    const logs = logsByPlayer[key] || [];
+    let rating;
+    let mvpCount;
+
+    if (logs.length) {
+      const last = logs[logs.length - 1];
+      rating = clampRating(last.rating_after);
+      mvpCount = Math.max(0, Math.round(Number(last.mvp_count_after) || 0));
+    } else if (removedByPlayer[key]) {
+      rating = clampRating(removedByPlayer[key].rating_before);
+      mvpCount = Math.max(0, Math.round(Number(removedByPlayer[key].mvp_count_before) || 0));
+    } else {
+      continue;
+    }
+
+    stmts.push(updatePlayer.bind(rating, mvpCount, r.id));
+  }
+
+  if (stmts.length) await db.batch(stmts);
+}
+
+async function deleteCompletedMatch(db, payload) {
+  const matchId = String(payload.match_id || "").trim();
+  if (!matchId) throw new Error("match_id is required");
+
+  const summary = await db.prepare("SELECT status FROM match_summary WHERE match_id = ?").bind(matchId).first();
+  if (!summary) throw new Error("Không tìm thấy trận: " + matchId);
+  if (summary.status !== "completed") {
+    throw new Error("Chỉ xóa được trận đã hoàn tất trong lịch sử.");
+  }
+
+  const removedLogs = (await db.prepare("SELECT * FROM rating_log WHERE match_id = ?").bind(matchId).all()).results || [];
+
+  await db.prepare("DELETE FROM rating_log WHERE match_id = ?").bind(matchId).run();
+  const delHist = await db.prepare("DELETE FROM match_history WHERE match_id = ?").bind(matchId).run();
+  const delSum = await db.prepare("DELETE FROM match_summary WHERE match_id = ?").bind(matchId).run();
+
+  await recalculateRosterFromLogs(db, removedLogs);
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    match_id: matchId,
+    deleted_history_rows: delHist.meta?.changes || 0,
+    deleted_summary_rows: delSum.meta?.changes || 0,
+    status: "deleted"
+  };
 }
 
 async function cancelMatch(db, payload) {
