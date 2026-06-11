@@ -7,16 +7,16 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.3.6">
-  <link rel="stylesheet" href="css/lineup.css?v=2.3.6">
-  <link rel="stylesheet" href="css/modals.css?v=2.3.6">
-  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.3.6">
-  <link rel="stylesheet" href="css/latest-match.css?v=2.3.6">
+  <link rel="stylesheet" href="css/base.css?v=2.3.8">
+  <link rel="stylesheet" href="css/lineup.css?v=2.3.8">
+  <link rel="stylesheet" href="css/modals.css?v=2.3.8">
+  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.3.8">
+  <link rel="stylesheet" href="css/latest-match.css?v=2.3.8">
 </head>
 <body>
 <div class="wrap">
   <h1>DIAMOND UNITED FC - SÂN 7</h1>
-  <div class="buildVersion">Build v2.3.6</div>
+  <div class="buildVersion">Build v2.3.8</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -205,8 +205,10 @@
 
   <div id="latestResultView">
     <div class="card">
-      <h2>Trận đấu gần nhất</h2>
-      <button class="secondary" onclick="loadLatestMatch()" style="width:auto;margin:0 0 12px">Tải lại</button>
+      <div class="latestMatchCardHead">
+        <h2>Trận đấu gần nhất</h2>
+        <button class="secondary" onclick="loadLatestMatch()">Tải lại</button>
+      </div>
       <div id="latestResultContent">
         <div class="meta">Đang tải...</div>
       </div>
@@ -355,7 +357,7 @@
   <script src="js/match-result.js?v=2.3.6"></script>
   <script src="js/stats.js?v=2.3.6"></script>
   <script src="js/auth-admin.js?v=2.3.6"></script>
-  <script src="js/latest-match.js?v=2.3.6"></script>
+  <script src="js/latest-match.js?v=2.3.7"></script>
   <script src="js/tabs-history.js?v=2.3.6"></script>
   <script src="js/player-helpers.js?v=2.3.6"></script>
   <script src="js/lineup-confirm.js?v=2.3.6"></script>

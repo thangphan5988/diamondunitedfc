@@ -73,6 +73,79 @@ function latestResultBenchCardHtml(p, teamClass, stat, isCap){
   </div>`;
 }
 
+function lrSummaryStripHtml(statusChip, detailChip){
+  const detail = detailChip ? `<span class="lrSummaryDetail">${detailChip}</span>` : "";
+  return `<div class="lrSummaryStrip">${statusChip}${detail}</div>`;
+}
+
+function lrCompletedSummaryHtml(){
+  return lrSummaryStripHtml(
+    `<span class="lrStatusChip done">✓ Trận đã kết thúc</span>`,
+    `<span class="lrSummaryDetail lrSummaryDetail--desktop">Kết quả & điểm cầu thủ đã cập nhật</span>`
+  );
+}
+
+function lrMvpSummaryHtml(mvpNames){
+  if(!mvpNames) return "";
+  return lrSummaryStripHtml(
+    `<span class="lrMvpChip">🏆 MVP: <b>${escapeHtml(mvpNames)}</b></span>`,
+    ""
+  );
+}
+
+function lmTeamSegHtml(segments){
+  if(!segments?.length || segments.length < 2) return "";
+  const btns = segments.map((seg, i) =>
+    `<button type="button" class="lmSegBtn${i === 0 ? " active" : ""}" data-team="${escapeAttr(seg.id)}">${seg.label}</button>`
+  ).join("");
+  return `<div class="lmTeamSeg" role="tablist">${btns}</div>`;
+}
+
+function wrapLmTeamsSwitchable(segHtml, teamsInnerHtml){
+  if(!segHtml) return `<div class="teams lmTeams">${teamsInnerHtml}</div>`;
+  return `<div class="lmTeamsWrap">${segHtml}<div class="teams lmTeams lmTeams--switchable">${teamsInnerHtml}</div></div>`;
+}
+
+function initLmTeamSwitcher(root){
+  if(!root) return;
+  const wrap = root.querySelector(".lmTeamsWrap") || (root.classList.contains("lmTeamsWrap") ? root : null);
+  if(!wrap) return;
+
+  const seg = wrap.querySelector(".lmTeamSeg");
+  const panels = wrap.querySelectorAll(".lmTeamPanel[data-lm-team]");
+  if(!seg || panels.length < 2) return;
+
+  const mq = window.matchMedia("(max-width:760px)");
+
+  function apply(){
+    const mobile = mq.matches;
+    wrap.classList.toggle("lmTeamsWrap--mobile", mobile);
+    if(!mobile){
+      panels.forEach(p => p.classList.remove("lmTeamHidden"));
+      return;
+    }
+    const active = seg.querySelector(".lmSegBtn.active")?.dataset.team || panels[0]?.dataset.lmTeam;
+    panels.forEach(p => p.classList.toggle("lmTeamHidden", p.dataset.lmTeam !== active));
+  }
+
+  seg.querySelectorAll(".lmSegBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      seg.querySelectorAll(".lmSegBtn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      apply();
+    });
+  });
+
+  wrap._lmApply = apply;
+  if(!window._lmSwitcherMqBound){
+    window._lmSwitcherMqBound = true;
+    mq.addEventListener("change", () => {
+      document.querySelectorAll(".lmTeamsWrap").forEach(w => w._lmApply?.());
+    });
+  }
+  apply();
+}
+
 function renderPublicPitchLineup(pitchId, lineup, formation, renderCard){
   if(!lineup?.starters?.length) return;
   const safeFormation = resolveFormation(formation, "3-1-2");
@@ -143,28 +216,26 @@ function ongoingMatchPhaseHtml(summary){
   const phase = getOngoingMatchPhase(summary);
   const confA = !!summary?.team_a_lineup_confirmed;
   const confB = !!summary?.team_b_lineup_confirmed;
-  let barClass = "lmPhaseBar";
+  let chipClass = "wait";
   let title = "🔴 Trận đang diễn ra";
   let detail = "Điều phối đang chuẩn bị đội hình";
 
   if(phase === "hlv_arranging"){
-    barClass += " wait";
-    detail = `HLV đang sắp xếp · 🔴 ${confA ? "Đã chốt" : "Đang sắp xếp"} · 🟡 ${confB ? "Đã chốt" : "Đang sắp xếp"}`;
+    detail = `HLV sắp xếp · 🔴 ${confA ? "✓" : "…"} · 🟡 ${confB ? "✓" : "…"}`;
   }else if(phase === "awaiting_export"){
-    barClass += " wait";
-    detail = "Cả 2 HLV đã chốt — chờ xuất hình đội hình";
+    detail = "2 HLV đã chốt — chờ xuất hình";
   }else if(phase === "awaiting_result"){
-    barClass += " done";
+    chipClass = "done";
     title = "✓ Đội hình đã chốt";
-    detail = "Đã xuất hình — chờ cập nhật kết quả sau trận";
+    detail = "Chờ cập nhật kết quả sau trận";
   }else if(phase === "preparing"){
-    detail = "Điều phối đang random / chuẩn bị gửi HLV";
+    detail = "Điều phối đang chuẩn bị gửi HLV";
   }
 
-  return `<div class="${barClass}">
-    <span>${title}</span>
-    <span class="lmPhaseDetail">${detail}</span>
-  </div>`;
+  return lrSummaryStripHtml(
+    `<span class="lrStatusChip ${chipClass}">${title}</span>`,
+    `<span class="lrSummaryDetail">${escapeHtml(detail)}</span>`
+  );
 }
 
 function ongoingTeamConfirmBadge(confirmed){
@@ -175,19 +246,21 @@ function ongoingTeamConfirmBadge(confirmed){
 
 function publicMatchTeamPanelHtml(opts){
   const {
-    idPrefix, teamLabel, teamColor, formation, pitchSuffix, benchSuffix, showStatus, teamConfirmed
+    idPrefix, teamLabel, teamColor, formation, pitchSuffix, benchSuffix, showStatus, teamConfirmed, teamKey
   } = opts;
   const pitchId = idPrefix + pitchSuffix;
   const benchId = idPrefix + benchSuffix;
   const badge = showStatus ? ongoingTeamConfirmBadge(!!teamConfirmed) : "";
-  const formRow = formation ? `<div class="formationControl">
+  const formBadge = formation ? `<span class="lmFormBadge">${escapeHtml(formation)}</span>` : "";
+  const formRow = formation ? `<div class="formationControl lmFormDesktop">
       <label>Sơ đồ</label>
       <div class="formationReadonly">${escapeHtml(formation)}</div>
     </div>` : "";
+  const teamAttr = teamKey ? ` data-lm-team="${escapeAttr(teamKey)}"` : "";
 
-  return `<div class="lmTeamPanel">
+  return `<div class="lmTeamPanel"${teamAttr}>
     <div class="teamHead">
-      <h2 style="color:${teamColor}">${teamLabel}</h2>
+      <h2 style="color:${teamColor}">${teamLabel}${formBadge}</h2>
       ${badge}
     </div>
     ${formRow}
@@ -197,7 +270,7 @@ function publicMatchTeamPanelHtml(opts){
       </div>
       <div class="bench benchSide">
         <h3>Dự bị</h3>
-        <div id="${benchId}" class="benchList"></div>
+        <div id="${benchId}" class="benchList lrBenchList"></div>
       </div>
     </div>
   </div>`;
@@ -207,7 +280,7 @@ function latestResultScoreBoardHtml(summary, isCap){
   const a = formatHistoryScore(summary?.team_a_score);
   const b = formatHistoryScore(summary?.team_b_score);
   if(isCap){
-    return `<div class="lrScoreBoard">
+    return `<div class="lrScoreBoard lrScoreBoard--hero">
       <div class="lrTeamScore blue">
         <span class="lrTeamLabel">DUFC</span>
         <span class="lrScoreNum">${escapeHtml(String(a))}</span>
@@ -219,7 +292,7 @@ function latestResultScoreBoardHtml(summary, isCap){
       </div>
     </div>`;
   }
-  return `<div class="lrScoreBoard">
+  return `<div class="lrScoreBoard lrScoreBoard--hero">
     <div class="lrTeamScore red">
       <span class="lrTeamLabel">🔴 Đội A</span>
       <span class="lrScoreNum">${escapeHtml(String(a))}</span>
@@ -247,14 +320,8 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
     ? String(summary.mvp_players)
     : mvps.map(p => p.player_name).join(", ");
 
-  const mvpBar = mvpNames
-    ? `<div class="lrMvpBar">🏆 MVP: <b>${escapeHtml(mvpNames)}</b></div>`
-    : "";
-
-  const completedBar = embed ? "" : `<div class="lmPhaseBar done">
-    <span>✓ Trận đã kết thúc</span>
-    <span class="lmPhaseDetail">Kết quả & điểm cầu thủ đã được cập nhật</span>
-  </div>`;
+  const mvpBar = lrMvpSummaryHtml(mvpNames);
+  const completedBar = embed ? "" : lrCompletedSummaryHtml();
 
   const capResultMeta = `⚽ Trận Cáp · ${escapeHtml(fMain)}`;
   const headerHtml = embed
@@ -280,6 +347,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
   if(isCap){
     const lineupMain = result.lineupMain || result.lineupA;
     containerEl.innerHTML = `
+      <div class="lmMatchWrap">
       ${headerHtml}
       ${completedBar}
       ${mvpBar}
@@ -287,30 +355,39 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
       <div class="teams lmTeams lmTeamsCapDone">
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "⚽ Đội hình ra sân", teamColor: "#38bdf8", formation: fMain,
-          pitchSuffix: "PitchMain", benchSuffix: "BenchMain"
+          pitchSuffix: "PitchMain", benchSuffix: "BenchMain", teamKey: "main"
         })}
+      </div>
       </div>
     `;
     clearPitch(pMain);
     renderLatestResultLineup(pMain, lineupMain, fMain, "capTeam", statMap, true);
     renderLatestResultBench(bMain, lineupMain.bench || [], "capTeam", statMap, true);
+    initLmTeamSwitcher(containerEl);
     return;
   }
 
+  const teamSeg = lmTeamSegHtml([
+    {id: "a", label: "🔴 Đội A"},
+    {id: "b", label: "🟡 Đội B"}
+  ]);
+  const teamsHtml = `
+      ${publicMatchTeamPanelHtml({
+        idPrefix, teamLabel: "🔴 Đội A", teamColor: "#ef4444", formation: fMain,
+        pitchSuffix: "PitchA", benchSuffix: "BenchA", teamKey: "a"
+      })}
+      ${publicMatchTeamPanelHtml({
+        idPrefix, teamLabel: "🟡 Đội B", teamColor: "#facc15", formation: fSub,
+        pitchSuffix: "PitchB", benchSuffix: "BenchB", teamKey: "b"
+      })}
+  `;
   containerEl.innerHTML = `
+    <div class="lmMatchWrap">
     ${headerHtml}
     ${completedBar}
     ${mvpBar}
     ${latestResultScoreBoardHtml(summary, false)}
-    <div class="teams lmTeams">
-      ${publicMatchTeamPanelHtml({
-        idPrefix, teamLabel: "🔴 Đội A", teamColor: "#ef4444", formation: fMain,
-        pitchSuffix: "PitchA", benchSuffix: "BenchA"
-      })}
-      ${publicMatchTeamPanelHtml({
-        idPrefix, teamLabel: "🟡 Đội B", teamColor: "#facc15", formation: fSub,
-        pitchSuffix: "PitchB", benchSuffix: "BenchB"
-      })}
+    ${wrapLmTeamsSwitchable(teamSeg, teamsHtml)}
     </div>
   `;
   clearPitch(pA);
@@ -319,6 +396,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
   renderLatestResultLineup(pB, result.lineupB, fSub, "yellowTeam", statMap, false);
   renderLatestResultBench(bA, result.lineupA.bench || [], "redTeam", statMap, false);
   renderLatestResultBench(bB, result.lineupB.bench || [], "yellowTeam", statMap, false);
+  initLmTeamSwitcher(containerEl);
 }
 
 function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
@@ -348,18 +426,25 @@ function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
   const bB = idPrefix + "BenchB";
 
   if(isCap){
-    containerEl.innerHTML = `
-      ${headerHtml}
-      ${ongoingMatchPhaseHtml(summary)}
-      <div class="teams lmTeams">
+    const capSeg = lmTeamSegHtml([
+      {id: "main", label: "⚽ Ra sân"},
+      {id: "sub", label: "🔄 Phụ"}
+    ]);
+    const capTeamsHtml = `
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "⚽ Đội hình ra sân", teamColor: "#38bdf8", formation: fMain,
-          pitchSuffix: "PitchMain", benchSuffix: "BenchMain"
+          pitchSuffix: "PitchMain", benchSuffix: "BenchMain", teamKey: "main"
         })}
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "🔄 Đội hình Phụ", teamColor: "#a78bfa", formation: fSub,
-          pitchSuffix: "PitchSub", benchSuffix: "BenchSub"
+          pitchSuffix: "PitchSub", benchSuffix: "BenchSub", teamKey: "sub"
         })}
+    `;
+    containerEl.innerHTML = `
+      <div class="lmMatchWrap">
+      ${headerHtml}
+      ${ongoingMatchPhaseHtml(summary)}
+      ${wrapLmTeamsSwitchable(capSeg, capTeamsHtml)}
       </div>
     `;
     clearPitch(pMain);
@@ -368,21 +453,29 @@ function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
     renderPreviewPitchLineup(pSub, result.lineupSub || result.lineupB, fSub, "capSubTeam");
     renderPreviewBench(bMain, (result.lineupMain || result.lineupA).bench || []);
     renderPreviewBench(bSub, (result.lineupSub || result.lineupB).bench || []);
+    initLmTeamSwitcher(containerEl);
     return;
   }
 
-  containerEl.innerHTML = `
-    ${headerHtml}
-    ${ongoingMatchPhaseHtml(summary)}
-    <div class="teams lmTeams">
+  const teamSeg = lmTeamSegHtml([
+    {id: "a", label: "🔴 Đội A"},
+    {id: "b", label: "🟡 Đội B"}
+  ]);
+  const teamsHtml = `
       ${publicMatchTeamPanelHtml({
         idPrefix, teamLabel: "🔴 Đội A", teamColor: "#ef4444", formation: fMain,
-        pitchSuffix: "PitchA", benchSuffix: "BenchA", showStatus: true, teamConfirmed: confA
+        pitchSuffix: "PitchA", benchSuffix: "BenchA", showStatus: true, teamConfirmed: confA, teamKey: "a"
       })}
       ${publicMatchTeamPanelHtml({
         idPrefix, teamLabel: "🟡 Đội B", teamColor: "#facc15", formation: fSub,
-        pitchSuffix: "PitchB", benchSuffix: "BenchB", showStatus: true, teamConfirmed: confB
+        pitchSuffix: "PitchB", benchSuffix: "BenchB", showStatus: true, teamConfirmed: confB, teamKey: "b"
       })}
+  `;
+  containerEl.innerHTML = `
+    <div class="lmMatchWrap">
+    ${headerHtml}
+    ${ongoingMatchPhaseHtml(summary)}
+    ${wrapLmTeamsSwitchable(teamSeg, teamsHtml)}
     </div>
   `;
   clearPitch(pA);
@@ -391,6 +484,7 @@ function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
   renderPreviewPitchLineup(pB, result.lineupB, fSub, "yellowTeam");
   renderPreviewBench(bA, result.lineupA.bench || []);
   renderPreviewBench(bB, result.lineupB.bench || []);
+  initLmTeamSwitcher(containerEl);
 }
 
 let latestMatchPollTimer = null;

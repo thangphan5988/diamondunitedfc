@@ -46,3 +46,13 @@ button.danger:hover{filter:brightness(1.15)}
   padding:8px 10px;font-size:11px;background:#020617;border:1px solid var(--line);
   border-radius:12px;color:var(--text);font-weight:800
 }
+@media(max-width:760px){
+  html,body{overflow-x:hidden;max-width:100%}
+  .wrap{
+    padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));
+    overflow-x:hidden;max-width:100%
+  }
+  h1{font-size:20px;margin-bottom:4px}
+  .buildVersion{display:none}
+  .card{padding:12px;border-radius:16px}
+}

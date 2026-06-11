@@ -4,15 +4,49 @@
 .lrHeader h3{margin:0 0 4px;font-size:18px}
 .lrMvpBar{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);color:#fde68a;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;margin-bottom:14px}
 .lrMvpBar b{color:#facc15}
+.lrSummaryStrip{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  margin-bottom:12px
+}
+.lrStatusChip,.lrMvpChip,.lrSummaryDetail{
+  font-size:11px;font-weight:800;line-height:1.35;border-radius:999px;padding:6px 12px
+}
+.lrStatusChip.done{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#bbf7d0}
+.lrStatusChip.wait{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#fde68a}
+.lrMvpChip{background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.35);color:#fde68a}
+.lrMvpChip b{color:#facc15}
+.lrSummaryDetail{color:#cbd5e1;background:rgba(2,6,23,.55);border:1px solid var(--line)}
 .lrScoreBoard{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 18px;padding:18px 12px;background:linear-gradient(180deg,#020617,#0b1224);border:1px solid var(--line);border-radius:20px}
+.lrScoreBoard--hero{margin-bottom:14px}
 .lrTeamScore{text-align:center;flex:1;min-width:0}
 .lrTeamLabel{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
 .lrScoreNum{font-size:44px;font-weight:900;line-height:1}
-.lrVs{font-size:13px;font-weight:900;color:#64748b;padding:0 4px}
+.lrVs{font-size:13px;font-weight:900;color:#64748b;padding:0 4px;flex-shrink:0}
 .lrTeamScore.red .lrScoreNum{color:#ef4444}
 .lrTeamScore.yellow .lrScoreNum{color:#facc15}
 .lrTeamScore.blue .lrScoreNum{color:#38bdf8}
 .lrTeamScore.opp .lrScoreNum{color:#cbd5e1}
+.lmTeamsWrap{margin-top:4px;max-width:100%;min-width:0}
+.lmTeamsWrap .teams{min-width:0}
+.lmTeamPanel{min-width:0;max-width:100%}
+.lmMatchWrap{max-width:100%;min-width:0;overflow-x:hidden}
+.lmTeamSeg{
+  display:none;gap:8px;margin-bottom:12px;padding:4px;
+  background:rgba(2,6,23,.65);border:1px solid var(--line);border-radius:14px
+}
+.lmTeamsWrap--mobile .lmTeamSeg{display:flex}
+.lmSegBtn{
+  flex:1;margin:0;padding:10px 8px;border-radius:10px;border:1px solid transparent;
+  background:transparent;color:#94a3b8;font-size:11px;font-weight:900;cursor:pointer
+}
+.lmSegBtn.active{background:#0284c7;border-color:#0284c7;color:#fff}
+.lmSegBtn:hover:not(.active){background:rgba(51,65,85,.45)}
+.lmTeamPanel.lmTeamHidden{display:none}
+.lmFormBadge{
+  display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;
+  font-size:10px;font-weight:900;vertical-align:middle;
+  background:rgba(2,6,23,.65);border:1px solid var(--line);color:#cbd5e1
+}
 .lmTeams{
   max-width:min(1020px,calc(100vw - 44px - 376px));
   margin:0 auto;width:100%
@@ -31,6 +65,7 @@
 .lmConfirmBadge.done{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45);color:#86efac}
 .lmConfirmBadge.pending{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:#fde68a}
 .lmTeams .lineupBody{margin-top:6px}
+.lmTeams .lmTeamPanel .teamHead h2{font-size:18px}
 .pitch.lrPitch{overflow:visible}
 .lrPitch .slot,.lmTeams .lineupBody .slot{transform:translate(-50%,-50%)}
 .lrBenchList{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -76,9 +111,81 @@
 .lrBenchMeta{flex:1;min-width:0}
 .lrBenchMeta .lrName{margin:0;font-size:11px;white-space:normal}
 .lrBenchMeta .lrScore{font-size:11px;margin-top:2px;text-align:left}
+#latestResultView .latestMatchCardHead{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px
+}
+#latestResultView .latestMatchCardHead h2{margin:0;flex:1;min-width:0;font-size:18px}
+#latestResultView .latestMatchCardHead button{width:auto;margin:0;padding:8px 12px;flex-shrink:0}
 @media(max-width:1100px){
   .lmTeams{max-width:min(1020px,calc(100vw - 44px))}
   .lrScoreNum{font-size:36px}
+}
+@media(max-width:760px){
+  .lmTeams{
+    --pitch-width:100%;
+    --pitch-height:auto;
+    max-width:100%;min-width:0
+  }
+  .lmTeamsCapDone{max-width:100%}
+  .lmTeams--switchable,.lmTeamsWrap .teams{grid-template-columns:1fr;gap:0;min-width:0}
+  .lmTeams .lmTeamPanel{overflow:hidden}
+  .lmTeams .lineupBody{max-width:100%;min-width:0}
+  .lmTeams .pitchCol{
+    width:100%;max-width:100%;min-width:0;overflow:hidden;
+    display:flex;justify-content:center;padding:0
+  }
+  .lmTeams .pitch.lrPitch{
+    width:100%;max-width:100%;min-width:0;
+    overflow:hidden;margin:0 auto
+  }
+  .lmTeams .lmTeamPanel .teamHead{flex-wrap:wrap;gap:6px;min-width:0}
+  .lmTeams .lmTeamPanel .teamHead h2{
+    font-size:15px;min-width:0;flex:1 1 auto;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+  .lmTeams .lmFormBadge{margin-left:4px;padding:2px 6px;font-size:9px}
+  .lmTeams .lmTeamPanel .teamHead{margin-bottom:6px}
+  .lmTeams .lmFormDesktop{display:none}
+  .lrHeader h3{font-size:16px;margin-bottom:2px}
+  .lrHeader{margin-bottom:8px}
+  .lrSummaryStrip{gap:6px;margin-bottom:10px;max-width:100%}
+  .lrStatusChip,.lrMvpChip,.lrSummaryDetail{font-size:10px;padding:5px 10px;max-width:100%}
+  .lrSummaryDetail--desktop{display:none}
+  .lrScoreBoard{
+    padding:10px 8px;margin-bottom:10px;gap:8px;border-radius:16px;
+    max-width:100%;box-sizing:border-box
+  }
+  .lrScoreBoard--hero .lrTeamLabel{font-size:10px;margin-bottom:4px}
+  .lrScoreNum{font-size:28px}
+  .lrVs{font-size:11px}
+  .lrPitch .lrCard{
+    width:min(62px,18vw);min-height:72px;padding:4px 2px 5px;
+    box-sizing:border-box
+  }
+  .lrPitch .lrCard img{width:28px;height:28px}
+  .lrPitch .lrName{font-size:8px;max-width:100%}
+  .lrPitch .lrScore{font-size:9px}
+  .lrPitch .lrDelta{font-size:7px;padding:1px 4px}
+  .lmTeams .benchSide{max-width:100%;overflow:hidden}
+  .lmTeams .benchSide h3{font-size:12px;margin:0 0 6px}
+  .lmTeams .benchSide{margin-top:8px;padding-top:8px}
+  .lrBenchList{gap:6px;max-width:100%}
+  .lrBenchCard{
+    min-width:0;flex:0 1 auto;max-width:calc(100% - 4px);padding:5px 10px 5px 5px;
+    border-radius:999px;gap:6px
+  }
+  .lrBenchCard img{width:26px;height:26px}
+  .lrBenchMeta{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+  .lrBenchMeta .lrName{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px}
+  .lrBenchMeta .lrScore{font-size:9px;margin:0;white-space:nowrap}
+  .lrBenchMeta .lrDelta,.lrBenchMeta .lrStatRow{display:none}
+  .lrMvpBadge{width:16px;height:16px;font-size:9px;top:-4px;right:-4px}
+  #latestResultView .card{overflow:hidden}
+  #latestResultView .latestMatchCardHead h2{font-size:15px}
+  #latestResultView .latestMatchCardHead button{padding:7px 10px;font-size:10px}
+  .historyDetail{overflow:hidden;max-width:100%}
+  .historyDetail .lrScoreBoard{padding:10px 8px}
+  .historyDetail .lrScoreNum{font-size:26px}
 }
 @media(max-width:760px){
   .hlvPanel .benchSide .benchList{flex-direction:row;flex-wrap:wrap;max-height:none}
