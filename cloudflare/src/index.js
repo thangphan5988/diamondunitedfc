@@ -4,6 +4,7 @@ import {
   normalizeMatchDate,
   calcRatingDelta,
   clampRating,
+  clampBaseRating,
   clampStatCount,
   clampPositiveIntScore,
   formatSummaryScore,
@@ -26,8 +27,17 @@ import {
   adminSaveUser,
   adminDeleteUser
 } from "./auth.js";
+import { applyInactivityDecay, inactivityMetaForPlayer } from "./inactivity.js";
 
 export default {
+  async scheduled(event, env) {
+    try {
+      await applyInactivityDecay(env.DB);
+    } catch (err) {
+      console.error("inactivity_decay_failed", err);
+    }
+  },
+
   async fetch(request, env) {
     if (request.method === "OPTIONS") return corsPreflight();
 
@@ -129,10 +139,38 @@ export default {
 };
 
 async function getRoster(db) {
+  await applyInactivityDecay(db);
   const rows = await db.prepare(
-    "SELECT name, position, secondary_positions, preferred_side, rating, mvp_count, avatar FROM players ORDER BY name COLLATE NOCASE"
+    `SELECT name, position, secondary_positions, preferred_side, rating, base_rating,
+      mvp_count, avatar, last_match_at, joined_at
+     FROM players ORDER BY name COLLATE NOCASE`
   ).all();
-  return { ok: true, version: APP_VERSION, players: rows.results || [] };
+  const lastRows = await db.prepare(`
+    SELECT player_name_norm, MAX(COALESCE(NULLIF(result_saved_at, ''), created_at)) AS last_at
+    FROM match_history WHERE status = 'completed' GROUP BY player_name_norm
+  `).all();
+  const lastMatchMap = new Map(
+    (lastRows.results || []).map((row) => [row.player_name_norm, String(row.last_at || "")])
+  );
+
+  const players = (rows.results || []).map((row) => {
+    const meta = inactivityMetaForPlayer(row, lastMatchMap);
+    return {
+      name: row.name,
+      position: row.position,
+      secondary_positions: row.secondary_positions,
+      preferred_side: row.preferred_side,
+      rating: meta.rating,
+      base_rating: meta.base_rating,
+      mvp_count: row.mvp_count,
+      avatar: row.avatar,
+      last_match_at: meta.last_match_at,
+      joined_at: row.joined_at || null,
+      inactivity_penalty: meta.inactivity_penalty,
+      days_inactive: meta.days_inactive
+    };
+  });
+  return { ok: true, version: APP_VERSION, players };
 }
 
 async function getMatchList(db, params) {
@@ -706,7 +744,9 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
     rosterMap[normalizeName(r.name)] = r;
   }
 
-  const updatePlayer = db.prepare("UPDATE players SET rating = ?, mvp_count = ? WHERE id = ?");
+  const updatePlayer = db.prepare(
+    "UPDATE players SET base_rating = ?, rating = ?, mvp_count = ?, last_match_at = ? WHERE id = ?"
+  );
   const insertLog = db.prepare(`
     INSERT INTO rating_log (
       match_id, match_date, player_name, match_score, rating_before, rating_delta,
@@ -718,19 +758,19 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
   for (const p of players) {
     const key = normalizeName(p.player_name);
     const roster = rosterMap[key];
-    const ratingBefore = clampRating(p.rating_before);
+    const baseBefore = clampBaseRating(Number(roster?.base_rating ?? roster?.rating ?? p.rating_before) || 5);
     const delta = calcRatingDelta(p.match_score);
-    const ratingAfter = clampRating(ratingBefore + delta);
+    const baseAfter = clampBaseRating(baseBefore + delta);
     const mvpBefore = Math.max(0, Math.round(Number(p.mvp_count_before) || roster?.mvp_count || 0));
     const mvpAfter = mvpBefore + (p.is_mvp ? 1 : 0);
 
     if (roster) {
-      stmts.push(updatePlayer.bind(ratingAfter, mvpAfter, roster.id));
+      stmts.push(updatePlayer.bind(baseAfter, baseAfter, mvpAfter, savedAt, roster.id));
     }
 
     stmts.push(insertLog.bind(
       matchId, matchDate, p.player_name, Number(p.match_score),
-      ratingBefore, delta, ratingAfter, p.is_mvp ? 1 : 0,
+      baseBefore, delta, baseAfter, p.is_mvp ? 1 : 0,
       mvpBefore, mvpAfter, savedAt
     ));
   }
@@ -756,7 +796,7 @@ async function recalculateRosterFromLogs(db, removedLogs = []) {
     if (!removedByPlayer[key]) removedByPlayer[key] = log;
   }
 
-  const updatePlayer = db.prepare("UPDATE players SET rating = ?, mvp_count = ? WHERE id = ?");
+  const updatePlayer = db.prepare("UPDATE players SET base_rating = ?, rating = ?, mvp_count = ? WHERE id = ?");
   const stmts = [];
 
   for (const r of rosterRows.results || []) {
@@ -767,19 +807,20 @@ async function recalculateRosterFromLogs(db, removedLogs = []) {
 
     if (logs.length) {
       const last = logs[logs.length - 1];
-      rating = clampRating(last.rating_after);
+      rating = clampBaseRating(last.rating_after);
       mvpCount = Math.max(0, Math.round(Number(last.mvp_count_after) || 0));
     } else if (removedByPlayer[key]) {
-      rating = clampRating(removedByPlayer[key].rating_before);
+      rating = clampBaseRating(removedByPlayer[key].rating_before);
       mvpCount = Math.max(0, Math.round(Number(removedByPlayer[key].mvp_count_before) || 0));
     } else {
       continue;
     }
 
-    stmts.push(updatePlayer.bind(rating, mvpCount, r.id));
+    stmts.push(updatePlayer.bind(rating, rating, mvpCount, r.id));
   }
 
   if (stmts.length) await db.batch(stmts);
+  await applyInactivityDecay(db);
 }
 
 async function deleteCompletedMatch(db, payload) {
@@ -844,20 +885,29 @@ async function importData(db, payload, secret, pepper) {
 
   if (Array.isArray(payload.players)) {
     await db.prepare("DELETE FROM players").run();
+    const nowIso = new Date().toISOString();
     const ins = db.prepare(`
-      INSERT OR REPLACE INTO players (name, name_norm, position, secondary_positions, preferred_side, rating, mvp_count, avatar)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO players (
+        name, name_norm, position, secondary_positions, preferred_side,
+        rating, base_rating, mvp_count, avatar, joined_at, last_match_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const stmts = payload.players.map((p) => ins.bind(
-      p.name,
-      normalizeName(p.name),
-      p.position || p.main || "MID",
-      p.secondary_positions || "",
-      p.preferred_side || "",
-      clampRating(p.rating || 5),
-      Math.max(0, Math.round(Number(p.mvp_count) || 0)),
-      p.avatar || ""
-    ));
+    const stmts = payload.players.map((p) => {
+      const base = clampBaseRating(p.rating || 5);
+      return ins.bind(
+        p.name,
+        normalizeName(p.name),
+        p.position || p.main || "MID",
+        p.secondary_positions || "",
+        p.preferred_side || "",
+        base,
+        base,
+        Math.max(0, Math.round(Number(p.mvp_count) || 0)),
+        p.avatar || "",
+        p.joined_at || nowIso,
+        p.last_match_at || ""
+      );
+    });
     if (stmts.length) await db.batch(stmts);
     imported.players = stmts.length;
   }

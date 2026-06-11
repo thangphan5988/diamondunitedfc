@@ -484,7 +484,7 @@ function sumRating(t){return t.reduce((s,p)=>s+(Number(p.rating)||5),0)}
 function exactRatingCounts(team){
   const c = {};
   team.forEach(p => {
-    const r = Math.max(1, Math.min(10, Math.round(Number(p.rating) || 5)));
+    const r = Math.max(1, Math.round(Number(p.rating) || 5));
     c[r] = (c[r] || 0) + 1;
   });
   return c;

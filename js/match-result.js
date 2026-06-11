@@ -503,7 +503,7 @@ function statRowHtml(p, rank, mode){
     badgeClass = "statMvp";
     label = `🏆 ${value}`;
   }else if(mode === "rating"){
-    value = Number(p.rating) || 5;
+    value = Number.isFinite(Number(p.rating)) ? Number(p.rating) : 5;
     badgeClass = "statRating";
     label = String(value);
   }else if(mode === "goals"){
@@ -515,12 +515,15 @@ function statRowHtml(p, rank, mode){
     badgeClass = "statAssists";
     label = `🅰️ ${value}`;
   }
+  const inactiveNote = mode === "rating" && Number(p.inactivity_penalty) > 0
+    ? ` · −${p.inactivity_penalty} vắng (${Number(p.days_inactive) || 0} ngày)`
+    : "";
   return `<div class="statRow">
     <span class="statRank">#${rank}</span>
     <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div>
       <div class="name">${escapeHtml(p.name)}</div>
-      <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}</div>
+      <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}${inactiveNote}</div>
     </div>
     <span class="statValue ${badgeClass}">${label}</span>
   </div>`;

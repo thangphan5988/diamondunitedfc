@@ -13,3 +13,6 @@ APP_VERSION = "v2.0.0"
 AUTH_PEPPER = "dufc-auth-pepper-v1"
 
 # wrangler secret put MIGRATE_SECRET
+
+[triggers]
+crons = ["0 3 * * *"]

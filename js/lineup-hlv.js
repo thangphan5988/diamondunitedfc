@@ -62,12 +62,29 @@ function getStarterCoords(p, indexByPos, formation){
 function ensureStarterPositions(lineup, formation){
   if(!lineup?.starters?.length) return;
   const slots = slotOrderForFormation(resolveFormation(formation, "3-1-2"));
+  const usedSlotIdx = new Set();
+
   lineup.starters.forEach((p, idx) => {
     if(p.hasCustomPosition) return;
-    const slot = slots[idx];
-    if(!slot) return;
-    if(!p.assigned) p.assigned = slot.pos;
-    if(!p.assignedSide) p.assignedSide = slot.side;
+    const pos = normalizePos(p.assigned);
+    if(pos && p.assignedSide){
+      const matchIdx = slots.findIndex((s, i) => s.pos === pos && s.side === p.assignedSide && !usedSlotIdx.has(i));
+      if(matchIdx >= 0) usedSlotIdx.add(matchIdx);
+      return;
+    }
+    if(pos){
+      const slotIdx = slots.findIndex((s, i) => s.pos === pos && !usedSlotIdx.has(i));
+      if(slotIdx >= 0){
+        usedSlotIdx.add(slotIdx);
+        p.assignedSide = slots[slotIdx].side;
+      }
+      return;
+    }
+    const freeIdx = slots.findIndex((_, i) => !usedSlotIdx.has(i));
+    if(freeIdx < 0) return;
+    usedSlotIdx.add(freeIdx);
+    p.assigned = slots[freeIdx].pos;
+    p.assignedSide = slots[freeIdx].side;
   });
 }
 

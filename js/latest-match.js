@@ -193,7 +193,7 @@ function publicMatchTeamPanelHtml(opts){
     ${formRow}
     <div class="lineupBody">
       <div class="pitchCol">
-        <div class="pitch" id="${pitchId}">${LR_PITCH_MARKINGS}</div>
+        <div class="pitch lrPitch" id="${pitchId}">${LR_PITCH_MARKINGS}</div>
       </div>
       <div class="bench benchSide">
         <h3>Dự bị</h3>

@@ -42,8 +42,49 @@ export function calcRatingDelta(matchScore) {
   return 0;
 }
 
+export function clampBaseRating(rating) {
+  const n = Math.round(Number(rating) || 0);
+  return Math.max(1, n);
+}
+
 export function clampRating(rating) {
-  return Math.max(1, Math.min(10, Math.round(Number(rating))));
+  return clampBaseRating(rating);
+}
+
+export function effectiveRating(baseRating, penalty) {
+  const base = Math.round(Number(baseRating) || 0);
+  const cut = Math.max(0, Math.round(Number(penalty) || 0));
+  return Math.max(0, base - cut);
+}
+
+export function calcInactivityPenalty(daysInactive) {
+  const days = Math.max(0, Math.floor(Number(daysInactive) || 0));
+  return Math.floor(days / 8);
+}
+
+export function parseTimestamp(value) {
+  const s = String(value || "").trim();
+  if (!s) return null;
+
+  const iso = Date.parse(s);
+  if (Number.isFinite(iso) && /^\d{4}-\d{2}-\d{2}/.test(s)) return iso;
+
+  const norm = normalizeMatchDate(s);
+  if (norm) {
+    const t = Date.parse(`${norm}T12:00:00.000Z`);
+    if (Number.isFinite(t)) return t;
+  }
+
+  const fallback = Date.parse(s);
+  return Number.isFinite(fallback) ? fallback : null;
+}
+
+export function daysSinceTimestamp(value, nowMs = Date.now()) {
+  const ts = parseTimestamp(value);
+  if (ts == null) return 0;
+  const diff = nowMs - ts;
+  if (diff <= 0) return 0;
+  return Math.floor(diff / (24 * 60 * 60 * 1000));
 }
 
 export function clampStatCount(value) {
