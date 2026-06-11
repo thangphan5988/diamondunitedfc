@@ -230,24 +230,31 @@ function getOngoingMatchPhase(summary){
   return "preparing";
 }
 
+function isCapMatchSummary(summary){
+  return String(summary?.match_type || "").trim().toLowerCase() === "cap";
+}
+
 function ongoingMatchPhaseHtml(summary){
   const phase = getOngoingMatchPhase(summary);
+  const isCap = isCapMatchSummary(summary);
   const confA = !!summary?.team_a_lineup_confirmed;
   const confB = !!summary?.team_b_lineup_confirmed;
   let chipClass = "wait";
-  let title = "🔴 Trận đang diễn ra";
-  let detail = "Điều phối đang chuẩn bị đội hình";
+  let title = isCap ? "⚽ Trận Cáp đang diễn ra" : "🔴 Trận đang diễn ra";
+  let detail = isCap ? "Điều phối đang chuẩn bị đội hình Cáp" : "Điều phối đang chuẩn bị đội hình";
 
   if(phase === "hlv_arranging"){
-    detail = `HLV sắp xếp · 🔴 ${confA ? "✓" : "…"} · 🟡 ${confB ? "✓" : "…"}`;
+    detail = isCap
+      ? `HLV sắp xếp · ⚽ Ra sân ${confA ? "✓" : "…"} · 🔄 Phụ ${confB ? "✓" : "…"}`
+      : `HLV sắp xếp · 🔴 ${confA ? "✓" : "…"} · 🟡 ${confB ? "✓" : "…"}`;
   }else if(phase === "awaiting_export"){
-    detail = "2 HLV đã chốt — chờ xuất hình";
+    detail = isCap ? "Ra sân + Phụ đã chốt — chờ xuất hình" : "2 HLV đã chốt — chờ xuất hình";
   }else if(phase === "awaiting_result"){
     chipClass = "done";
-    title = "✓ Đội hình đã chốt";
+    title = isCap ? "✓ Đội hình Cáp đã chốt" : "✓ Đội hình đã chốt";
     detail = "Chờ cập nhật kết quả sau trận";
   }else if(phase === "preparing"){
-    detail = "Điều phối đang chuẩn bị gửi HLV";
+    detail = isCap ? "Điều phối đang chuẩn bị gửi HLV Cáp" : "Điều phối đang chuẩn bị gửi HLV";
   }
 
   return lrSummaryStripHtml(
@@ -455,11 +462,13 @@ function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
     const capTeamsHtml = `
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "⚽ Đội hình ra sân", teamColor: "#38bdf8", formation: fMain,
-          pitchSuffix: "PitchMain", benchSuffix: "BenchMain", teamKey: "main"
+          pitchSuffix: "PitchMain", benchSuffix: "BenchMain", teamKey: "main",
+          showStatus: true, teamConfirmed: confA
         })}
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "🔄 Đội hình Phụ", teamColor: "#a78bfa", formation: fSub,
-          pitchSuffix: "PitchSub", benchSuffix: "BenchSub", teamKey: "sub"
+          pitchSuffix: "PitchSub", benchSuffix: "BenchSub", teamKey: "sub",
+          showStatus: true, teamConfirmed: confB
         })}
     `;
     containerEl.innerHTML = `
