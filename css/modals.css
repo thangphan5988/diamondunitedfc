@@ -63,7 +63,10 @@ body.modal-open .lineupDragFlyout{
   border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#020617
 }
 .lineupExportPreviewImgWrap img{display:block;width:100%;height:auto;-webkit-touch-callout:default}
-.lineupExportPreviewDone{width:100%;margin:12px 0 0}
+.lineupExportPreviewDone{width:100%;margin:0}
+.lineupExportPreviewActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.lineupExportPreviewActions button{width:100%;margin:0}
+.lineupExportPreviewShare{margin:0}
 
 .count{font-size:108px;font-weight:1000;line-height:1;animation:pulse .8s infinite}
 .rolling{margin-top:20px;height:88px;display:flex;align-items:center;gap:12px;font-size:28px;font-weight:900}
