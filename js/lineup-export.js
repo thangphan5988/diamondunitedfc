@@ -135,6 +135,14 @@ async function exportImage(options = {}){
   const stamp = `${now.getDate()}-${now.getMonth()+1}`;
   const filename = `diamondunitedfc-${stamp}.png`;
 
+  const btnExport = document.getElementById("btnExport");
+  if(btnExport?.disabled && /Đang/.test(btnExport.textContent || "")) return;
+
+  if(btnExport){
+    btnExport.disabled = true;
+    btnExport.textContent = "Đang tạo ảnh...";
+  }
+
   try{
     cloneWrap = document.createElement("div");
     cloneWrap.style.position = "fixed";
@@ -161,12 +169,17 @@ async function exportImage(options = {}){
       imageTimeout: 8000
     });
 
-    const link = document.createElement("a");
-    link.download = filename;
-    link.href = canvas.toDataURL("image/png");
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    const pngBlob = await canvasToPngBlob(canvas);
+    let deliveryMode;
+    try{
+      deliveryMode = await deliverLineupPngBlob(pngBlob, filename);
+    }catch(deliveryErr){
+      if(deliveryErr?.name === "AbortError"){
+        showToast("Đã hủy chia sẻ — trận chưa khóa", "info", 3200);
+        return;
+      }
+      throw deliveryErr;
+    }
 
     const savedMatch = await saveMatchHistoryToServer({
       imageFilename: filename,
@@ -175,9 +188,9 @@ async function exportImage(options = {}){
       matchLabel: currentMatchLabel
     });
     lockMatchState(savedMatch.matchId, savedMatch.matchLabel, filename);
-    document.getElementById("ocrStatus").innerHTML =
-      `Đã xuất hình trận <b>${displayMatchLabel()}</b>. Có thể nhập kết quả sau trận.`;
-    showToast("✓ Đã xuất hình & khóa trận", "success");
+    const msg = lineupExportSuccessMessage(deliveryMode);
+    document.getElementById("ocrStatus").innerHTML = msg.ocr;
+    showToast(msg.toast, msg.toastType, msg.toastMs);
     updateLockBannerContent();
     applyLineupRoleUI();
   }catch(e){
@@ -186,6 +199,7 @@ async function exportImage(options = {}){
   }finally{
     if(cloneWrap) cloneWrap.remove();
     text.style.display = oldDisplay;
+    applyLineupRoleUI();
   }
 }
 
@@ -234,6 +248,129 @@ function blobToDataURL(blob){
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+function canvasToPngBlob(canvas){
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if(blob) resolve(blob);
+      else reject(new Error("Không tạo được ảnh PNG."));
+    }, "image/png");
+  });
+}
+
+function isMobileLineupExportContext(){
+  return window.matchMedia("(max-width:760px)").matches;
+}
+
+function canUseLineupWebShare(){
+  return window.isSecureContext && typeof navigator.share === "function";
+}
+
+function lineupExportButtonLabel(){
+  if(!isMobileLineupExportContext()) return "Xuất hình đội hình";
+  return canUseLineupWebShare() ? "Chia sẻ ảnh" : "Lưu ảnh";
+}
+
+function lineupExportSuccessMessage(mode){
+  if(mode === "share"){
+    return {
+      ocr: `Đã chia sẻ ảnh trận <b>${displayMatchLabel()}</b>. Chọn Zalo hoặc Lưu vào Ảnh trong menu chia sẻ. Có thể nhập kết quả sau trận.`,
+      toast: "✓ Đã mở menu chia sẻ — chọn Zalo hoặc Lưu ảnh",
+      toastType: "success",
+      toastMs: 5200
+    };
+  }
+  if(mode === "preview"){
+    return {
+      ocr: `Đã tạo ảnh trận <b>${displayMatchLabel()}</b>. Giữ ảnh → <b>Lưu vào Ảnh</b> hoặc gửi Zalo. Có thể nhập kết quả sau trận.`,
+      toast: "✓ Giữ ảnh trong popup → Lưu vào Ảnh",
+      toastType: "success",
+      toastMs: 5200
+    };
+  }
+  return {
+    ocr: `Đã xuất hình trận <b>${displayMatchLabel()}</b>. File PNG đã tải về. Có thể nhập kết quả sau trận.`,
+    toast: "✓ Đã tải file PNG & khóa trận",
+    toastType: "success",
+    toastMs: 4200
+  };
+}
+
+async function downloadPngBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function sharePngBlob(blob, filename){
+  const file = new File([blob], filename, { type: "image/png" });
+  if(navigator.canShare && !navigator.canShare({ files: [file] })){
+    throw new Error("share_not_supported");
+  }
+  await navigator.share({
+    files: [file],
+    title: displayMatchLabel() || "DUFC đội hình"
+  });
+}
+
+function showMobileLineupImagePreview(blob, filename){
+  const url = URL.createObjectURL(blob);
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.className = "lineupExportPreview";
+    overlay.innerHTML = `
+      <div class="lineupExportPreviewCard">
+        <div class="lineupExportPreviewHead">
+          <strong>Lưu ảnh đội hình</strong>
+          <button type="button" class="lineupExportPreviewClose" aria-label="Đóng">✕</button>
+        </div>
+        <p class="lineupExportPreviewHint">Giữ ảnh bên dưới → chọn <b>Lưu vào Ảnh</b> hoặc <b>Chia sẻ</b> (Zalo).</p>
+        <div class="lineupExportPreviewImgWrap">
+          <img src="${escapeAttr(url)}" alt="${escapeAttr(filename)}">
+        </div>
+        <button type="button" class="gold lineupExportPreviewDone">Đã lưu / gửi xong</button>
+      </div>`;
+
+    const close = () => {
+      overlay.remove();
+      document.body.classList.remove("modal-open");
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+
+    overlay.querySelector(".lineupExportPreviewClose").addEventListener("click", close);
+    overlay.querySelector(".lineupExportPreviewDone").addEventListener("click", close);
+    overlay.addEventListener("click", e => { if(e.target === overlay) close(); });
+
+    document.body.classList.add("modal-open");
+    document.body.appendChild(overlay);
+  });
+}
+
+/** @returns {"share"|"preview"|"download"} */
+async function deliverLineupPngBlob(blob, filename){
+  const mobile = isMobileLineupExportContext();
+  if(mobile && canUseLineupWebShare()){
+    try{
+      await sharePngBlob(blob, filename);
+      return "share";
+    }catch(e){
+      if(e?.name === "AbortError") throw e;
+      console.warn("share lineup image:", e);
+    }
+  }
+  if(mobile){
+    await showMobileLineupImagePreview(blob, filename);
+    return "preview";
+  }
+  await downloadPngBlob(blob, filename);
+  return "download";
 }
 
 function fallbackAvatarDataURL(text){

@@ -344,9 +344,9 @@ function maybeAutoLockFromConfirm(){
 
   applyLockUI(true);
   if(canSplitTeams() && !isCapMode()){
-    showToast("🔒 Cả 2 HLV đã chốt — bấm Xuất hình đội hình", "warn", 5000);
+    showToast(`🔒 Cả 2 HLV đã chốt — bấm ${lineupExportButtonLabel()}`, "warn", 5000);
   }else if(canCoordinateCap() && isCapMode()){
-    showToast("🔒 HLV Cáp đã chốt — bấm Xuất hình đội hình", "warn", 5000);
+    showToast(`🔒 HLV Cáp đã chốt — bấm ${lineupExportButtonLabel()}`, "warn", 5000);
   }
   updateCoordinatorConfirmStatus();
 }
@@ -608,7 +608,7 @@ function applyLineupRoleUI(){
         btnExport.textContent = "Đã xuất ảnh — chờ kết quả";
         btnExport.disabled = true;
       }else{
-        btnExport.textContent = "Xuất hình đội hình";
+        btnExport.textContent = lineupExportButtonLabel();
         btnExport.disabled = false;
       }
     }

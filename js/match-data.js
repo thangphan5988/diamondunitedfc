@@ -130,7 +130,7 @@ function updateLockBannerContent(){
     }
   }else if(canExport){
     textEl.innerHTML =
-      `✓ Trận <b>${escapeHtml(label)}</b> đã được 2 HLV chốt — bấm <b>Xuất hình đội hình</b> để hoàn tất.`;
+      `✓ Trận <b>${escapeHtml(label)}</b> đã được 2 HLV chốt — bấm <b>${escapeHtml(lineupExportButtonLabel())}</b> để hoàn tất.`;
     if(resultBtn) resultBtn.style.display = "none";
   }
 }

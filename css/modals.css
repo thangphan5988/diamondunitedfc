@@ -41,6 +41,30 @@ body.modal-open .lineupDragFlyout{
 .confirmPlayer img{width:34px;height:34px;border-radius:50%;object-fit:cover}
 @media(max-width:700px){.confirmList{grid-template-columns:1fr}}
 
+.lineupExportPreview{
+  position:fixed;inset:0;z-index:10050;background:rgba(2,6,23,.94);
+  display:flex;align-items:center;justify-content:center;padding:16px
+}
+.lineupExportPreviewCard{
+  width:min(420px,100%);max-height:92vh;overflow:auto;
+  background:#0f172a;border:1px solid var(--line);border-radius:18px;
+  padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)
+}
+.lineupExportPreviewHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.lineupExportPreviewHead strong{font-size:16px}
+.lineupExportPreviewClose{
+  width:auto;margin:0;padding:6px 10px;background:#334155;border:0;border-radius:10px;
+  color:#e2e8f0;font-size:14px;font-weight:900;cursor:pointer
+}
+.lineupExportPreviewHint{
+  margin:0 0 10px;font-size:11px;line-height:1.45;color:#94a3b8
+}
+.lineupExportPreviewImgWrap{
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#020617
+}
+.lineupExportPreviewImgWrap img{display:block;width:100%;height:auto;-webkit-touch-callout:default}
+.lineupExportPreviewDone{width:100%;margin:12px 0 0}
+
 .count{font-size:108px;font-weight:1000;line-height:1;animation:pulse .8s infinite}
 .rolling{margin-top:20px;height:88px;display:flex;align-items:center;gap:12px;font-size:28px;font-weight:900}
 .rolling img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #fff}
