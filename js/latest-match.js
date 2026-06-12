@@ -89,7 +89,7 @@ function latestResultPitchCardHtml(p, teamClass, stat, isCap){
   const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
-  const avatar = p.avatar || defaultAvatar(p.name);
+  const avatar = avatarSrc(p.avatar, p.name);
   return `<div class="lrCard ${teamClass}${captainClass}">
     ${captain}
     ${mvp}
@@ -106,7 +106,7 @@ function latestResultBenchCardHtml(p, teamClass, stat, isCap){
   const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
-  const avatar = p.avatar || defaultAvatar(p.name);
+  const avatar = avatarSrc(p.avatar, p.name);
   const capStats = latestResultPlayerStatsHtml(stat);
   const delta = latestResultDeltaHtml(stat.rating_delta);
   return `<div class="lrBenchCard ${teamClass}${captainClass}">
@@ -243,7 +243,7 @@ function renderPreviewBench(benchId, bench){
     return;
   }
   el.innerHTML = bench.map(p =>
-    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
+    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
   ).join("");
 }
 

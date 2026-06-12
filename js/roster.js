@@ -40,7 +40,7 @@ function applyRosterFromApi(rows){
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
       mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
-      avatar: avatarText || defaultAvatar(name),
+      avatar: avatarSrc(avatarText, name),
       side,
       selected: true
     };
@@ -81,7 +81,7 @@ function renderPlayerPicker(){
   el.innerHTML = filtered.map(({p,i})=>`
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
-      <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
+      <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
       <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
@@ -279,7 +279,7 @@ function renderConfirmList(){
     const checked = pendingDetectedNames.has(p.name) ? "checked" : "";
     return `<label class="confirmPlayer">
       <input type="checkbox" ${checked} onchange="togglePendingPlayer('${escapeAttr(p.name)}', this.checked)">
-      <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar("DUFC")}'">
+      <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
       <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""}</div></div>
     </label>`;
   }).join("");

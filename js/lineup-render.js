@@ -117,7 +117,7 @@ function getPosCoord(assigned, assignedSide, indexByPos, formation, coordsMap){
 function cardHtml(p, teamClass){
   const fitClass = p.fit === 2 ? "fitOk" : p.fit === 1 ? "fitAlt" : "fitBad";
   const fitText = p.fit === 2 ? "✓ Đúng sở trường" : p.fit === 1 ? "↔ Vị trí phụ" : "⚠ Trái vị trí";
-  return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(playerDisplayName(p))}</div><div class="ppos">${p.assigned}</div><div class="fit ${fitClass}">${fitText}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
+  return `<div class="cardPlayer ${teamClass || ""} ${p.captain ? "captainCard" : ""}"><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'"><div class="pname">${escapeHtml(playerDisplayName(p))}</div><div class="ppos">${p.assigned}</div><div class="fit ${fitClass}">${fitText}</div>${p.captain ? '<div class="captainBadge">C</div>' : ''}<div class="ratingBadge">${p.rating || 5}</div></div>`;
 }
 function setBench(id,bench,editTeam){
   const root = document.getElementById(id);
@@ -129,7 +129,7 @@ function setBench(id,bench,editTeam){
     const editable = editTeam && canEditTeamLineup(editTeam);
     const cls = editable ? "benchItem benchEditable" : "benchItem";
     const attrs = editable ? ` data-player-name="${escapeAttr(p.name)}"` : "";
-    return `<div class="${cls}"${attrs}><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(p.avatar)}">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`;
+    return `<div class="${cls}"${attrs}><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`;
   }).join("");
   if(editTeam && canEditTeamLineup(editTeam)){
     root.querySelectorAll(".benchEditable").forEach(el => {

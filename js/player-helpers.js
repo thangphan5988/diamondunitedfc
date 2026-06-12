@@ -14,9 +14,22 @@ function playerDisplayName(pOrName){
   return String(pOrName || "").trim();
 }
 
+const AVATAR_CACHE_BUST = "20260612";
+
 function defaultAvatar(name){
   const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());
   return `https://ui-avatars.com/api/?name=${initials}&background=0f172a&color=ffffff&bold=true`;
+}
+
+/** Bust browser cache when avatar PNG files are replaced at the same path. */
+function avatarSrc(url, fallbackName){
+  const u = String(url || "").trim();
+  if(!u) return fallbackName ? defaultAvatar(fallbackName) : defaultAvatar("?");
+  if(u.startsWith("http://") || u.startsWith("https://")) {
+    if(u.includes("ui-avatars.com")) return u;
+  }
+  const base = u.split("?")[0];
+  return `${base}?v=${AVATAR_CACHE_BUST}`;
 }
 function normalizePos(v){return String(v||"").trim().toUpperCase();}
 
