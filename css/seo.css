@@ -1,0 +1,54 @@
+/* SEO landing pages + site footer */
+
+.siteTagline{
+  margin:0 0 6px;font-size:14px;font-weight:800;line-height:1.35;color:#7dd3fc
+}
+
+.siteFooter{
+  margin-top:28px;padding:16px 0 8px;border-top:1px solid var(--line)
+}
+.siteFooterBottom{
+  font-size:11px;color:#64748b;line-height:1.5
+}
+.siteFooterSeo{
+  display:flex;flex-direction:column;gap:6px;margin-top:10px
+}
+.siteFooterSeo a{
+  font-size:11px;font-weight:700;line-height:1.4;color:#64748b;text-decoration:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.siteFooterSeo a:hover{color:#38bdf8;text-decoration:underline}
+
+.seoPage{max-width:860px;margin:0 auto;padding:24px 18px 40px}
+.seoPageHeader{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.seoPageHeader img{width:64px;height:64px;object-fit:contain}
+.seoPageHeader h1{margin:0;font-size:26px;line-height:1.15}
+.seoPageHeader p{margin:6px 0 0;font-size:13px;color:#94a3b8;line-height:1.5}
+.seoHero{
+  background:rgba(15,23,42,.92);border:1px solid var(--line);border-radius:18px;
+  padding:18px;margin-bottom:18px
+}
+.seoHero p{margin:0;font-size:14px;line-height:1.65;color:#cbd5e1}
+.seoSection{
+  background:rgba(15,23,42,.75);border:1px solid var(--line);border-radius:16px;
+  padding:16px 18px;margin-bottom:14px
+}
+.seoSection h2{margin:0 0 10px;font-size:18px;color:#f8fafc}
+.seoSection h3{margin:14px 0 8px;font-size:14px;color:#e2e8f0}
+.seoSection p,.seoSection li,.seoSection ol{
+  margin:0 0 10px;font-size:13px;line-height:1.65;color:#94a3b8
+}
+.seoSection ul,.seoSection ol{margin:0;padding-left:18px}
+.seoCtaRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.seoCtaRow a,.seoCtaRow button{
+  width:auto;margin:0;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;text-decoration:none
+}
+.seoCtaPrimary{background:#0068ff;color:#fff;border:0}
+.seoCtaSecondary{background:#0f172a;color:#e2e8f0;border:1px solid var(--line)}
+.seoBreadcrumb{font-size:12px;color:#64748b;margin-bottom:14px}
+.seoBreadcrumb a{color:#38bdf8;text-decoration:none}
+.seoKeywordList{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.seoKeywordList span{
+  display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;
+  background:#0f2744;border:1px solid rgba(56,189,248,.18);color:#bae6fd
+}

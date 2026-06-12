@@ -196,12 +196,16 @@ function canManageRoster(){
   return hasPerm(PERMS.ALL) || hasPerm(PERMS.MANAGE_ROSTER);
 }
 
+function canManageSponsors(){
+  return hasPerm(PERMS.ALL) || hasPerm(PERMS.MANAGE_SPONSORS);
+}
+
 function canManageUsers(){
   return hasPerm(PERMS.ALL) || hasPerm(PERMS.MANAGE_USERS);
 }
 
 function canAccessAdminTab(){
-  return canManageUsers() || canManageRoster();
+  return canManageUsers() || canManageRoster() || canManageSponsors();
 }
 
 function canFinalizeMatch(){

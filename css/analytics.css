@@ -1,0 +1,42 @@
+/* Admin traffic analytics UI */
+
+.analyticsToolbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin-bottom:14px
+}
+.analyticsFilters{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end
+}
+.analyticsFilters label{
+  display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:800;color:#94a3b8
+}
+.analyticsFilters input,.analyticsFilters select{
+  width:auto;min-width:130px;margin:0;padding:8px 10px;font-size:11px
+}
+.analyticsPresets{display:flex;flex-wrap:wrap;gap:6px}
+.analyticsPresets button{
+  width:auto;margin:0;padding:8px 12px;font-size:11px;background:#0f2744
+}
+.analyticsSummary{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px
+}
+.analyticsMetric{
+  background:#020617;border:1px solid var(--line);border-radius:14px;padding:10px 12px
+}
+.analyticsMetricLabel{
+  display:block;font-size:10px;font-weight:800;color:#94a3b8;margin-bottom:6px
+}
+.analyticsMetricValue{
+  display:block;font-size:22px;line-height:1;color:#f8fafc
+}
+.analyticsTableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+.analyticsTable{
+  width:100%;border-collapse:collapse;font-size:12px;background:#020617
+}
+.analyticsTable th,.analyticsTable td{
+  padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:right;white-space:nowrap
+}
+.analyticsTable th:first-child,.analyticsTable td:first-child{text-align:left}
+.analyticsTable th{
+  position:sticky;top:0;background:#0f172a;font-size:11px;color:#94a3b8
+}
+.analyticsTable tr:last-child td{border-bottom:0}

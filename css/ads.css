@@ -1,0 +1,116 @@
+/* Sponsor ads — side rails (desktop) + top strip (mobile) */
+
+.adShell{
+  display:grid;grid-template-columns:minmax(0,1fr);margin:0 auto
+}
+.adMain{min-width:0}
+.adRail{display:none}
+.adMobileTop{display:none}
+
+.adRailTrack{
+  display:flex;flex-direction:column;gap:12px
+}
+.adRailTrack--marquee{
+  animation:sponsorMarqueeVertical 24s linear infinite
+}
+.adRailTrack--marquee:hover{animation-play-state:paused}
+.adRailItem{
+  display:block;width:100%;overflow:hidden;
+  border:1px solid rgba(56,189,248,.18);background:#0a1628;
+  box-shadow:0 10px 24px rgba(0,0,0,.28);text-decoration:none;color:inherit
+}
+.adRailItem img{
+  display:block;width:100%;height:auto;object-fit:contain
+}
+.adPlaceholder{
+  min-height:160px;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center;
+  background:linear-gradient(160deg,#0f2744,#0284c7 55%,#0369a1);
+  font-size:12px;font-weight:900;line-height:1.35;color:#f8fafc
+}
+.adMobileTrack{
+  display:flex;width:max-content;gap:10px;
+  animation:sponsorMarqueeHorizontal 22s linear infinite
+}
+.adMobileTrack:hover{animation-play-state:paused}
+.adMobileTop{
+  margin:0 0 12px;padding:0;overflow:hidden;
+  border:1px solid rgba(56,189,248,.16);background:#0a1628
+}
+.adMobileTopInner{overflow:hidden;padding:8px}
+.adMobileItem{
+  flex:0 0 auto;width:min(92vw,360px);overflow:hidden;
+  border:1px solid rgba(56,189,248,.18);background:#020617;text-decoration:none;color:inherit
+}
+.adMobileItem img{
+  display:block;width:100%;height:auto;max-height:88px;object-fit:cover
+}
+.adMobileItem .adPlaceholder{min-height:72px;max-height:88px;font-size:11px}
+
+@keyframes sponsorMarqueeVertical{
+  0%{transform:translateY(0)}
+  100%{transform:translateY(-50%)}
+}
+@keyframes sponsorMarqueeHorizontal{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+
+@media(min-width:1120px){
+  .adShell{
+    grid-template-columns:minmax(140px,180px) minmax(0,1440px) minmax(140px,180px);
+    gap:14px;padding:0 10px
+  }
+  .adRail{
+    display:block;position:sticky;top:16px;align-self:start;
+    max-height:calc(100vh - 32px);overflow:hidden
+  }
+  .adRailInner{
+    overflow:hidden;max-height:calc(100vh - 32px);min-height:calc(100vh - 32px);
+    display:flex;flex-direction:column
+  }
+  .adRailInner:has(.adRailTrack--static){justify-content:center}
+  .adRailInner:has(.adRailTrack--marquee){justify-content:flex-start}
+  .adMobileTop{display:none!important}
+}
+
+@media(max-width:1119px){
+  .adMobileTop{
+    display:block;
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:120;
+    margin:0;
+    background:#020617;
+    box-shadow:0 6px 18px rgba(0,0,0,.38)
+  }
+  .adMain{
+    padding-top:var(--ad-mobile-offset, 0px)
+  }
+  .adRail{display:none!important}
+}
+
+/* Admin sponsors */
+.sponsorAdminToolbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin-bottom:12px
+}
+.sponsorAdminCard{
+  border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#020617
+}
+.sponsorAdminCardHead{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer
+}
+.sponsorAdminCardHead b{font-size:14px}
+.sponsorPreviewSide,.sponsorPreviewMobile{
+  margin-top:10px;border:1px dashed var(--line);border-radius:12px;padding:10px;background:#0a1628
+}
+.sponsorPreviewSide img{max-height:180px;width:100%;object-fit:contain;display:block;margin:0 auto}
+.sponsorPreviewMobile img{max-height:88px;width:100%;object-fit:cover;display:block;border-radius:8px}
+.sponsorUploadRow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sponsorStatsRow{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px}
+.sponsorStatChip{
+  display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;
+  background:#0f2744;border:1px solid rgba(56,189,248,.22);font-size:12px;font-weight:800;color:#e2e8f0
+}
+.sponsorStatsInline{margin-top:4px;font-size:12px;font-weight:800;color:#7dd3fc}

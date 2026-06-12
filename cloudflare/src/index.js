@@ -34,6 +34,7 @@ import {
   adminDeleteUser
 } from "./auth.js";
 import { applyInactivityDecay, inactivityMetaForPlayer } from "./inactivity.js";
+import { trackSiteEvent, adminGetAnalytics } from "./analytics.js";
 
 export default {
   async scheduled(event, env) {
@@ -48,7 +49,10 @@ export default {
     if (request.method === "OPTIONS") return corsPreflight();
 
     const url = new URL(request.url);
-    if (request.method === "GET" && url.pathname.startsWith("/avatars/")) {
+    if (request.method === "GET" && (url.pathname.startsWith("/avatars/") || url.pathname.startsWith("/sponsors/"))) {
+      return serveAvatarObject(env, url.pathname.slice(1));
+    }
+    if (request.method === "HEAD" && (url.pathname.startsWith("/avatars/") || url.pathname.startsWith("/sponsors/"))) {
       return serveAvatarObject(env, url.pathname.slice(1));
     }
 
@@ -79,9 +83,13 @@ export default {
             "save_match_history", "save_match_result", "edit_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
-            "get_latest_lineup", "get_latest_result", "get_player_stats",
+            "get_latest_lineup", "get_latest_result", "get_player_stats", "get_sponsors",
+            "track_sponsor_view", "track_sponsor_click", "track_site_event",
             "admin_validate_session", "admin_list_users", "admin_list_players",
-            "admin_save_player", "admin_delete_player", "admin_upload_avatar", "import_data"
+            "admin_save_player", "admin_delete_player", "admin_upload_avatar",
+            "admin_list_sponsors", "admin_save_sponsor", "admin_delete_sponsor", "admin_upload_sponsor_image",
+            "admin_get_analytics",
+            "import_data"
           ]
         });
       }
@@ -102,6 +110,14 @@ export default {
           return json(await getLatestResult(db));
         case "get_player_stats":
           return json(await getPlayerStats(db));
+        case "get_sponsors":
+          return json(await getSponsors(db));
+        case "track_sponsor_view":
+          return json(await trackSponsorStat(db, payload, "view"));
+        case "track_sponsor_click":
+          return json(await trackSponsorStat(db, payload, "click"));
+        case "track_site_event":
+          return json(await trackSiteEvent(db, payload));
         case "admin_validate_session":
           return json(await adminValidateSession(db, token));
         case "admin_list_users":
@@ -129,6 +145,21 @@ export default {
         case "admin_upload_avatar":
           await requireAuth(db, token, ["manage_roster"]);
           return json(await adminUploadAvatar(env, payload, url.origin));
+        case "admin_list_sponsors":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminListSponsors(db));
+        case "admin_save_sponsor":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminSaveSponsor(db, payload));
+        case "admin_delete_sponsor":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminDeleteSponsor(db, payload));
+        case "admin_upload_sponsor_image":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminUploadSponsorImage(env, payload, url.origin));
+        case "admin_get_analytics":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminGetAnalytics(db, params));
         case "save_match_history":
           await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
@@ -366,7 +397,8 @@ async function serveAvatarObject(env, key) {
     return new Response("Avatar storage chưa cấu hình.", { status: 503 });
   }
   const safeKey = String(key || "").replace(/^\/+/, "");
-  if (!safeKey.startsWith("avatars/") || safeKey.includes("..")) {
+  const allowedPrefix = safeKey.startsWith("avatars/") || safeKey.startsWith("sponsors/");
+  if (!allowedPrefix || safeKey.includes("..")) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -378,9 +410,17 @@ async function serveAvatarObject(env, key) {
     headers: {
       "Content-Type": contentType,
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=86400"
+      "Cache-Control": "public, max-age=300"
     }
   });
+}
+
+function publicAssetBaseUrl(origin) {
+  let base = String(origin || "https://api.diamondunitedfc.com").replace(/\/$/, "");
+  if (!/localhost|127\.0\.0\.1/i.test(base)) {
+    base = base.replace(/^http:/i, "https:");
+  }
+  return base;
 }
 
 async function adminUploadAvatar(env, payload, origin) {
@@ -406,11 +446,167 @@ async function adminUploadAvatar(env, payload, origin) {
     metadata: { contentType }
   });
 
-  const baseUrl = `${String(origin || "https://api.diamondunitedfc.com").replace(/\/$/, "")}/${key}`;
+  const baseUrl = `${publicAssetBaseUrl(origin)}/${key}`;
   if (isZalo) {
     return { ok: true, version: APP_VERSION, avatar: baseUrl, key };
   }
   return { ok: true, version: APP_VERSION, profile_card: baseUrl, key };
+}
+
+function mapSponsorRow(row) {
+  return {
+    id: row.id,
+    name: row.name || "",
+    link_url: row.link_url || "",
+    image_side: row.image_side || "",
+    image_mobile: row.image_mobile || "",
+    sort_order: row.sort_order != null ? row.sort_order : 0,
+    active: row.active ? 1 : 0,
+    end_at: row.end_at || "",
+    view_count: Number(row.view_count) || 0,
+    click_count: Number(row.click_count) || 0,
+    created_at: row.created_at || "",
+    updated_at: row.updated_at || ""
+  };
+}
+
+function defaultSponsorEndAtIso(fromDate = new Date()) {
+  const d = new Date(fromDate.getTime());
+  d.setDate(d.getDate() + 14);
+  return d.toISOString();
+}
+
+function parseSponsorEndAt(value, fallbackIso = null) {
+  const raw = String(value || "").trim();
+  if (!raw) return fallbackIso;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) throw new Error("Ngày kết thúc không hợp lệ.");
+  return d.toISOString();
+}
+
+async function getSponsors(db) {
+  const rows = await db.prepare(
+    `SELECT id, name, link_url, image_side, image_mobile, sort_order, active, end_at, updated_at
+     FROM sponsors
+     WHERE active = 1
+       AND (end_at IS NULL OR end_at = '' OR datetime(end_at) > datetime('now'))
+     ORDER BY sort_order ASC, id ASC`
+  ).all();
+  return {
+    ok: true,
+    version: APP_VERSION,
+    sponsors: (rows.results || []).map(mapSponsorRow)
+  };
+}
+
+async function adminListSponsors(db) {
+  const rows = await db.prepare(
+    `SELECT id, name, link_url, image_side, image_mobile, sort_order, active, end_at,
+            view_count, click_count, created_at, updated_at
+     FROM sponsors ORDER BY sort_order ASC, id ASC`
+  ).all();
+  return {
+    ok: true,
+    version: APP_VERSION,
+    sponsors: (rows.results || []).map(mapSponsorRow)
+  };
+}
+
+async function adminSaveSponsor(db, payload) {
+  const id = payload.id != null && String(payload.id).trim() !== "" ? Number(payload.id) : null;
+  const name = String(payload.name || "").trim();
+  const linkUrl = String(payload.link_url || "").trim();
+  const imageSide = String(payload.image_side || "").trim();
+  const imageMobile = String(payload.image_mobile || "").trim();
+  const sortOrder = Math.round(Number(payload.sort_order) || 0);
+  const active = payload.active === false || payload.active === 0 || payload.active === "0" ? 0 : 1;
+  const nowIso = new Date().toISOString();
+
+  if (!name) throw new Error("Tên nhà tài trợ là bắt buộc.");
+
+  if (id) {
+    const existing = await db.prepare("SELECT id, end_at FROM sponsors WHERE id = ?").bind(id).first();
+    if (!existing) throw new Error("Không tìm thấy nhà tài trợ.");
+    const endAt = parseSponsorEndAt(payload.end_at, existing.end_at || defaultSponsorEndAtIso());
+    await db.prepare(`
+      UPDATE sponsors SET
+        name = ?, link_url = ?, image_side = ?, image_mobile = ?,
+        sort_order = ?, active = ?, end_at = ?, updated_at = ?
+      WHERE id = ?
+    `).bind(name, linkUrl, imageSide, imageMobile, sortOrder, active, endAt, nowIso, id).run();
+    return { ok: true, version: APP_VERSION, id, name };
+  }
+
+  const endAt = parseSponsorEndAt(payload.end_at, defaultSponsorEndAtIso());
+  const result = await db.prepare(`
+    INSERT INTO sponsors (name, link_url, image_side, image_mobile, sort_order, active, end_at, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(name, linkUrl, imageSide, imageMobile, sortOrder, active, endAt, nowIso, nowIso).run();
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    id: result.meta?.last_row_id,
+    name
+  };
+}
+
+async function adminDeleteSponsor(db, payload) {
+  const id = Number(payload.id);
+  if (!Number.isFinite(id)) throw new Error("ID nhà tài trợ không hợp lệ.");
+  const existing = await db.prepare("SELECT id FROM sponsors WHERE id = ?").bind(id).first();
+  if (!existing) throw new Error("Không tìm thấy nhà tài trợ.");
+  await db.prepare("DELETE FROM sponsors WHERE id = ?").bind(id).run();
+  return { ok: true, version: APP_VERSION, id };
+}
+
+async function trackSponsorStat(db, payload, kind) {
+  const id = Number(payload.sponsor_id);
+  if (!Number.isFinite(id)) throw new Error("sponsor_id không hợp lệ.");
+  const column = kind === "click" ? "click_count" : "view_count";
+
+  const row = await db.prepare("SELECT id FROM sponsors WHERE id = ?").bind(id).first();
+  if (!row) throw new Error("Không tìm thấy nhà tài trợ.");
+
+  await db.prepare(`UPDATE sponsors SET ${column} = COALESCE(${column}, 0) + 1 WHERE id = ?`).bind(id).run();
+  const updated = await db.prepare(`SELECT view_count, click_count FROM sponsors WHERE id = ?`).bind(id).first();
+  return {
+    ok: true,
+    version: APP_VERSION,
+    id,
+    view_count: Number(updated?.view_count) || 0,
+    click_count: Number(updated?.click_count) || 0
+  };
+}
+
+async function adminUploadSponsorImage(env, payload, origin) {
+  if (!env.AVATARS) throw new Error("Storage chưa cấu hình trên server.");
+
+  const contentType = String(payload.content_type || "image/png").trim().toLowerCase();
+  const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
+  if (!allowed.has(contentType)) throw new Error("Chỉ hỗ trợ PNG, JPG hoặc WebP.");
+
+  const bytes = decodeBase64Image(payload.image_base64);
+  if (!bytes.length) throw new Error("File ảnh trống.");
+  if (bytes.length > 2 * 1024 * 1024) throw new Error("Ảnh tối đa 2MB.");
+
+  const ext = contentType === "image/jpeg" ? "jpg" : contentType === "image/webp" ? "webp" : "png";
+  const slug = slugifyAvatarFilename(payload.filename_base || payload.name || "sponsor");
+  const kind = String(payload.upload_kind || payload.kind || "side").trim().toLowerCase();
+  const slot = kind === "mobile" ? "mobile" : "side";
+  const key = `sponsors/${slot}/${slug}.${ext}`;
+
+  await env.AVATARS.put(key, bytes, { metadata: { contentType } });
+
+  const baseUrl = `${publicAssetBaseUrl(origin)}/${key}?v=${Date.now()}`;
+  return {
+    ok: true,
+    version: APP_VERSION,
+    key,
+    image_side: slot === "side" ? baseUrl : undefined,
+    image_mobile: slot === "mobile" ? baseUrl : undefined,
+    url: baseUrl
+  };
 }
 
 async function getMatchList(db, params) {

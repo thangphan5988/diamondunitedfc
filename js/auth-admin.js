@@ -290,16 +290,27 @@ function applyAuthUI(){
   const adminTabs = document.getElementById("adminSectionTabs");
   const adminUsersPanel = document.getElementById("adminUsersPanel");
   const adminRosterPanel = document.getElementById("adminRosterPanel");
+  const adminSponsorsPanel = document.getElementById("adminSponsorsPanel");
+  const adminAnalyticsPanel = document.getElementById("adminAnalyticsPanel");
   const adminTabUsers = document.getElementById("adminTabUsers");
   const adminTabRoster = document.getElementById("adminTabRoster");
+  const adminTabSponsors = document.getElementById("adminTabSponsors");
+  const adminTabAnalytics = document.getElementById("adminTabAnalytics");
   if(adminTabs){
     const showUsers = canManageUsers();
     const showRoster = canManageRoster();
-    adminTabs.style.display = showUsers && showRoster ? "" : "none";
+    const showSponsors = canManageSponsors();
+    const showAnalytics = canManageSponsors();
+    const tabCount = [showUsers, showRoster, showSponsors, showAnalytics].filter(Boolean).length;
+    adminTabs.style.display = tabCount > 1 ? "" : "none";
     if(adminTabUsers) adminTabUsers.style.display = showUsers ? "" : "none";
     if(adminTabRoster) adminTabRoster.style.display = showRoster ? "" : "none";
+    if(adminTabSponsors) adminTabSponsors.style.display = showSponsors ? "" : "none";
+    if(adminTabAnalytics) adminTabAnalytics.style.display = showAnalytics ? "" : "none";
     if(adminUsersPanel) adminUsersPanel.style.display = showUsers ? "" : "none";
-    if(adminRosterPanel && showRoster && !showUsers) adminRosterPanel.style.display = "";
+    if(adminRosterPanel && showRoster && !showUsers && !showSponsors && !showAnalytics) adminRosterPanel.style.display = "";
+    if(adminSponsorsPanel && showSponsors && !showUsers && !showRoster && !showAnalytics) adminSponsorsPanel.style.display = "";
+    if(adminAnalyticsPanel && showAnalytics && !showUsers && !showRoster && !showSponsors) adminAnalyticsPanel.style.display = "";
   }
 
   updateResultModalPerms();

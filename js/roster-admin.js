@@ -10,22 +10,44 @@ function rosterFormKey(id){
 function switchAdminSection(section){
   const usersPanel = document.getElementById("adminUsersPanel");
   const rosterPanel = document.getElementById("adminRosterPanel");
+  const sponsorsPanel = document.getElementById("adminSponsorsPanel");
+  const analyticsPanel = document.getElementById("adminAnalyticsPanel");
   const tabUsers = document.getElementById("adminTabUsers");
   const tabRoster = document.getElementById("adminTabRoster");
-  if(!usersPanel || !rosterPanel) return;
+  const tabSponsors = document.getElementById("adminTabSponsors");
+  const tabAnalytics = document.getElementById("adminTabAnalytics");
+  if(!usersPanel || !rosterPanel || !sponsorsPanel || !analyticsPanel) return;
 
-  const showUsers = section === "users" && canManageUsers();
-  const showRoster = section === "roster" && canManageRoster();
-  if(!showUsers && showRoster) section = "roster";
-  if(showUsers && !showRoster) section = "users";
+  const allowed = {
+    users: canManageUsers(),
+    roster: canManageRoster(),
+    sponsors: canManageSponsors(),
+    analytics: canManageSponsors()
+  };
+  if(!allowed[section]){
+    section = allowed.users ? "users"
+      : allowed.roster ? "roster"
+      : allowed.sponsors ? "sponsors"
+      : allowed.analytics ? "analytics"
+      : "users";
+  }
 
   usersPanel.style.display = section === "users" ? "" : "none";
   rosterPanel.style.display = section === "roster" ? "" : "none";
+  sponsorsPanel.style.display = section === "sponsors" ? "" : "none";
+  analyticsPanel.style.display = section === "analytics" ? "" : "none";
   if(tabUsers) tabUsers.classList.toggle("active", section === "users");
   if(tabRoster) tabRoster.classList.toggle("active", section === "roster");
+  if(tabSponsors) tabSponsors.classList.toggle("active", section === "sponsors");
+  if(tabAnalytics) tabAnalytics.classList.toggle("active", section === "analytics");
 
   if(section === "users") loadAdminUsers();
   if(section === "roster") loadAdminPlayers();
+  if(section === "sponsors") loadAdminSponsors();
+  if(section === "analytics"){
+    initAnalyticsAdminFilters();
+    loadAdminAnalytics();
+  }
 }
 
 function rosterPositionsLabel(p){

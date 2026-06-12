@@ -80,7 +80,8 @@ const PERMS = {
   CANCEL_MATCH: "cancel_match",
   DELETE_MATCH: "delete_match",
   MANAGE_USERS: "manage_users",
-  MANAGE_ROSTER: "manage_roster"
+  MANAGE_ROSTER: "manage_roster",
+  MANAGE_SPONSORS: "manage_sponsors"
 };
 const PERM_OPTIONS = [
   { id: PERMS.LINEUP_INTERNAL, label: "Chia đội nội bộ (toàn quyền)" },
@@ -98,6 +99,7 @@ const PERM_OPTIONS = [
   { id: PERMS.DELETE_MATCH, label: "Xóa trận lịch sử" },
   { id: PERMS.MANAGE_USERS, label: "Quản lý tài khoản" },
   { id: PERMS.MANAGE_ROSTER, label: "Quản lý danh sách cầu thủ" },
+  { id: PERMS.MANAGE_SPONSORS, label: "Quản lý nhà tài trợ / quảng cáo" },
   { id: PERMS.ALL, label: "Toàn quyền (all)" }
 ];
 let teamConfirmState = { A: false, B: false, Main: false, Sub: false };
@@ -109,18 +111,24 @@ let lineupDragSession = null;
 let confirmPollTimer = null;
 let authSession = null;
 const WEEKDAYS_VI = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-// Cloudflare Worker API (D1)
+// Cloudflare Worker API (D1) — frontend localhost vẫn gọi API production (data thật)
 const API_BASE_URL = "https://api.diamondunitedfc.com";
 const MATCH_HISTORY_WEB_APP_URL = API_BASE_URL;
 
 /** Liên hệ đá giao hữu — SĐT VN (0xxx / 84xxx) hoặc URL Zalo đầy đủ (https://zalo.me/...) */
-const ZALO_FRIENDLY_MATCH_CONTACT = "0916507405";
+const ZALO_FRIENDLY_MATCH_CONTACT = "0909197819";
+/** Liên hệ đặt quảng cáo / nhà tài trợ */
+const ZALO_AD_CONTACT = ZALO_FRIENDLY_MATCH_CONTACT;
 
-function zaloFriendlyMatchUrl(){
-  const raw = String(ZALO_FRIENDLY_MATCH_CONTACT || "").trim();
-  if(!raw) return "";
-  if(/^https?:\/\//i.test(raw)) return raw;
-  const digits = raw.replace(/\D/g, "");
+const SITE_URL = "https://diamondunitedfc.com";
+const SITE_NAME = "Diamond United FC";
+const SITE_AREA = "Diamond Riverside, Bình Phú, TP. Hồ Chí Minh";
+
+function zaloContactUrl(raw){
+  const value = String(raw || "").trim();
+  if(!value) return "";
+  if(/^https?:\/\//i.test(value)) return value;
+  const digits = value.replace(/\D/g, "");
   if(!digits) return "";
   let phone = digits;
   if(phone.startsWith("0")) phone = "84" + phone.slice(1);
@@ -128,8 +136,32 @@ function zaloFriendlyMatchUrl(){
   return `https://zalo.me/${phone}`;
 }
 
+function zaloFriendlyMatchUrl(){
+  return zaloContactUrl(ZALO_FRIENDLY_MATCH_CONTACT);
+}
+
+function zaloAdUrl(){
+  return zaloContactUrl(ZALO_AD_CONTACT);
+}
+
+function openZaloAdContact(event){
+  if(event?.preventDefault) event.preventDefault();
+  if(typeof trackSiteEvent === "function"){
+    trackSiteEvent("cta_dat_quang_cao", { source: event?.currentTarget?.id || event?.target?.id || "zalo_quang_cao" });
+  }
+  const url = zaloAdUrl();
+  if(!url){
+    alert("Chưa cấu hình Zalo liên hệ quảng cáo. Cập nhật ZALO_AD_CONTACT trong js/config.js.");
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 function openZaloFriendlyMatch(event){
   if(event?.preventDefault) event.preventDefault();
+  if(typeof trackSiteEvent === "function"){
+    trackSiteEvent("cta_giao_huu", { source: event?.currentTarget?.id || event?.target?.id || "zalo_giao_huu" });
+  }
   const url = zaloFriendlyMatchUrl();
   if(!url){
     alert("Chưa cấu hình Zalo liên hệ. Cập nhật ZALO_FRIENDLY_MATCH_CONTACT trong js/config.js.");
@@ -140,7 +172,13 @@ function openZaloFriendlyMatch(event){
 
 function initFriendlyMatchButton(){
   const btn = document.getElementById("btnFriendlyMatch");
-  if(!btn) return;
-  const url = zaloFriendlyMatchUrl();
-  if(url) btn.href = url;
+  if(btn){
+    const url = zaloFriendlyMatchUrl();
+    if(url) btn.href = url;
+  }
+  const adBtn = document.getElementById("btnAdContact");
+  if(adBtn){
+    const adUrl = zaloAdUrl();
+    if(adUrl) adBtn.href = adUrl;
+  }
 }

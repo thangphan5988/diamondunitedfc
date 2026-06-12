@@ -52,6 +52,7 @@ function switchTab(tab){
   if(tab === "admin"){
     if(canManageUsers()) switchAdminSection("users");
     else if(canManageRoster()) switchAdminSection("roster");
+    else if(canManageSponsors()) switchAdminSection("sponsors");
   }
   if(tab === "lineup" && shouldRestorePending()) restorePendingMatchIfAny();
   if(shouldPollPendingMatch()) startConfirmPolling();

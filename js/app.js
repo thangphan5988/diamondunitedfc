@@ -14,6 +14,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   initFormationSegControls();
   initLineupTeamSwitchers();
   initFriendlyMatchButton();
+  initSiteAnalytics();
+  loadSponsors();
 });
 document.addEventListener("visibilitychange", () => {
   if(document.visibilityState === "visible" && shouldPollPendingMatch() &&

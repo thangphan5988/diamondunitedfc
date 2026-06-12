@@ -27,14 +27,21 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(
   margin:0;max-width:720px;font-size:13px;line-height:1.55;font-weight:500;
   color:#cbd5e1
 }
-.friendlyMatchBtn{
+.siteHeaderActions{
   grid-column:3;grid-row:1;justify-self:end;align-self:start;
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;max-width:min(280px,100%)
+}
+.friendlyMatchBtn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  width:auto;max-width:min(280px,100%);margin:0;padding:10px 14px;
+  width:auto;margin:0;padding:10px 14px;
   background:#0068ff;border:1px solid rgba(255,255,255,.12);border-radius:999px;
   font-size:12px;font-weight:800;color:#fff;text-decoration:none;cursor:pointer;
   box-shadow:0 8px 22px rgba(0,0,0,.28)
 }
+.friendlyMatchBtn--ad{
+  background:#0f766e;border-color:rgba(255,255,255,.1)
+}
+.friendlyMatchBtn--ad:hover,.friendlyMatchBtn--ad:focus-visible{filter:brightness(1.1)}
 .friendlyMatchBtn:hover,.friendlyMatchBtn:focus-visible{
   filter:brightness(1.08);color:#fff;text-decoration:none
 }
@@ -96,12 +103,18 @@ button.danger:hover{filter:brightness(1.15)}
   .siteBrand{grid-column:1 / -1;grid-row:2}
   .siteBrand h1{font-size:18px;margin-bottom:6px;padding-right:0}
   .siteIntro{font-size:11px;line-height:1.5}
-  .friendlyMatchBtn{
+  .siteHeaderActions{
     grid-column:3;grid-row:1;justify-self:end;align-self:start;
-    max-width:min(148px,42vw);padding:8px 10px;font-size:10px;gap:5px
+    flex-direction:row;align-items:center;flex-wrap:nowrap;
+    width:max-content;max-width:calc(100vw - 76px);gap:6px
   }
+  .friendlyMatchBtn{
+    flex:0 0 auto;white-space:nowrap;padding:8px 10px;font-size:10px;gap:4px
+  }
+  .friendlyMatchBtnIcon{font-size:13px}
   .friendlyMatchBtnText{display:none}
-  .friendlyMatchBtn::after{content:"Liên hệ giao hữu";line-height:1.2}
+  .friendlyMatchBtn:not(.friendlyMatchBtn--ad)::after{content:"Giao hữu";line-height:1.2;white-space:nowrap}
+  .friendlyMatchBtn--ad::after{content:"Quảng cáo";line-height:1.2;white-space:nowrap}
   h1{font-size:20px;margin-bottom:4px}
   .buildVersion{display:none}
   .card{padding:12px;border-radius:16px}
