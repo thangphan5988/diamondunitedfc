@@ -516,7 +516,7 @@ function renderResultForm(){
       const videoInput = canEditMatchVideos() ? resultPlayerVideoInputHtml(p, goals, encodedName) : "";
       const videoRow = videoInput ? `<div class="resultPlayerVideo">${videoInput}</div>` : "";
       return `<div class="resultPlayerBlock">${`<div class="resultPlayer${showStats ? "" : " noStats"}${ratingLocked ? " resultLocked" : ""}">
-        <span class="resultPlayerThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main })}</span>
+        <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
         <div>
           <div class="name">${escapeHtml(playerDisplayName(p))}</div>
           <div class="meta">${roleMeta} · rating ${ratingBefore}${mvpTotal ? ` · 🏆 ${mvpTotal} MVP` : ""}${lockNote}</div>
@@ -901,7 +901,7 @@ function statRowHtml(p, rank, mode){
     : "";
   return `<div class="statRow">
     <span class="statRank">#${rank}</span>
-    <span class="statRowThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main })}</span>
+    <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div>
       <div class="name">${escapeHtml(playerDisplayName(p))}</div>
       <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}${inactiveNote}</div>

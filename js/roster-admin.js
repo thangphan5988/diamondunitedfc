@@ -65,8 +65,7 @@ function rosterLabeledInput(key, field, label, hint, attrs){
 
 function rosterAvatarPreviewInner(avatarUrl, name){
   if(!avatarUrl) return `<span class="meta rosterAvatarEmpty">Chưa có avatar</span>`;
-  const p = { name: name || "DUFC", avatar: avatarUrl, main: "", rating: 5 };
-  return `<span class="rosterAvatarPreviewCard">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: "" })}</span>`;
+  return `<img class="rosterAvatarPreviewImg" src="${escapeAttr(avatarSrc(avatarUrl, name))}" alt="" onerror="this.src='${defaultAvatar(name || 'DUFC')}'">`;
 }
 
 function rosterAvatarFieldsHtml(key, data){
@@ -215,7 +214,7 @@ function renderAdminPlayerList(){
     parts.push(`<div class="rosterAdminCard${expanded ? " expanded" : ""}">
       <div class="rosterAdminCardHead" onclick="toggleRosterPlayer(${Number(p.id)})">
         <div class="rosterAdminRowMain">
-          <span class="rosterThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main || p.position })}</span>
+          <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'" alt="">
           <div>
             <b>${escapeHtml(label)}</b>${canonical}
             <div class="meta">${escapeHtml(posText)}${side} · ⭐ ${Number(p.rating) || 5}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>

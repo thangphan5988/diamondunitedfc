@@ -237,9 +237,8 @@ async function makeImagesExportSafe(root){
       img.crossOrigin = "anonymous";
     }catch(e){
       const fallbackText =
-        img.closest(".benchItem")?.querySelector(".benchItemText")?.textContent?.trim() ||
-        img.closest(".cardPlayer")?.querySelector(".pname")?.textContent?.trim() ||
-        img.closest(".lrBenchCard")?.querySelector(".lrName")?.textContent?.trim() ||
+        img.closest(".cardPlayer")?.querySelector(".pname")?.textContent ||
+        img.closest(".benchItem")?.textContent ||
         "DUFC";
       img.setAttribute("src", fallbackAvatarDataURL(fallbackText));
       img.removeAttribute("srcset");

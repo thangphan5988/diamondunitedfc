@@ -79,9 +79,9 @@ function renderPlayerPicker(){
   }
 
   el.innerHTML = filtered.map(({p,i})=>`
-    <label class="row row--portrait">
+    <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
-      ${rosterThumbHtml(p)}
+      <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
       <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
@@ -279,7 +279,7 @@ function renderConfirmList(){
     const checked = pendingDetectedNames.has(p.name) ? "checked" : "";
     return `<label class="confirmPlayer">
       <input type="checkbox" ${checked} onchange="togglePendingPlayer('${escapeAttr(p.name)}', this.checked)">
-      <span class="confirmThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main })}</span>
+      <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
       <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""}</div></div>
     </label>`;
   }).join("");

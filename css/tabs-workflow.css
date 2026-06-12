@@ -150,12 +150,10 @@
   background:rgba(2,6,23,.65);border:1px dashed rgba(148,163,184,.35);
   display:flex;align-items:center;justify-content:center;padding:4px
 }
+.rosterAvatarPreviewImg{
+  width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;background:#1e293b
+}
 .rosterAvatarPreviewCard{display:block;width:100%}
-.rosterAvatarPreviewCard .playerCardArt{border-radius:8px}
-.rosterAvatarPreviewCard .playerCardArt .ratingBadge,
-.rosterAvatarPreviewCard .playerCardArt .captainBadge,
-.rosterAvatarPreviewCard .playerCardArt .ppos,
-.rosterAvatarPreviewCard .playerCardArt .fit{display:none}
 .rosterAvatarEmpty{font-size:10px;line-height:1.35;text-align:center;padding:6px 4px}
 .rosterAvatarActions{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
 .rosterAvatarUploadBtn{margin:0;width:100%;min-height:44px}
