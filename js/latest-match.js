@@ -21,7 +21,9 @@ function buildLatestStatMap(historyPlayers){
       is_mvp: p.is_mvp === true || p.is_mvp === "TRUE",
       rating_delta: Number(p.rating_delta),
       rating_before: p.rating_before,
-      rating_after: p.rating_after
+      rating_after: p.rating_after,
+      goal_video_url: p.goal_video_url || "",
+      goal_video_urls: parseGoalVideoUrlsInput(p.goal_video_urls || p.goal_video_url)
     });
   });
   return map;
@@ -32,13 +34,46 @@ function latestResultDeltaHtml(delta){
   return `<div class="lrDelta ${deltaClass(delta)}">${deltaLabel(delta)} rating</div>`;
 }
 
-function latestResultCapStatsHtml(stat){
+function collectTeamGoalVideoUrls(historyPlayers, side, isCap){
+  const urls = [];
+  const filtered = (historyPlayers || []).filter(hp => {
+    const teamKey = String(hp.team || "").toUpperCase();
+    if(side === "a"){
+      return isCap
+        ? (teamKey === "MAIN" || teamKey === "SUB" || teamKey === "CAP" || teamKey === "A")
+        : teamKey === "A";
+    }
+    if(side === "b") return !isCap && teamKey === "B";
+    return false;
+  });
+  filtered.sort((a, b) => (Number(a.lineup_order) || 999) - (Number(b.lineup_order) || 999));
+  filtered.forEach(hp => {
+    parseGoalVideoUrlsInput(hp.goal_video_urls || hp.goal_video_url).forEach(url => urls.push(url));
+  });
+  return urls;
+}
+
+function lrTeamGoalVideosColumnHtml(urls, variant){
+  if(!urls.length) return "";
+  const cols = urls.length >= 7 ? 3 : (urls.length >= 4 ? 2 : 1);
+  const colsClass = cols > 1 ? ` lrTeamGoalVideos--cols${cols}` : "";
+  const chips = urls.map((url, i) =>
+    `<a class="lrGoalVideoChip lrGoalVideoChip--${variant}" href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer" title="Bàn ${i + 1}">📹 ${i + 1}</a>`
+  ).join("");
+  return `<div class="lrTeamGoalVideos lrTeamGoalVideos--${variant}${colsClass}">${chips}</div>`;
+}
+
+function latestResultCompactStatsHtml(stat){
   const goals = Number(stat.goals) || 0;
   const assists = Number(stat.assists) || 0;
   if(!goals && !assists) return "";
   const g = goals ? `<span class="goals">⚽${goals}</span>` : "";
   const a = assists ? `<span class="assists">🅰️${assists}</span>` : "";
   return `<div class="lrStatRow">${g}${a}</div>`;
+}
+
+function latestResultPlayerStatsHtml(stat){
+  return latestResultCompactStatsHtml(stat);
 }
 
 function latestResultMvpBadgeHtml(){
@@ -61,7 +96,7 @@ function latestResultPitchCardHtml(p, teamClass, stat, isCap){
     <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
     <div class="lrScore">${escapeHtml(String(score))} điểm</div>
-    ${isCap ? latestResultCapStatsHtml(stat) : ""}
+    ${latestResultPlayerStatsHtml(stat)}
     ${latestResultDeltaHtml(stat.rating_delta)}
   </div>`;
 }
@@ -72,7 +107,7 @@ function latestResultBenchCardHtml(p, teamClass, stat, isCap){
   const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
   const avatar = p.avatar || defaultAvatar(p.name);
-  const capStats = isCap ? latestResultCapStatsHtml(stat) : "";
+  const capStats = latestResultPlayerStatsHtml(stat);
   const delta = latestResultDeltaHtml(stat.rating_delta);
   return `<div class="lrBenchCard ${teamClass}${captainClass}">
     ${captain}
@@ -96,14 +131,6 @@ function lrCompletedSummaryHtml(){
   return lrSummaryStripHtml(
     `<span class="lrStatusChip done">✓ Trận đã kết thúc</span>`,
     `<span class="lrSummaryDetail lrSummaryDetail--desktop">Kết quả & điểm cầu thủ đã cập nhật</span>`
-  );
-}
-
-function lrMvpSummaryHtml(mvpNames){
-  if(!mvpNames) return "";
-  return lrSummaryStripHtml(
-    `<span class="lrMvpChip">🏆 MVP: <b>${escapeHtml(mvpNames)}</b></span>`,
-    ""
   );
 }
 
@@ -301,32 +328,59 @@ function publicMatchTeamPanelHtml(opts){
   </div>`;
 }
 
-function latestResultScoreBoardHtml(summary, isCap){
+function latestResultScoreBoardHtml(summary, isCap, historyPlayers){
   const a = formatHistoryScore(summary?.team_a_score);
   const b = formatHistoryScore(summary?.team_b_score);
-  if(isCap){
-    return `<div class="lrScoreBoard lrScoreBoard--hero">
-      <div class="lrTeamScore blue">
-        <span class="lrTeamLabel">DUFC</span>
-        <span class="lrScoreNum">${escapeHtml(String(a))}</span>
+  const teamAUrls = collectTeamGoalVideoUrls(historyPlayers, "a", isCap);
+  const teamBUrls = collectTeamGoalVideoUrls(historyPlayers, "b", isCap);
+  const highlightUrl = normalizeVideoUrlInput(summary?.highlight_video_url);
+  const matchVideoHtml = highlightUrl
+    ? `<a class="lrMatchVideoLink" href="${escapeAttr(highlightUrl)}" target="_blank" rel="noopener noreferrer">🎬 Video trận</a>`
+    : "";
+  const leftVideos = lrTeamGoalVideosColumnHtml(teamAUrls, isCap ? "blue" : "red");
+  const rightVideos = lrTeamGoalVideosColumnHtml(teamBUrls, isCap ? "opp" : "yellow");
+  const hasVideos = !!(leftVideos || rightVideos || matchVideoHtml);
+  const boardClass = `lrScoreBoard lrScoreBoard--hero${hasVideos ? " lrScoreBoard--withVideos" : ""}`;
+
+  const teamAClass = isCap ? "blue" : "red";
+  const teamBClass = isCap ? "opp" : "yellow";
+  const teamALabel = isCap ? "DUFC" : "🔴 Đội A";
+  const teamBLabel = isCap
+    ? escapeHtml(String(summary.opponent_name || "Đối thủ"))
+    : "🟡 Đội B";
+
+  const teamAScore = `<div class="lrTeamScore ${teamAClass}">
+    <span class="lrTeamLabel">${teamALabel}</span>
+    <span class="lrScoreNum">${escapeHtml(String(a))}</span>
+  </div>`;
+  const teamBScore = `<div class="lrTeamScore ${teamBClass}">
+    <span class="lrTeamLabel">${teamBLabel}</span>
+    <span class="lrScoreNum">${escapeHtml(String(b))}</span>
+  </div>`;
+
+  if(hasVideos){
+    const matchBlock = matchVideoHtml
+      ? `<div class="lrScoreBoardMatch">${matchVideoHtml}</div>`
+      : "";
+    const centerHtml = `<div class="lrScoreBoardCenter">${matchVideoHtml}<div class="lrVs">VS</div></div>`;
+    return `<div class="${boardClass}">
+      ${matchBlock}
+      <div class="lrScoreBoardSide lrScoreBoardSide--a lrScoreBoardSide--${teamAClass}">
+        ${leftVideos}
+        ${teamAScore}
       </div>
-      <div class="lrVs">VS</div>
-      <div class="lrTeamScore opp">
-        <span class="lrTeamLabel">${escapeHtml(String(summary.opponent_name || "Đối thủ"))}</span>
-        <span class="lrScoreNum">${escapeHtml(String(b))}</span>
+      ${centerHtml}
+      <div class="lrScoreBoardSide lrScoreBoardSide--b lrScoreBoardSide--${teamBClass}">
+        ${teamBScore}
+        ${rightVideos}
       </div>
     </div>`;
   }
-  return `<div class="lrScoreBoard lrScoreBoard--hero">
-    <div class="lrTeamScore red">
-      <span class="lrTeamLabel">🔴 Đội A</span>
-      <span class="lrScoreNum">${escapeHtml(String(a))}</span>
-    </div>
+
+  return `<div class="${boardClass}">
+    ${teamAScore}
     <div class="lrVs">VS</div>
-    <div class="lrTeamScore yellow">
-      <span class="lrTeamLabel">🟡 Đội B</span>
-      <span class="lrScoreNum">${escapeHtml(String(b))}</span>
-    </div>
+    ${teamBScore}
   </div>`;
 }
 
@@ -340,16 +394,6 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
   const fMain = resolveFormation(summary.formation_a, "3-1-2");
   const fSub = resolveFormation(summary.formation_b, "3-1-2");
 
-  const mvps = historyPlayers.filter(p => p.is_mvp === true || p.is_mvp === "TRUE");
-  const mvpNames = summary.mvp_players
-    ? String(summary.mvp_players)
-    : mvps.map(p => p.player_name).join(", ");
-
-  const mvpBar = lrMvpSummaryHtml(
-    mvpNames
-      ? String(mvpNames).split(",").map(n => playerDisplayName(n.trim())).filter(Boolean).join(", ")
-      : ""
-  );
   const completedBar = embed ? "" : lrCompletedSummaryHtml();
 
   const capResultMeta = `⚽ Trận Cáp · ${escapeHtml(fMain)}`;
@@ -379,8 +423,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
       <div class="lmMatchWrap">
       ${headerHtml}
       ${completedBar}
-      ${mvpBar}
-      ${latestResultScoreBoardHtml(summary, true)}
+      ${latestResultScoreBoardHtml(summary, true, historyPlayers)}
       <div class="teams lmTeams lmTeamsCapDone">
         ${publicMatchTeamPanelHtml({
           idPrefix, teamLabel: "⚽ Đội hình ra sân", teamColor: "#38bdf8", formation: fMain,
@@ -414,8 +457,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
     <div class="lmMatchWrap">
     ${headerHtml}
     ${completedBar}
-    ${mvpBar}
-    ${latestResultScoreBoardHtml(summary, false)}
+    ${latestResultScoreBoardHtml(summary, false, historyPlayers)}
     ${wrapLmTeamsSwitchable(teamSeg, teamsHtml)}
     </div>
   `;

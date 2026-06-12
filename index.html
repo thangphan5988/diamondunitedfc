@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="css/base.css?v=2.4.21">
   <link rel="stylesheet" href="css/lineup.css?v=2.4.10">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
-  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.22">
-  <link rel="stylesheet" href="css/latest-match.css?v=2.4.11">
+  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.24">
+  <link rel="stylesheet" href="css/latest-match.css?v=2.4.32">
 </head>
 <body>
 <div class="wrap">
@@ -24,7 +24,7 @@
       <p class="siteTagline">Sân 7 · Football Club</p>
     </div>
   </header>
-  <div class="buildVersion">Build v2.4.22</div>
+  <div class="buildVersion">Build v2.4.33</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -272,12 +272,12 @@
     </div>
     <div class="card" id="statPanelGoals" style="display:none">
       <h2>⚽ Bảng Bàn thắng</h2>
-      <div class="meta">Tổng BT các trận đã hoàn tất — cao → thấp</div>
+      <div class="meta">Tổng BT các trận Cáp đã hoàn tất — cao → thấp · trận nội bộ không tính</div>
       <div id="goalsRanking" class="statList"></div>
     </div>
     <div class="card" id="statPanelAssists" style="display:none">
       <h2>🅰️ Bảng Kiến tạo</h2>
-      <div class="meta">Tổng KT các trận đã hoàn tất — cao → thấp</div>
+      <div class="meta">Tổng KT các trận Cáp đã hoàn tất — cao → thấp · trận nội bộ không tính</div>
       <div id="assistsRanking" class="statList"></div>
     </div>
   </div>
@@ -381,6 +381,10 @@
           <input id="teamBScore" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="0" oninput="sanitizeScoreInput(this)">
         </div>
       </div>
+      <div id="highlightVideoWrap" class="highlightVideoWrap" style="display:none">
+        <label for="highlightVideoUrl">Link video trận đấu</label>
+        <input id="highlightVideoUrl" type="url" inputmode="url" placeholder="https://youtube.com/... hoặc link Zalo/Facebook">
+      </div>
       <div class="hint" id="resultHint">
         <b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
         <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.
@@ -396,17 +400,17 @@
 </div>
 
 
-  <script src="js/config.js?v=2.4.20"></script>
-  <script src="js/utils.js?v=2.4.0"></script>
+  <script src="js/config.js?v=2.4.23"></script>
+  <script src="js/utils.js?v=2.4.24"></script>
   <script src="js/permissions.js?v=2.4.8"></script>
   <script src="js/api.js?v=2.4.19"></script>
-  <script src="js/match-data.js?v=2.4.14"></script>
-  <script src="js/match-result.js?v=2.4.22"></script>
+  <script src="js/match-data.js?v=2.4.23"></script>
+  <script src="js/match-result.js?v=2.4.33"></script>
   <script src="js/stats.js?v=2.4.0"></script>
   <script src="js/auth-admin.js?v=2.4.22"></script>
   <script src="js/roster-admin.js?v=2.4.2"></script>
-  <script src="js/latest-match.js?v=2.4.12"></script>
-  <script src="js/tabs-history.js?v=2.4.22"></script>
+  <script src="js/latest-match.js?v=2.4.32"></script>
+  <script src="js/tabs-history.js?v=2.4.23"></script>
   <script src="js/player-helpers.js?v=2.4.2"></script>
   <script src="js/lineup-confirm.js?v=2.4.0"></script>
   <script src="js/roster.js?v=2.4.20"></script>

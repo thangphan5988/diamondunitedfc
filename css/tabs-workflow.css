@@ -47,6 +47,7 @@
 .historyItemHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .historyItemHead h3{margin:0 0 6px;font-size:16px;flex:1;min-width:0}
 .historyItemActions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.historyVideoTag{color:#7dd3fc;font-weight:800;font-size:13px}
 .historyActionBtn,.historyDeleteBtn{width:auto;margin:0;padding:6px 10px;font-size:10px;flex-shrink:0}
 .roleTaskBanner{
   margin:0 0 14px;padding:10px 14px;border-radius:14px;
@@ -109,6 +110,11 @@
   .statsTabs::-webkit-scrollbar{display:none}
   .statsTab{flex-shrink:0}
 }
+.resultPlayerVideo{display:flex;flex-direction:column;gap:6px;margin:-2px 0 8px 0;padding-left:52px}
+.resultVideoInput{width:100%;margin:0;padding:8px 10px;font-size:11px;border-radius:10px}
+.highlightVideoWrap{margin:0 0 12px}
+.highlightVideoWrap label{display:block;font-size:10px;color:#94a3b8;font-weight:800;margin-bottom:6px}
+.highlightVideoWrap input{margin:0}
 @media(max-width:700px){.resultPlayer{grid-template-columns:32px 1fr 50px 40px 40px 36px}.resultPlayer.noStats{grid-template-columns:34px 1fr 64px 44px}}
 .authBar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .authBar .meta{margin:0}

@@ -177,6 +177,8 @@ function lockMatchState(matchId, matchLabel, imageFilename){
   playerMatchScores = {};
   playerMatchGoals = {};
   playerMatchAssists = {};
+  playerGoalVideoUrls = {};
+  highlightVideoUrl = "";
   allPlayers.forEach(p => {
     playerMatchScores[p.name] = 7;
     playerMatchGoals[p.name] = 0;
@@ -201,6 +203,8 @@ function unlockMatchState(){
   playerMatchScores = {};
   playerMatchGoals = {};
   playerMatchAssists = {};
+  playerGoalVideoUrls = {};
+  highlightVideoUrl = "";
   localStorage.removeItem(PENDING_MATCH_KEY);
   applyLockUI(false);
   lastResult = null;
@@ -410,6 +414,8 @@ function finishPendingMatchRestore(sourceNote, options = {}){
     playerMatchScores,
     playerMatchGoals,
     playerMatchAssists,
+    playerGoalVideoUrls,
+    highlightVideoUrl,
     teamConfirmState,
     teamResultSaved,
     lockedAt: new Date().toISOString()
@@ -482,6 +488,8 @@ function restorePendingMatchFromLocalStorage(){
     playerMatchScores = saved.playerMatchScores || {};
     playerMatchGoals = saved.playerMatchGoals || {};
     playerMatchAssists = saved.playerMatchAssists || {};
+    playerGoalVideoUrls = saved.playerGoalVideoUrls || {};
+    highlightVideoUrl = saved.highlightVideoUrl || "";
     teamConfirmState = Object.assign({ A: false, B: false, Main: false, Sub: false }, saved.teamConfirmState || {});
     teamResultSaved = Object.assign({ A: false, B: false }, saved.teamResultSaved || {});
     loadPendingScoresFromStore(saved);

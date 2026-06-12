@@ -140,6 +140,49 @@ export function parseCustomCoord(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+export function normalizeVideoUrl(value) {
+  const s = String(value || "").trim();
+  if (!s) return "";
+  if (/^https?:\/\/.+/i.test(s)) return s;
+  throw new Error("Link video phải bắt đầu bằng http:// hoặc https://");
+}
+
+export function parseGoalVideoUrls(value) {
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    return value.map((u) => String(u || "").trim()).filter(Boolean);
+  }
+  const s = String(value).trim();
+  if (!s) return [];
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      if (Array.isArray(arr)) {
+        return arr.map((u) => String(u || "").trim()).filter(Boolean);
+      }
+    } catch {
+      /* legacy plain URL */
+    }
+  }
+  return [s];
+}
+
+export function serializeGoalVideoUrls(value, maxGoals = null) {
+  let urls = parseGoalVideoUrls(value);
+  if (maxGoals != null) {
+    const n = Math.max(0, Math.round(Number(maxGoals) || 0));
+    urls = urls.slice(0, n);
+  }
+  urls = urls.map((u) => normalizeVideoUrl(u)).filter(Boolean);
+  if (!urls.length) return "";
+  if (urls.length === 1) return urls[0];
+  return JSON.stringify(urls);
+}
+
+export function normalizeGoalVideoUrls(value, maxGoals = null) {
+  return serializeGoalVideoUrls(value, maxGoals);
+}
+
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -234,7 +277,9 @@ export function mapHistoryPlayer(row) {
     rating_after: row.rating_after,
     captain: boolish(row.captain),
     custom_x: row.custom_x != null ? Number(row.custom_x) : null,
-    custom_y: row.custom_y != null ? Number(row.custom_y) : null
+    custom_y: row.custom_y != null ? Number(row.custom_y) : null,
+    goal_video_url: parseGoalVideoUrls(row.goal_video_url)[0] || "",
+    goal_video_urls: parseGoalVideoUrls(row.goal_video_url)
   };
 }
 
@@ -259,6 +304,7 @@ export function mapSummary(row) {
     team_a_result_saved: !!row.team_a_result_saved,
     team_b_result_saved: !!row.team_b_result_saved,
     team_a_lineup_confirmed: !!row.team_a_lineup_confirmed,
-    team_b_lineup_confirmed: !!row.team_b_lineup_confirmed
+    team_b_lineup_confirmed: !!row.team_b_lineup_confirmed,
+    highlight_video_url: row.highlight_video_url || ""
   };
 }

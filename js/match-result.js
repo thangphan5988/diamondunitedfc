@@ -35,6 +35,80 @@ function getRatingBeforeForResultForm(player){
   return Number(player.rating) || 5;
 }
 
+function canEditMatchVideos(){
+  if(isEditingCompletedResult()) return true;
+  if(canFinalizeMatch()) return true;
+  if(isCapHlvResultOnly()) return true;
+  if(canResultTeamA() || canResultTeamB()) return true;
+  return false;
+}
+
+function getGoalVideoMap(){
+  if(isEditingCompletedResult()) return editResultState.playerGoalVideoUrls;
+  return playerGoalVideoUrls;
+}
+
+function getHighlightVideoValue(){
+  if(isEditingCompletedResult()){
+    return normalizeVideoUrlInput(editResultState?.highlightVideoUrl);
+  }
+  const el = document.getElementById("highlightVideoUrl");
+  const fromDom = el ? normalizeVideoUrlInput(el.value) : "";
+  return fromDom || normalizeVideoUrlInput(highlightVideoUrl);
+}
+
+function bindHighlightVideoInput(){
+  const el = document.getElementById("highlightVideoUrl");
+  if(!el || el.dataset.bound) return;
+  el.dataset.bound = "1";
+  el.addEventListener("input", () => {
+    const val = normalizeVideoUrlInput(el.value);
+    if(isEditingCompletedResult()) editResultState.highlightVideoUrl = val;
+    else highlightVideoUrl = val;
+    persistPendingMatchStats();
+  });
+}
+
+function ensureGoalVideoSlotCount(name, count){
+  const map = getGoalVideoMap();
+  const n = Math.max(0, Math.round(Number(count) || 0));
+  if(!Array.isArray(map[name])){
+    const legacy = map[name];
+    map[name] = legacy ? parseGoalVideoUrlsInput(legacy) : [];
+  }
+  while(map[name].length < n) map[name].push("");
+  if(map[name].length > n) map[name].length = n;
+}
+
+function setPlayerGoalVideo(name, index, value){
+  const goalMap = isEditingCompletedResult() ? editResultState.playerMatchGoals : playerMatchGoals;
+  const goalCount = clampMatchStat(goalMap[name] ?? 0);
+  ensureGoalVideoSlotCount(name, Math.max(goalCount, Number(index) + 1));
+  getGoalVideoMap()[name][index] = normalizeVideoUrlInput(value);
+  if(!isEditingCompletedResult()) persistPendingMatchStats();
+}
+
+function goalVideoUrlsForPayload(name, goalCount){
+  return normalizeGoalVideoUrlsForSave(getGoalVideoMap()[name], goalCount);
+}
+
+function resultPlayerVideoInputHtml(p, goals, encodedName){
+  if(!canEditMatchVideos()) return "";
+  const map = getGoalVideoMap();
+  const goalCount = Math.max(0, Math.round(Number(goals) || 0));
+  ensureGoalVideoSlotCount(p.name, goalCount);
+  const urls = map[p.name] || [];
+  const filledCount = urls.filter(Boolean).length;
+  const slotCount = Math.max(goalCount, filledCount);
+  const show = slotCount > 0 || canFinalizeMatch() || isEditingCompletedResult();
+  if(!show) return "";
+  return Array.from({length: slotCount}, (_, i) => {
+    const url = escapeAttr(urls[i] || "");
+    return `<input class="resultVideoInput" type="url" value="${url}" placeholder="📹 Bàn ${i + 1} (YouTube/Zalo...)"
+      oninput="setPlayerGoalVideo(decodeURIComponent('${encodedName}'), ${i}, this.value)">`;
+  }).join("");
+}
+
 async function openEditResultModal(historyIdx, ev){
   if(ev) ev.stopPropagation();
   clearError();
@@ -66,6 +140,8 @@ async function openEditResultModal(historyIdx, ev){
       playerMatchScores: {},
       playerMatchGoals: {},
       playerMatchAssists: {},
+      playerGoalVideoUrls: {},
+      highlightVideoUrl: summary.highlight_video_url || "",
       pendingTeamAScore: formatIntScoreDisplay(summary.team_a_score),
       pendingTeamBScore: formatIntScoreDisplay(summary.team_b_score),
       opponentTeamName: summary.opponent_name || "",
@@ -82,6 +158,7 @@ async function openEditResultModal(historyIdx, ev){
       }
       editResultState.playerMatchGoals[name] = Number(hp.goals) || 0;
       editResultState.playerMatchAssists[name] = Number(hp.assists) || 0;
+      editResultState.playerGoalVideoUrls[name] = parseGoalVideoUrlsInput(hp.goal_video_urls || hp.goal_video_url);
     });
 
     editResultState.formPlayers.forEach(p => {
@@ -114,14 +191,28 @@ function shouldPreserveLocalMatchResult(){
   return false;
 }
 
+function syncGoalVideoUrlsFromDom(){
+  const map = getGoalVideoMap();
+  document.querySelectorAll("#resultTeams .resultPlayerBlock").forEach(block => {
+    const nameEl = block.querySelector(".resultPlayer .name");
+    if(!nameEl) return;
+    const name = nameEl.textContent.trim();
+    const inputs = block.querySelectorAll(".resultVideoInput");
+    if(!inputs.length) return;
+    map[name] = Array.from(inputs, input => normalizeVideoUrlInput(input.value));
+  });
+}
+
 function syncResultFormDraftFromDom(){
   syncPendingScoresFromInputs();
   const opponentEl = document.getElementById("opponentTeamName");
   const opponentVal = opponentEl ? String(opponentEl.value || "").trim() : "";
   if(isEditingCompletedResult()){
     editResultState.opponentTeamName = opponentVal;
+    editResultState.highlightVideoUrl = normalizeVideoUrlInput(document.getElementById("highlightVideoUrl")?.value);
   }else if(opponentEl){
     opponentTeamName = opponentVal;
+    highlightVideoUrl = normalizeVideoUrlInput(document.getElementById("highlightVideoUrl")?.value);
   }
 
   const scoreMap = isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores;
@@ -139,6 +230,7 @@ function syncResultFormDraftFromDom(){
     if(statInputs[0]) goalMap[name] = clampMatchStat(statInputs[0].value);
     if(statInputs[1]) assistMap[name] = clampMatchStat(statInputs[1].value);
   });
+  syncGoalVideoUrlsFromDom();
 }
 
 function bindResultFormInputs(){
@@ -328,17 +420,27 @@ function renderResultForm(){
     opponentEl.disabled = false;
   }
 
+  const videoWrap = document.getElementById("highlightVideoWrap");
+  if(videoWrap){
+    videoWrap.style.display = canEditMatchVideos() ? "" : "none";
+    const highlightEl = document.getElementById("highlightVideoUrl");
+    if(highlightEl && canEditMatchVideos()){
+      highlightEl.value = getHighlightVideoValue();
+      bindHighlightVideoInput();
+    }
+  }
+
   if(isEditingCompletedResult()){
     document.getElementById("resultHint").innerHTML =
       `<b>Sửa kết quả trận đã hoàn tất.</b> Rating và MVP sẽ được tính lại từ đầu cho trận này.<br>
        <b>Rating</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
        <b>MVP</b>: mỗi đội (hoặc DUFC với trận Cáp) 1 người điểm cao nhất → +1 MVP.` +
-      (cap ? `<br><b>⚽ BT / 🅰️ KT</b>: bàn thắng và kiến tạo từng cầu thủ.` : "");
+      (cap ? `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn.` : `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: ghi nhận theo trận · BT/KT không tính bảng Top.`);
   }else if(cap){
     document.getElementById("resultHint").innerHTML =
       `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
        <b>MVP</b>: 1 người điểm cao nhất trong đội DUFC → cộng <b>1 lần MVP</b>.<br>
-       <b>⚽ BT / 🅰️ KT</b>: bàn thắng và kiến tạo từng cầu thủ.` +
+       <b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn.` +
       (canFinalizeMatch()
         ? (capHlvResultConfirmed()
           ? `<br><b>Host</b>: chỉnh tỉ số/tên đội/BT/KT · <b>không sửa điểm cầu thủ</b> đã chốt HLV Cáp → <b>Xác nhận trận đấu</b>.`
@@ -349,7 +451,9 @@ function renderResultForm(){
   }else{
     document.getElementById("resultHint").innerHTML =
       `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
-       <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.` +
+       <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.<br>
+       <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · <span class="meta">BT/KT không tính bảng Top (chỉ trận Cáp)</span>.<br>
+       <b>📹 Video</b>: link từng bàn thắng + video trận (tùy chọn).` +
       (canFinalizeMatch()
         ? `<br><b>Host</b>: chỉnh tỉ số khi cần · chờ 2 HLV xác nhận → <b>Xác nhận trận đấu</b>. Điểm cầu thủ đội đã xác nhận không sửa được.`
         : (canResultTeamA() && !canResultTeamB()
@@ -372,9 +476,11 @@ function renderResultForm(){
         return false;
       });
 
+  const showStats = true;
+
   document.getElementById("resultTeams").innerHTML = teams.map(team => {
     const list = getResultFormPlayers().filter(p => p.team === team.key);
-    const header = cap
+    const header = showStats
       ? `<div class="resultPlayer resultPlayerHead">
           <span></span><span>Cầu thủ</span>
           <span class="resultColHead">Điểm</span>
@@ -400,14 +506,16 @@ function renderResultForm(){
         : (p.starter ? p.assigned : "Dự bị");
       const ratingLocked = !isEditingCompletedResult() && isPlayerScoreLocked(p.team);
       const statLocked = !isEditingCompletedResult() && isPlayerStatInputLocked(p.team);
-      const statInputs = cap
+      const statInputs = showStats
         ? `<input class="resultStatInput" type="number" min="0" max="30" value="${goals}" ${statLocked ? "disabled" : ""}
             onchange="setPlayerMatchGoals(decodeURIComponent('${encodedName}'), this.value)">
           <input class="resultStatInput" type="number" min="0" max="30" value="${assists}" ${statLocked ? "disabled" : ""}
             onchange="setPlayerMatchAssists(decodeURIComponent('${encodedName}'), this.value)">`
         : "";
       const lockNote = ratingLocked && (canFinalizeMatch() || isCapHlvResultOnly()) ? " · đã chốt HLV" : "";
-      return `<div class="resultPlayer${cap ? "" : " noStats"}${ratingLocked ? " resultLocked" : ""}">
+      const videoInput = canEditMatchVideos() ? resultPlayerVideoInputHtml(p, goals, encodedName) : "";
+      const videoRow = videoInput ? `<div class="resultPlayerVideo">${videoInput}</div>` : "";
+      return `<div class="resultPlayerBlock">${`<div class="resultPlayer${showStats ? "" : " noStats"}${ratingLocked ? " resultLocked" : ""}">
         <img src="${escapeAttr(p.avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
         <div>
           <div class="name">${escapeHtml(playerDisplayName(p))}</div>
@@ -418,7 +526,7 @@ function renderResultForm(){
         </select>
         ${statInputs}
         <div class="mvpTag">${isMvp ? `⭐ MVP` : ""}</div>
-      </div>`;
+      </div>`}${videoRow}</div>`;
     }).join("");
 
     return `<div class="resultTeam"><h3 style="color:${team.color}">${team.title}</h3>${header}${rows}</div>`;
@@ -439,8 +547,30 @@ function persistPendingMatchStats(){
   saved.playerMatchScores = playerMatchScores;
   saved.playerMatchGoals = playerMatchGoals;
   saved.playerMatchAssists = playerMatchAssists;
+  saved.playerGoalVideoUrls = playerGoalVideoUrls;
+  saved.highlightVideoUrl = highlightVideoUrl;
   saved.opponentTeamName = opponentTeamName;
   localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify(saved));
+}
+
+function collectInvalidVideoUrls(){
+  const invalid = [];
+  const highlight = getHighlightVideoValue();
+  if(highlight && !isLikelyVideoUrl(highlight)) invalid.push("Link video trận");
+  const map = isEditingCompletedResult() ? editResultState.playerGoalVideoUrls : playerGoalVideoUrls;
+  Object.entries(map || {}).forEach(([name, urls]) => {
+    parseGoalVideoUrlsInput(urls).forEach((val, i) => {
+      if(val && !isLikelyVideoUrl(val)){
+        const label = playerDisplayName({name, display_name: name});
+        invalid.push(filledCountLabel(label, i + 1));
+      }
+    });
+  });
+  return invalid;
+}
+
+function filledCountLabel(name, goalNo){
+  return goalNo > 1 ? `${name} · bàn ${goalNo}` : name;
 }
 
 function setPlayerMatchScore(name, value){
@@ -462,6 +592,8 @@ function setPlayerMatchGoals(name, value){
     persistPendingMatchStats();
     persistPendingScores();
   }
+  if(canEditMatchVideos()) renderResultForm();
+  else refreshResultMvpTags();
 }
 
 function setPlayerMatchAssists(name, value){
@@ -536,14 +668,20 @@ async function saveMatchResult(){
     const scoreMap = editResultState.playerMatchScores;
     const goalMap = editResultState.playerMatchGoals;
     const assistMap = editResultState.playerMatchAssists;
+    const invalidVideos = collectInvalidVideoUrls();
+    if(invalidVideos.length){
+      showError("Link video không hợp lệ: " + invalidVideos.join(", "));
+      return;
+    }
     const mvpNames = getMvpNamesFromScores(scoreMap);
     const payloadPlayers = getResultFormPlayers().map(p => ({
       player_name: p.name,
       team: p.team,
       starter: !!p.starter,
       match_score: Number(scoreMap[p.name] ?? 7),
-      goals: cap ? clampMatchStat(goalMap[p.name] ?? 0) : 0,
-      assists: cap ? clampMatchStat(assistMap[p.name] ?? 0) : 0,
+      goals: clampMatchStat(goalMap[p.name] ?? 0),
+      assists: clampMatchStat(assistMap[p.name] ?? 0),
+      goal_video_urls: goalVideoUrlsForPayload(p.name, goalMap[p.name] ?? 0),
       is_mvp: mvpNames.includes(p.name)
     }));
 
@@ -561,6 +699,7 @@ async function saveMatchResult(){
         match_id: editResultState.match_id,
         match_type: cap ? "cap" : "internal",
         opponent_name: cap ? opponent : "",
+        highlight_video_url: getHighlightVideoValue(),
         team_a_score: teamAScore,
         team_b_score: teamBScore,
         players: payloadPlayers
@@ -595,6 +734,7 @@ async function saveMatchResult(){
   const capHlvPartial = cap && isCapHlvResultOnly();
   const hostFinalizeInternal = canFinalizeMatch() && !cap;
   const hostFinalize = hostFinalizeInternal || capHostFinalize;
+  const internalHlvPartial = !cap && !hostFinalize && (canResultTeamA() || canResultTeamB());
   persistPendingScores();
 
   if(hostFinalizeInternal && !bothTeamsResultSaved()){
@@ -648,6 +788,12 @@ async function saveMatchResult(){
     }
   }
 
+  const invalidVideos = collectInvalidVideoUrls();
+  if(invalidVideos.length){
+    showError("Link video không hợp lệ: " + invalidVideos.join(", "));
+    return;
+  }
+
   const allPlayers = getAllMatchPlayers();
   const mvpNames = getMvpNamesFromScores();
   const seenNames = new Set();
@@ -662,8 +808,9 @@ async function saveMatchResult(){
     team: p.team,
     starter: !!p.starter,
     match_score: Number(playerMatchScores[p.name] ?? 7),
-    goals: cap ? clampMatchStat(playerMatchGoals[p.name] ?? 0) : 0,
-    assists: cap ? clampMatchStat(playerMatchAssists[p.name] ?? 0) : 0,
+    goals: clampMatchStat(playerMatchGoals[p.name] ?? 0),
+    assists: clampMatchStat(playerMatchAssists[p.name] ?? 0),
+    goal_video_urls: goalVideoUrlsForPayload(p.name, playerMatchGoals[p.name] ?? 0),
     rating_before: Number(p.rating) || 5,
     mvp_count_before: Number(p.mvp_count) || 0,
     is_mvp: mvpNames.includes(p.name)
@@ -679,6 +826,7 @@ async function saveMatchResult(){
       match_label: currentMatchLabel || displayMatchLabel(),
       match_type: cap ? "cap" : "internal",
       opponent_name: cap ? opponentTeamName : "",
+      highlight_video_url: (hostFinalize || capHlvPartial || internalHlvPartial) ? getHighlightVideoValue() : "",
       formation_a: cap ? formationCapMain : formationA,
       formation_b: cap ? formationCapSub : formationB,
       team_a_score: teamAScore,

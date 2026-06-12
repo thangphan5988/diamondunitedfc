@@ -82,6 +82,9 @@ function renderMatchHistoryList(matches){
       ? escapeHtml(String(m.formation_a || ""))
       : `${escapeHtml(String(m.formation_a || ""))} vs ${escapeHtml(String(m.formation_b || ""))}`;
     const typeTag = isCap ? " · ⚽ Cáp" : "";
+    const videoTag = normalizeVideoUrlInput(m.highlight_video_url)
+      ? ` · <span class="historyVideoTag">🎬 Video</span>`
+      : "";
     const deleteBtn = hasPerm(PERMS.DELETE_MATCH)
       ? `<button type="button" class="danger historyActionBtn" onclick="deleteHistoryMatch(${idx}, event)">🗑 Xóa</button>`
       : "";
@@ -93,7 +96,7 @@ function renderMatchHistoryList(matches){
       : "";
     return `<div class="historyItem" onclick="toggleHistoryDetail(${idx})">
       <div class="historyItemHead">
-        <h3>${escapeHtml(displayMatchLabel(m))}${typeTag} · ${score}</h3>
+        <h3>${escapeHtml(displayMatchLabel(m))}${typeTag}${videoTag} · ${score}</h3>
         ${actionBtns}
       </div>
       <div class="historyMeta">

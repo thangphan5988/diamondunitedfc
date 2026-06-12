@@ -55,3 +55,33 @@ function syncModalOpenState(){
 }
 function escapeHtml(s){return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function escapeAttr(s){return escapeHtml(s)}
+
+function normalizeVideoUrlInput(value){
+  return String(value || "").trim();
+}
+
+function isLikelyVideoUrl(value){
+  const s = normalizeVideoUrlInput(value);
+  return !s || /^https?:\/\/.+/i.test(s);
+}
+
+function parseGoalVideoUrlsInput(value){
+  if(value == null) return [];
+  if(Array.isArray(value)) return value.map(u => normalizeVideoUrlInput(u)).filter(Boolean);
+  const s = normalizeVideoUrlInput(value);
+  if(!s) return [];
+  if(s.startsWith("[")){
+    try{
+      const arr = JSON.parse(s);
+      if(Array.isArray(arr)) return arr.map(u => normalizeVideoUrlInput(u)).filter(Boolean);
+    }catch(e){ /* legacy */ }
+  }
+  return [s];
+}
+
+function normalizeGoalVideoUrlsForSave(value, maxGoals){
+  let urls = parseGoalVideoUrlsInput(value);
+  const n = Math.max(0, Math.round(Number(maxGoals) || 0));
+  urls = urls.slice(0, n).map(u => normalizeVideoUrlInput(u)).filter(Boolean);
+  return urls;
+}

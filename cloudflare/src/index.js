@@ -14,6 +14,8 @@ import {
   mapSummary,
   hasPermission,
   parseCustomCoord,
+  normalizeVideoUrl,
+  normalizeGoalVideoUrls,
   json,
   corsPreflight
 } from "./utils.js";
@@ -418,9 +420,11 @@ async function getLatestResult(db) {
 
 async function getPlayerStats(db) {
   const rows = await db.prepare(
-    `SELECT MAX(player_name) AS player_name, SUM(goals) AS goals, SUM(assists) AS assists
-     FROM match_history WHERE status = 'completed'
-     GROUP BY player_name_norm
+    `SELECT MAX(h.player_name) AS player_name, SUM(h.goals) AS goals, SUM(h.assists) AS assists
+     FROM match_history h
+     INNER JOIN match_summary s ON s.match_id = h.match_id
+     WHERE h.status = 'completed' AND LOWER(COALESCE(s.match_type, 'internal')) = 'cap'
+     GROUP BY h.player_name_norm
      ORDER BY goals DESC, assists DESC, player_name COLLATE NOCASE`
   ).all();
 
@@ -673,6 +677,13 @@ async function confirmTeamLineup(db, payload, session) {
   };
 }
 
+function goalVideoUrlsFromPlayer(item, goalsFallback = 0) {
+  if (!item) return "";
+  const raw = item.goal_video_urls != null ? item.goal_video_urls : item.goal_video_url;
+  if (raw == null || raw === "") return "";
+  return normalizeGoalVideoUrls(raw, clampStatCount(item.goals ?? goalsFallback));
+}
+
 async function saveMatchResult(db, payload, session) {
   const matchId = String(payload.match_id || "").trim();
   let players = Array.isArray(payload.players) ? payload.players : [];
@@ -766,7 +777,8 @@ async function saveMatchResult(db, payload, session) {
   const updatePartialHist = db.prepare(`
     UPDATE match_history SET
       team_a_score = ?, team_b_score = ?, match_score = ?,
-      goals = ?, assists = ?, is_mvp = ?
+      goals = ?, assists = ?, is_mvp = ?,
+      goal_video_url = COALESCE(?, goal_video_url)
     WHERE id = ?
   `);
 
@@ -782,7 +794,11 @@ async function saveMatchResult(db, payload, session) {
     partialStmts.push(updatePartialHist.bind(
       nextAScore, nextBScore, item.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
-      item.is_mvp ? 1 : 0, row.id
+      item.is_mvp ? 1 : 0,
+      item.goal_video_urls != null || item.goal_video_url != null
+        ? goalVideoUrlsFromPlayer(item, item.goals)
+        : null,
+      row.id
     ));
   }
   if (partialStmts.length) await db.batch(partialStmts);
@@ -791,16 +807,21 @@ async function saveMatchResult(db, payload, session) {
   const nextBFlag = teamBFlag;
   const finalize = finalizeMatch;
 
+  const highlightVideo = payload.highlight_video_url != null
+    ? normalizeVideoUrl(payload.highlight_video_url)
+    : null;
+
   await db.prepare(`
     UPDATE match_summary SET
       team_a_score = ?, team_b_score = ?,
       team_a_result_saved = ?, team_b_result_saved = ?,
       opponent_name = COALESCE(?, opponent_name),
-      match_type = COALESCE(?, match_type)
+      match_type = COALESCE(?, match_type),
+      highlight_video_url = COALESCE(?, highlight_video_url)
     WHERE match_id = ?
   `).bind(
     String(nextAScore), String(nextBScore), nextAFlag, nextBFlag,
-    payload.opponent_name || null, matchType || null, matchId
+    payload.opponent_name || null, matchType || null, highlightVideo, matchId
   ).run();
 
   if (!finalize) {
@@ -846,7 +867,10 @@ async function saveMatchResult(db, payload, session) {
       assists: incoming && !statsLocked ? clampStatCount(incoming.assists) : Number(row.assists) || 0,
       rating_before: incoming ? clampRating(incoming.rating_before) : clampRating(row.rating_before || row.rating),
       mvp_count_before: incoming ? Math.max(0, Math.round(Number(incoming.mvp_count_before) || 0)) : Math.max(0, Math.round(Number(row.mvp_count) || 0)),
-      is_mvp: ratingLocked ? !!row.is_mvp : (incoming ? !!incoming.is_mvp : !!row.is_mvp)
+      is_mvp: ratingLocked ? !!row.is_mvp : (incoming ? !!incoming.is_mvp : !!row.is_mvp),
+      goal_video_url: incoming && (incoming.goal_video_urls != null || incoming.goal_video_url != null)
+        ? goalVideoUrlsFromPlayer(incoming, incoming.goals ?? row.goals)
+        : (row.goal_video_url || "")
     });
   }
 
@@ -855,11 +879,15 @@ async function saveMatchResult(db, payload, session) {
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
 
+  const finalizeHighlightVideo = payload.highlight_video_url != null
+    ? normalizeVideoUrl(payload.highlight_video_url)
+    : null;
+
   const updateHist = db.prepare(`
     UPDATE match_history SET
       status = 'completed', team_a_score = ?, team_b_score = ?, match_score = ?,
       goals = ?, assists = ?, is_mvp = ?, rating_before = ?, rating_delta = ?,
-      rating_after = ?, result_saved_at = ?
+      rating_after = ?, result_saved_at = ?, goal_video_url = ?
     WHERE id = ?
   `);
 
@@ -873,16 +901,18 @@ async function saveMatchResult(db, payload, session) {
     histStmts.push(updateHist.bind(
       nextAScore, nextBScore, item.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
-      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt, row.id
+      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt,
+      item.goal_video_url || "", row.id
     ));
   }
   if (histStmts.length) await db.batch(histStmts);
 
   await db.prepare(`
     UPDATE match_summary SET
-      mvp_players = ?, status = 'completed', result_saved_at = ?
+      mvp_players = ?, status = 'completed', result_saved_at = ?,
+      highlight_video_url = COALESCE(?, highlight_video_url)
     WHERE match_id = ?
-  `).bind(mvpNames.join(", "), savedAt, matchId).run();
+  `).bind(mvpNames.join(", "), savedAt, finalizeHighlightVideo, matchId).run();
 
   await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
 
@@ -948,7 +978,10 @@ async function editMatchResult(db, payload) {
       assists: clampStatCount(incoming.assists),
       rating_before: clampRating(roster?.base_rating ?? roster?.rating ?? row.rating_before),
       mvp_count_before: Math.max(0, Math.round(Number(roster?.mvp_count) || 0)),
-      is_mvp: !!incoming.is_mvp
+      is_mvp: !!incoming.is_mvp,
+      goal_video_url: (incoming.goal_video_urls != null || incoming.goal_video_url != null)
+        ? goalVideoUrlsFromPlayer(incoming, incoming.goals)
+        : (row.goal_video_url || "")
     });
   }
   if (!mergedPlayers.length) throw new Error("Không có cầu thủ để cập nhật.");
@@ -958,11 +991,15 @@ async function editMatchResult(db, payload) {
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
 
+  const editHighlightVideo = payload.highlight_video_url != null
+    ? normalizeVideoUrl(payload.highlight_video_url)
+    : null;
+
   const updateHist = db.prepare(`
     UPDATE match_history SET
       status = 'completed', team_a_score = ?, team_b_score = ?, match_score = ?,
       goals = ?, assists = ?, is_mvp = ?, rating_before = ?, rating_delta = ?,
-      rating_after = ?, result_saved_at = ?
+      rating_after = ?, result_saved_at = ?, goal_video_url = ?
     WHERE id = ?
   `);
 
@@ -976,7 +1013,8 @@ async function editMatchResult(db, payload) {
     histStmts.push(updateHist.bind(
       nextAScore, nextBScore, item.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
-      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt, row.id
+      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt,
+      item.goal_video_url || "", row.id
     ));
   }
   if (histStmts.length) await db.batch(histStmts);
@@ -984,9 +1022,10 @@ async function editMatchResult(db, payload) {
   await db.prepare(`
     UPDATE match_summary SET
       team_a_score = ?, team_b_score = ?, opponent_name = ?,
-      mvp_players = ?, result_saved_at = ?
+      mvp_players = ?, result_saved_at = ?,
+      highlight_video_url = COALESCE(?, highlight_video_url)
     WHERE match_id = ?
-  `).bind(String(nextAScore), String(nextBScore), opponentName || null, mvpNames.join(", "), savedAt, matchId).run();
+  `).bind(String(nextAScore), String(nextBScore), opponentName || null, mvpNames.join(", "), savedAt, editHighlightVideo, matchId).run();
 
   await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
 
