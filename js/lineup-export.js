@@ -522,8 +522,6 @@ async function saveMatchHistoryToServer(options = {}){
   }
 
   await apiPost("save_match_history", {
-    spreadsheet_id: "1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU",
-    sheet_gid: "228928781",
     match_id: matchId,
     match_label: matchLabel,
     match_type: cap ? "cap" : "internal",

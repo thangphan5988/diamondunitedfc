@@ -2,31 +2,12 @@
 
 async function loadDefaultRoster(){
   clearError();
-  if(API_BASE_URL){
-    try{
-      const data = await apiGet("get_roster");
-      if(data.players?.length){
-        applyRosterFromApi(data.players);
-        return;
-      }
-    }catch(e){
-      console.warn("Cloudflare roster failed, fallback Google Sheet:", e);
-    }
-  }
-
   try{
-    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&ts=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error("Không load được Google Sheet.");
-
-    const text = await res.text();
-    const wb = XLSX.read(text, {type:"string"});
-    const sheetName = wb.SheetNames[0];
-    if(!sheetName) throw new Error("Không đọc được dữ liệu từ Google Sheet.");
-
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:""});
-    applyRows(rows);
+    const data = await apiGet("get_roster");
+    if(!data.players?.length) throw new Error("Chưa có dữ liệu cầu thủ trên server.");
+    applyRosterFromApi(data.players);
   }catch(e){
-    showError(e.message || "Không load được danh sách cầu thủ.");
+    showError(e.message || "Không load được danh sách cầu thủ từ API.");
   }
 }
 
@@ -66,86 +47,6 @@ function applyRosterFromApi(rows){
   }).filter(Boolean);
 
   if(!list.length) throw new Error("Không đọc được cầu thủ từ API.");
-  players = list;
-  renderPlayerPicker();
-  updateStats();
-  if(document.getElementById("statsView")?.style.display !== "none") renderStats();
-  maybeAutoOptimizeCapAfterImport();
-}
-
-function applyRows(rows){
-  if(!rows.length) throw new Error("File danh sách chưa có dữ liệu cầu thủ.");
-
-  const list = rows.map((row, idx) => {
-    const lower = {};
-    Object.keys(row).forEach(k => lower[String(k).trim().toLowerCase()] = row[k]);
-
-    const name = String(lower.name || lower["tên"] || lower.ten || "").trim();
-    const displayName = String(lower.display_name || lower["tên hiển thị"] || lower.ten_hien_thi || "").trim();
-
-    // Format mới:
-    // position = "MID, FWD, DEF"
-    // Giá trị đầu tiên là vị trí chính, các giá trị tiếp theo là vị trí phụ.
-    const positionRaw =
-      lower.position ||
-      lower.positions ||
-      lower.main_position ||
-      lower.main ||
-      lower["vị trí"] ||
-      lower["vị trí chính"] ||
-      lower.vi_tri ||
-      lower.vi_tri_chinh ||
-      "";
-
-    const positionList = splitPositions(positionRaw);
-    const main = positionList[0] || "";
-    let secondary = positionList.slice(1);
-
-    // Backward compatible nếu file cũ vẫn có secondary_positions.
-    const secondaryRaw = lower.secondary_positions || lower.secondary || lower["vị trí phụ"] || lower.vi_tri_phu || "";
-    if(secondaryRaw){
-      const moreSecondary = splitPositions(secondaryRaw);
-      secondary = [...new Set([...secondary, ...moreSecondary].filter(x => x !== main))];
-    }
-
-    const rating = Number(lower.rating || lower["điểm"] || lower.diem || 5);
-    const mvpCount = Number(lower.mvp_count || lower.mvp || lower["số mvp"] || lower.so_mvp || 0);
-    const avatarText = String(lower.avatar || lower.avatar_url || lower["ảnh"] || lower.anh || "").trim();
-
-    // Format mới:
-    // preferred_side = "CENTER, RIGHT, LEFT"
-    // Giá trị đầu tiên là khu vực chính, các giá trị sau là khu vực phụ.
-    const side = normalizeSideList(
-      lower.preferred_side ||
-      lower.side ||
-      lower["khu vực"] ||
-      lower.khu_vuc ||
-      lower["sở trường khu vực"] ||
-      lower.so_truong_khu_vuc ||
-      ""
-    );
-
-    if(!name) return null;
-    if(!POS.includes(main)) return null;
-
-    return {
-      id: (idx + 2) + "_" + name,
-      name,
-      display_name: displayName,
-      main,
-      secondary,
-      rating: Number.isFinite(rating) ? rating : 5,
-      mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
-      avatar: avatarText || defaultAvatar(name),
-      side,
-      selected: true
-    };
-  }).filter(Boolean);
-
-  if(list.length < 1) {
-    throw new Error("Không đọc được cầu thủ. Cần cột name và position. Ví dụ position: MID, FWD, DEF.");
-  }
-
   players = list;
   renderPlayerPicker();
   updateStats();
