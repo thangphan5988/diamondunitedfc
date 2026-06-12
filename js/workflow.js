@@ -128,6 +128,12 @@ function applyResultScoreFieldPerms(){
   inputA.disabled = false;
   inputB.disabled = false;
 
+  if(typeof isEditingCompletedResult === "function" && isEditingCompletedResult()){
+    wrapA.classList.add("scorePrimary");
+    wrapB.classList.add("scorePrimary");
+    return;
+  }
+
   if(canFinalizeMatch()){
     wrapA.classList.add("scorePrimary");
     wrapB.classList.add("scorePrimary");

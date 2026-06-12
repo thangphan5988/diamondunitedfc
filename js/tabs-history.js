@@ -83,12 +83,18 @@ function renderMatchHistoryList(matches){
       : `${escapeHtml(String(m.formation_a || ""))} vs ${escapeHtml(String(m.formation_b || ""))}`;
     const typeTag = isCap ? " · ⚽ Cáp" : "";
     const deleteBtn = hasPerm(PERMS.DELETE_MATCH)
-      ? `<button type="button" class="danger historyDeleteBtn" onclick="deleteHistoryMatch(${idx}, event)">🗑 Xóa</button>`
+      ? `<button type="button" class="danger historyActionBtn" onclick="deleteHistoryMatch(${idx}, event)">🗑 Xóa</button>`
+      : "";
+    const editBtn = canFinalizeMatch()
+      ? `<button type="button" class="secondary historyActionBtn" onclick="openEditResultModal(${idx}, event)">✏️ Sửa KQ</button>`
+      : "";
+    const actionBtns = (editBtn || deleteBtn)
+      ? `<div class="historyItemActions">${editBtn}${deleteBtn}</div>`
       : "";
     return `<div class="historyItem" onclick="toggleHistoryDetail(${idx})">
       <div class="historyItemHead">
         <h3>${escapeHtml(displayMatchLabel(m))}${typeTag} · ${score}</h3>
-        ${deleteBtn}
+        ${actionBtns}
       </div>
       <div class="historyMeta">
         MVP: <b>${escapeHtml(String(m.mvp_players || "—"))}</b> ·

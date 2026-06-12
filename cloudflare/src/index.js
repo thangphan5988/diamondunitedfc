@@ -66,7 +66,7 @@ export default {
           version: APP_VERSION,
           storage: "cloudflare-d1",
           actions: [
-            "save_match_history", "save_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
+            "save_match_history", "save_match_result", "edit_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats",
@@ -131,6 +131,9 @@ export default {
           ]);
           return json(await saveMatchResult(db, payload, resultSession));
         }
+        case "edit_match_result":
+          await requireAuth(db, token, ["match_result"]);
+          return json(await editMatchResult(db, payload));
         case "cancel_match":
           await requireAuth(db, token, ["cancel_match"]);
           return json(await cancelMatch(db, payload));
@@ -889,6 +892,111 @@ async function saveMatchResult(db, payload, session) {
     match_id: matchId,
     match_label: summary.match_label,
     status: "completed",
+    team_a_score: nextAScore,
+    team_b_score: nextBScore,
+    mvp_players: mvpNames,
+    saved_at: savedAt
+  };
+}
+
+async function editMatchResult(db, payload) {
+  const matchId = String(payload.match_id || "").trim();
+  let players = Array.isArray(payload.players) ? payload.players : [];
+  if (!matchId) throw new Error("match_id is required");
+  if (!players.length) throw new Error("players is required");
+
+  const summary = await db.prepare("SELECT * FROM match_summary WHERE match_id = ?").bind(matchId).first();
+  if (!summary) throw new Error("Không tìm thấy trận: " + matchId);
+  if (summary.status !== "completed") {
+    throw new Error("Chỉ sửa được trận đã hoàn tất trong lịch sử.");
+  }
+
+  const matchType = String(payload.match_type || summary.match_type || "internal").trim().toLowerCase();
+  players = applyTeamMvpRules(players, matchType);
+
+  const removedLogs = (await db.prepare("SELECT * FROM rating_log WHERE match_id = ?").bind(matchId).all()).results || [];
+  await db.prepare("DELETE FROM rating_log WHERE match_id = ?").bind(matchId).run();
+  await recalculateRosterFromLogs(db, removedLogs);
+
+  const rosterRows = await db.prepare("SELECT * FROM players").all();
+  const rosterMap = {};
+  for (const r of rosterRows.results || []) {
+    rosterMap[normalizeName(r.name)] = r;
+  }
+
+  const savedAt = new Date().toISOString();
+  const matchDate = summary.match_date || "";
+  const nextAScore = clampPositiveIntScore(payload.team_a_score, summary.team_a_score);
+  const nextBScore = clampPositiveIntScore(payload.team_b_score, summary.team_b_score);
+  const opponentName = payload.opponent_name != null ? String(payload.opponent_name).trim() : summary.opponent_name;
+
+  const historyRows = await db.prepare("SELECT * FROM match_history WHERE match_id = ?").bind(matchId).all();
+  const playerMap = {};
+  players.forEach((p) => { playerMap[normalizeName(p.player_name)] = p; });
+
+  const mergedPlayers = [];
+  for (const row of historyRows.results || []) {
+    const incoming = playerMap[normalizeName(row.player_name)];
+    if (!incoming) continue;
+    const roster = rosterMap[normalizeName(row.player_name)];
+    mergedPlayers.push({
+      player_name: row.player_name,
+      team: String(row.team || "").toUpperCase(),
+      starter: !!row.starter,
+      match_score: Number(incoming.match_score) || 7,
+      goals: clampStatCount(incoming.goals),
+      assists: clampStatCount(incoming.assists),
+      rating_before: clampRating(roster?.base_rating ?? roster?.rating ?? row.rating_before),
+      mvp_count_before: Math.max(0, Math.round(Number(roster?.mvp_count) || 0)),
+      is_mvp: !!incoming.is_mvp
+    });
+  }
+  if (!mergedPlayers.length) throw new Error("Không có cầu thủ để cập nhật.");
+
+  const finalized = applyTeamMvpRules(mergedPlayers, matchType);
+  const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
+  const playerMapFinal = {};
+  finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
+
+  const updateHist = db.prepare(`
+    UPDATE match_history SET
+      status = 'completed', team_a_score = ?, team_b_score = ?, match_score = ?,
+      goals = ?, assists = ?, is_mvp = ?, rating_before = ?, rating_delta = ?,
+      rating_after = ?, result_saved_at = ?
+    WHERE id = ?
+  `);
+
+  const histStmts = [];
+  for (const row of historyRows.results || []) {
+    const item = playerMapFinal[normalizeName(row.player_name)];
+    if (!item) continue;
+    const ratingBefore = clampRating(item.rating_before);
+    const delta = calcRatingDelta(item.match_score);
+    const ratingAfter = clampRating(ratingBefore + delta);
+    histStmts.push(updateHist.bind(
+      nextAScore, nextBScore, item.match_score,
+      clampStatCount(item.goals), clampStatCount(item.assists),
+      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt, row.id
+    ));
+  }
+  if (histStmts.length) await db.batch(histStmts);
+
+  await db.prepare(`
+    UPDATE match_summary SET
+      team_a_score = ?, team_b_score = ?, opponent_name = ?,
+      mvp_players = ?, result_saved_at = ?
+    WHERE match_id = ?
+  `).bind(String(nextAScore), String(nextBScore), opponentName || null, mvpNames.join(", "), savedAt, matchId).run();
+
+  await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    match_id: matchId,
+    match_label: summary.match_label,
+    status: "completed",
+    edited: true,
     team_a_score: nextAScore,
     team_b_score: nextBScore,
     mvp_players: mvpNames,

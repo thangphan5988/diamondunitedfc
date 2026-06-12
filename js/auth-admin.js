@@ -175,10 +175,23 @@ async function adminLogout(){
 function updateResultModalPerms(){
   const canResult = isLoggedIn() && canEnterAnyResult();
   const canCancel = isLoggedIn() && hasPerm(PERMS.CANCEL_MATCH);
-  if(matchLocked) updateLockBannerContent();
+  if(matchLocked && !isEditingCompletedResult()) updateLockBannerContent();
   const cancelBtn = document.getElementById("btnCancelMatch");
-  if(cancelBtn) cancelBtn.style.display = canCancel ? "" : "none";
   const saveBtn = document.getElementById("btnSaveResult");
+
+  if(typeof isEditingCompletedResult === "function" && isEditingCompletedResult()){
+    if(cancelBtn) cancelBtn.style.display = "none";
+    if(saveBtn){
+      saveBtn.style.display = canFinalizeMatch() ? "" : "none";
+      saveBtn.textContent = "Lưu thay đổi";
+      saveBtn.classList.remove("btnDone");
+      saveBtn.disabled = false;
+      saveBtn.title = "";
+    }
+    return;
+  }
+
+  if(cancelBtn) cancelBtn.style.display = canCancel ? "" : "none";
   if(saveBtn){
     saveBtn.style.display = canResult ? "" : "none";
     if(canFinalizeMatch() && isCapMode()){

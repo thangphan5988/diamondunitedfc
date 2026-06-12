@@ -1,10 +1,114 @@
 /* Result modal, save match scores */
 
+let editResultState = null;
+
+function isEditingCompletedResult(){
+  return !!editResultState?.match_id;
+}
+
+function clearEditResultState(){
+  editResultState = null;
+  const titleEl = document.getElementById("resultModalTitle");
+  if(titleEl) titleEl.textContent = "Kết quả trận";
+}
+
+function buildFormPlayersFromResult(lastResultObj, cap){
+  const savedLast = lastResult;
+  const savedMode = lineupMode;
+  lastResult = lastResultObj;
+  lineupMode = cap ? "cap" : "internal";
+  const list = getAllMatchPlayers();
+  lastResult = savedLast;
+  lineupMode = savedMode;
+  return list;
+}
+
+function getResultFormPlayers(){
+  if(editResultState?.formPlayers?.length) return editResultState.formPlayers;
+  return getAllMatchPlayers();
+}
+
+function getRatingBeforeForResultForm(player){
+  if(editResultState?.ratingBeforeMap?.[player.name] != null){
+    return Number(editResultState.ratingBeforeMap[player.name]) || 5;
+  }
+  return Number(player.rating) || 5;
+}
+
+async function openEditResultModal(historyIdx, ev){
+  if(ev) ev.stopPropagation();
+  clearError();
+  if(!isLoggedIn() || !canFinalizeMatch()){
+    showError("Chỉ Host mới được sửa kết quả trận đã hoàn tất.");
+    return;
+  }
+
+  const match = cachedHistoryMatches[historyIdx];
+  if(!match?.match_id) return;
+
+  try{
+    const data = await apiGet("get_match_detail", {match_id: match.match_id});
+    if(!data.summary || !data.players?.length){
+      showError("Không có dữ liệu trận để sửa.");
+      return;
+    }
+
+    const summary = data.summary;
+    const cap = isCapMatchFromDetail(summary, data.players);
+    const rebuilt = rebuildLastResultFromDetail(data.players, summary);
+
+    editResultState = {
+      match_id: summary.match_id,
+      summary,
+      cap,
+      formPlayers: buildFormPlayersFromResult(rebuilt, cap),
+      ratingBeforeMap: {},
+      playerMatchScores: {},
+      playerMatchGoals: {},
+      playerMatchAssists: {},
+      pendingTeamAScore: formatIntScoreDisplay(summary.team_a_score),
+      pendingTeamBScore: formatIntScoreDisplay(summary.team_b_score),
+      opponentTeamName: summary.opponent_name || "",
+      formationA: normalizeFormationValue(summary.formation_a, formationA),
+      formationB: normalizeFormationValue(summary.formation_b, formationB)
+    };
+
+    data.players.forEach(hp => {
+      const name = hp.player_name;
+      if(!name) return;
+      editResultState.ratingBeforeMap[name] = Number(hp.rating_before ?? hp.rating) || 5;
+      if(hp.match_score != null && hp.match_score !== ""){
+        editResultState.playerMatchScores[name] = Number(hp.match_score);
+      }
+      editResultState.playerMatchGoals[name] = Number(hp.goals) || 0;
+      editResultState.playerMatchAssists[name] = Number(hp.assists) || 0;
+    });
+
+    editResultState.formPlayers.forEach(p => {
+      if(editResultState.playerMatchScores[p.name] == null){
+        editResultState.playerMatchScores[p.name] = 7;
+      }
+    });
+
+    const titleEl = document.getElementById("resultModalTitle");
+    if(titleEl) titleEl.textContent = "Sửa kết quả trận";
+
+    renderResultForm();
+    document.getElementById("resultModal").classList.add("show");
+    syncModalOpenState();
+    updateResultModalPerms();
+  }catch(e){
+    console.error(e);
+    showError(e.message || "Không mở được form sửa kết quả.");
+  }
+}
+
 function isResultModalOpen(){
   return document.getElementById("resultModal")?.classList.contains("show");
 }
 
 function shouldPreserveLocalMatchResult(){
+  if(isEditingCompletedResult()) return true;
   if(isResultModalOpen()) return true;
   if(isCapHlvView() && matchLocked && currentImageFilename && canResultCap()) return true;
   return false;
@@ -13,7 +117,16 @@ function shouldPreserveLocalMatchResult(){
 function syncResultFormDraftFromDom(){
   syncPendingScoresFromInputs();
   const opponentEl = document.getElementById("opponentTeamName");
-  if(opponentEl) opponentTeamName = String(opponentEl.value || "").trim();
+  const opponentVal = opponentEl ? String(opponentEl.value || "").trim() : "";
+  if(isEditingCompletedResult()){
+    editResultState.opponentTeamName = opponentVal;
+  }else if(opponentEl){
+    opponentTeamName = opponentVal;
+  }
+
+  const scoreMap = isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores;
+  const goalMap = isEditingCompletedResult() ? editResultState.playerMatchGoals : playerMatchGoals;
+  const assistMap = isEditingCompletedResult() ? editResultState.playerMatchAssists : playerMatchAssists;
 
   document.querySelectorAll("#resultTeams .resultPlayer").forEach(row => {
     if(row.classList.contains("resultPlayerHead")) return;
@@ -21,10 +134,10 @@ function syncResultFormDraftFromDom(){
     if(!nameEl) return;
     const name = nameEl.textContent.trim();
     const sel = row.querySelector("select");
-    if(sel && sel.value !== "") playerMatchScores[name] = Number(sel.value);
+    if(sel && sel.value !== "") scoreMap[name] = Number(sel.value);
     const statInputs = row.querySelectorAll(".resultStatInput");
-    if(statInputs[0]) playerMatchGoals[name] = clampMatchStat(statInputs[0].value);
-    if(statInputs[1]) playerMatchAssists[name] = clampMatchStat(statInputs[1].value);
+    if(statInputs[0]) goalMap[name] = clampMatchStat(statInputs[0].value);
+    if(statInputs[1]) assistMap[name] = clampMatchStat(statInputs[1].value);
   });
 }
 
@@ -52,6 +165,7 @@ function refreshResultMvpTags(){
 }
 
 async function openResultModal(){
+  clearEditResultState();
   if(!isLoggedIn() || !canEnterAnyResult()){
     showError("Bạn cần đăng nhập với quyền nhập kết quả.");
     return;
@@ -100,6 +214,16 @@ function resolveMatchScores(hostFinalize){
 }
 
 function closeResultModal(){
+  if(isEditingCompletedResult()){
+    if(isCapMode()){
+      opponentTeamName = editResultState.opponentTeamName || opponentTeamName;
+    }
+    clearEditResultState();
+    document.getElementById("resultModal").classList.remove("show");
+    syncModalOpenState();
+    updateResultModalPerms();
+    return;
+  }
   if(isCapMode()){
     const opponentEl = document.getElementById("opponentTeamName");
     if(opponentEl) opponentTeamName = String(opponentEl.value || "").trim();
@@ -152,19 +276,34 @@ async function cancelPendingMatch(){
 
 function renderResultForm(){
   if(isResultModalOpen()) syncResultFormDraftFromDom();
-  else syncPendingScoresFromInputs();
+  else if(!isEditingCompletedResult()) syncPendingScoresFromInputs();
 
-  const cap = isCapMode();
+  const cap = isEditingCompletedResult() ? !!editResultState.cap : isCapMode();
+  const scoreMap = isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores;
+  const goalMap = isEditingCompletedResult() ? editResultState.playerMatchGoals : playerMatchGoals;
+  const assistMap = isEditingCompletedResult() ? editResultState.playerMatchAssists : playerMatchAssists;
+  const editScores = isEditingCompletedResult()
+    ? { a: editResultState.pendingTeamAScore, b: editResultState.pendingTeamBScore }
+    : null;
+
   document.getElementById("opponentFieldWrap").style.display = cap ? "" : "none";
-  document.getElementById("opponentTeamName").value = opponentTeamName || "";
+  document.getElementById("opponentTeamName").value = isEditingCompletedResult()
+    ? (editResultState.opponentTeamName || "")
+    : (opponentTeamName || "");
   bindResultFormInputs();
 
   const scoreA = document.getElementById("teamAScore");
   const scoreB = document.getElementById("teamBScore");
-  if(scoreA) scoreA.value = formatIntScoreDisplay(pendingTeamAScore);
-  if(scoreB) scoreB.value = formatIntScoreDisplay(pendingTeamBScore);
+  if(scoreA) scoreA.value = formatIntScoreDisplay(editScores ? editScores.a : pendingTeamAScore);
+  if(scoreB) scoreB.value = formatIntScoreDisplay(editScores ? editScores.b : pendingTeamBScore);
   applyResultScoreFieldPerms();
   updateHlvResultStatusUI();
+
+  const matchLabel = isEditingCompletedResult()
+    ? displayMatchLabel(editResultState.summary)
+    : displayMatchLabel();
+  const formFormationA = isEditingCompletedResult() ? editResultState.formationA : (cap ? formationCapMain : formationA);
+  const formFormationB = isEditingCompletedResult() ? editResultState.formationB : (cap ? formationCapSub : formationB);
 
   if(cap){
     document.getElementById("scoreLabelA").textContent = "⚽ DUFC";
@@ -172,23 +311,32 @@ function renderResultForm(){
     document.getElementById("scoreLabelB").textContent = "Đội bạn";
     document.getElementById("scoreLabelB").style.color = "#94a3b8";
     document.getElementById("resultSummary").textContent =
-      `Trận ${displayMatchLabel()} · ${formationCapMain} / ${formationCapSub}`;
+      `Trận ${matchLabel} · ${formFormationA} / ${formFormationB}`;
   }else{
     document.getElementById("scoreLabelA").textContent = "🔴 Đội A";
     document.getElementById("scoreLabelA").style.color = "#ef4444";
     document.getElementById("scoreLabelB").textContent = "🟡 Đội B";
     document.getElementById("scoreLabelB").style.color = "#facc15";
     document.getElementById("resultSummary").textContent =
-      `Trận ${displayMatchLabel()} · ${formationA} vs ${formationB}`;
+      `Trận ${matchLabel} · ${formFormationA} vs ${formFormationB}`;
   }
 
   const opponentEl = document.getElementById("opponentTeamName");
-  if(opponentEl){
+  if(opponentEl && !isEditingCompletedResult()){
     opponentEl.disabled = !!(isCapHlvResultOnly() && capHlvResultConfirmed());
+  }else if(opponentEl){
+    opponentEl.disabled = false;
   }
 
-  document.getElementById("resultHint").innerHTML = cap
-    ? `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+  if(isEditingCompletedResult()){
+    document.getElementById("resultHint").innerHTML =
+      `<b>Sửa kết quả trận đã hoàn tất.</b> Rating và MVP sẽ được tính lại từ đầu cho trận này.<br>
+       <b>Rating</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
+       <b>MVP</b>: mỗi đội (hoặc DUFC với trận Cáp) 1 người điểm cao nhất → +1 MVP.` +
+      (cap ? `<br><b>⚽ BT / 🅰️ KT</b>: bàn thắng và kiến tạo từng cầu thủ.` : "");
+  }else if(cap){
+    document.getElementById("resultHint").innerHTML =
+      `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
        <b>MVP</b>: 1 người điểm cao nhất trong đội DUFC → cộng <b>1 lần MVP</b>.<br>
        <b>⚽ BT / 🅰️ KT</b>: bàn thắng và kiến tạo từng cầu thủ.` +
       (canFinalizeMatch()
@@ -197,8 +345,10 @@ function renderResultForm(){
           : `<br><b>Host</b>: chỉnh tỉ số/tên đội khi cần · chờ HLV Cáp xác nhận → <b>Xác nhận trận đấu</b>.`)
         : (isCapHlvResultOnly()
           ? `<br><b>HLV Cáp</b>: nhập tỉ số & chấm điểm → <b>Xác nhận HLV Cáp</b>. Host chốt trận sau.`
-          : ""))
-    : `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+          : ""));
+  }else{
+    document.getElementById("resultHint").innerHTML =
+      `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
        <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.` +
       (canFinalizeMatch()
         ? `<br><b>Host</b>: chỉnh tỉ số khi cần · chờ 2 HLV xác nhận → <b>Xác nhận trận đấu</b>. Điểm cầu thủ đội đã xác nhận không sửa được.`
@@ -207,22 +357,23 @@ function renderResultForm(){
           : (canResultTeamB() && !canResultTeamA()
             ? `<br><b>HLV Đội B</b>: nhập bàn thắng Đội B + chấm điểm cầu thủ → <b>Xác nhận Đội B</b>.`
             : "")));
+  }
 
-  const mvpNames = getMvpNamesFromScores();
+  const mvpNames = getMvpNamesFromScores(scoreMap);
   const teams = cap
     ? [{key: "CAP", title: "⚽ DUFC", color: "#38bdf8"}]
     : [
         {key: "A", title: "🔴 Đội A (Áo Đỏ)", color: "#ef4444"},
         {key: "B", title: "🟡 Đội B (Áo Vàng)", color: "#facc15"}
       ].filter(team => {
-        if(canFinalizeMatch()) return true;
+        if(isEditingCompletedResult() || canFinalizeMatch()) return true;
         if(team.key === "A") return canResultTeamA();
         if(team.key === "B") return canResultTeamB();
         return false;
       });
 
   document.getElementById("resultTeams").innerHTML = teams.map(team => {
-    const list = getAllMatchPlayers().filter(p => p.team === team.key);
+    const list = getResultFormPlayers().filter(p => p.team === team.key);
     const header = cap
       ? `<div class="resultPlayer resultPlayerHead">
           <span></span><span>Cầu thủ</span>
@@ -237,18 +388,18 @@ function renderResultForm(){
           <span></span>
         </div>`;
     const rows = list.map(p => {
-      const score = Number(playerMatchScores[p.name] ?? 7);
-      const goals = Number(playerMatchGoals[p.name] ?? 0);
-      const assists = Number(playerMatchAssists[p.name] ?? 0);
-      const ratingBefore = Number(p.rating) || 5;
+      const score = Number(scoreMap[p.name] ?? 7);
+      const goals = Number(goalMap[p.name] ?? 0);
+      const assists = Number(assistMap[p.name] ?? 0);
+      const ratingBefore = getRatingBeforeForResultForm(p);
       const isMvp = mvpNames.includes(p.name);
       const mvpTotal = Number(p.mvp_count) || 0;
       const encodedName = encodeURIComponent(p.name);
       const roleMeta = cap
         ? `${p.capLabel || (p.starter ? "Ra sân" : "Dự bị")}`
         : (p.starter ? p.assigned : "Dự bị");
-      const ratingLocked = isPlayerScoreLocked(p.team);
-      const statLocked = isPlayerStatInputLocked(p.team);
+      const ratingLocked = !isEditingCompletedResult() && isPlayerScoreLocked(p.team);
+      const statLocked = !isEditingCompletedResult() && isPlayerStatInputLocked(p.team);
       const statInputs = cap
         ? `<input class="resultStatInput" type="number" min="0" max="30" value="${goals}" ${statLocked ? "disabled" : ""}
             onchange="setPlayerMatchGoals(decodeURIComponent('${encodedName}'), this.value)">
@@ -294,37 +445,44 @@ function persistPendingMatchStats(){
 
 function setPlayerMatchScore(name, value){
   syncResultFormDraftFromDom();
-  const player = getAllMatchPlayers().find(p => p.name === name);
-  if(player && isPlayerScoreLocked(player.team)) return;
-  playerMatchScores[name] = Number(value);
-  persistPendingMatchStats();
+  const player = getResultFormPlayers().find(p => p.name === name);
+  if(player && !isEditingCompletedResult() && isPlayerScoreLocked(player.team)) return;
+  const scoreMap = isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores;
+  scoreMap[name] = Number(value);
+  if(!isEditingCompletedResult()) persistPendingMatchStats();
   refreshResultMvpTags();
 }
 
 function setPlayerMatchGoals(name, value){
-  const player = getAllMatchPlayers().find(p => p.name === name);
-  if(player && isPlayerStatInputLocked(player.team)) return;
-  playerMatchGoals[name] = clampMatchStat(value);
-  persistPendingMatchStats();
-  persistPendingScores();
+  const player = getResultFormPlayers().find(p => p.name === name);
+  if(player && !isEditingCompletedResult() && isPlayerStatInputLocked(player.team)) return;
+  const goalMap = isEditingCompletedResult() ? editResultState.playerMatchGoals : playerMatchGoals;
+  goalMap[name] = clampMatchStat(value);
+  if(!isEditingCompletedResult()){
+    persistPendingMatchStats();
+    persistPendingScores();
+  }
 }
 
 function setPlayerMatchAssists(name, value){
-  const player = getAllMatchPlayers().find(p => p.name === name);
-  if(player && isPlayerStatInputLocked(player.team)) return;
-  playerMatchAssists[name] = clampMatchStat(value);
-  persistPendingMatchStats();
-  persistPendingScores();
+  const player = getResultFormPlayers().find(p => p.name === name);
+  if(player && !isEditingCompletedResult() && isPlayerStatInputLocked(player.team)) return;
+  const assistMap = isEditingCompletedResult() ? editResultState.playerMatchAssists : playerMatchAssists;
+  assistMap[name] = clampMatchStat(value);
+  if(!isEditingCompletedResult()){
+    persistPendingMatchStats();
+    persistPendingScores();
+  }
 }
 
-function pickTeamMvp_(teamPlayers){
+function pickTeamMvp_(teamPlayers, scoreMap){
   if(!teamPlayers.length) return null;
   let maxScore = -1;
   teamPlayers.forEach(p => {
-    const s = Number(playerMatchScores[p.name] ?? 7);
+    const s = Number(scoreMap[p.name] ?? 7);
     if(s > maxScore) maxScore = s;
   });
-  const tied = teamPlayers.filter(p => Number(playerMatchScores[p.name] ?? 7) === maxScore);
+  const tied = teamPlayers.filter(p => Number(scoreMap[p.name] ?? 7) === maxScore);
   tied.sort((a, b) => {
     if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
     return a.name.localeCompare(b.name, "vi");
@@ -332,14 +490,17 @@ function pickTeamMvp_(teamPlayers){
   return tied[0] ? tied[0].name : null;
 }
 
-function getMvpNamesFromScores(){
-  if(isCapMode()){
-    const winner = pickTeamMvp_(getAllMatchPlayers());
+function getMvpNamesFromScores(scoreMapOverride){
+  const scoreMap = scoreMapOverride || (isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores);
+  const cap = isEditingCompletedResult() ? !!editResultState.cap : isCapMode();
+  const formPlayers = getResultFormPlayers();
+  if(cap){
+    const winner = pickTeamMvp_(formPlayers, scoreMap);
     return winner ? [winner] : [];
   }
   const mvps = [];
   ["A", "B"].forEach(team => {
-    const winner = pickTeamMvp_(getAllMatchPlayers().filter(p => p.team === team));
+    const winner = pickTeamMvp_(formPlayers.filter(p => p.team === team), scoreMap);
     if(winner) mvps.push(winner);
   });
   return mvps;
@@ -348,6 +509,78 @@ function getMvpNamesFromScores(){
 async function saveMatchResult(){
   clearError();
   syncResultFormDraftFromDom();
+
+  if(isEditingCompletedResult()){
+    if(!isLoggedIn() || !canFinalizeMatch()){
+      showError("Chỉ Host mới được sửa kết quả trận đã hoàn tất.");
+      return;
+    }
+
+    const cap = !!editResultState.cap;
+    const teamAScore = readScoreInput("teamAScore");
+    const teamBScore = readScoreInput("teamBScore");
+    if(teamAScore === null || teamBScore === null){
+      showError(cap ? "Vui lòng nhập tỷ số DUFC và đội bạn (số nguyên ≥ 0)." : "Vui lòng nhập tỷ số 2 đội (số nguyên ≥ 0).");
+      return;
+    }
+
+    let opponent = editResultState.opponentTeamName || "";
+    if(cap){
+      opponent = String(document.getElementById("opponentTeamName").value || "").trim();
+      if(!opponent){
+        showError("Vui lòng nhập tên đội bạn.");
+        return;
+      }
+    }
+
+    const scoreMap = editResultState.playerMatchScores;
+    const goalMap = editResultState.playerMatchGoals;
+    const assistMap = editResultState.playerMatchAssists;
+    const mvpNames = getMvpNamesFromScores(scoreMap);
+    const payloadPlayers = getResultFormPlayers().map(p => ({
+      player_name: p.name,
+      team: p.team,
+      starter: !!p.starter,
+      match_score: Number(scoreMap[p.name] ?? 7),
+      goals: cap ? clampMatchStat(goalMap[p.name] ?? 0) : 0,
+      assists: cap ? clampMatchStat(assistMap[p.name] ?? 0) : 0,
+      is_mvp: mvpNames.includes(p.name)
+    }));
+
+    const label = displayMatchLabel(editResultState.summary);
+    if(!confirm(`Lưu thay đổi kết quả trận "${label}"?\nRating và MVP sẽ được tính lại.`)){
+      return;
+    }
+
+    const btn = document.getElementById("btnSaveResult");
+    btn.disabled = true;
+    btn.textContent = "Đang lưu...";
+
+    try{
+      const data = await apiPost("edit_match_result", {
+        match_id: editResultState.match_id,
+        match_type: cap ? "cap" : "internal",
+        opponent_name: cap ? opponent : "",
+        team_a_score: teamAScore,
+        team_b_score: teamBScore,
+        players: payloadPlayers
+      });
+
+      closeResultModal();
+      await loadDefaultRoster();
+      await loadMatchHistory();
+      if(document.getElementById("tabLatest").classList.contains("active")) loadLatestMatch();
+      if(document.getElementById("tabStats").classList.contains("active")) renderStats();
+      showToast(`✓ Đã cập nhật kết quả trận ${data.match_label || label}`, "success", 4000);
+    }catch(e){
+      console.error(e);
+      showError(e.message || "Không lưu được thay đổi kết quả.");
+    }finally{
+      updateResultModalPerms();
+    }
+    return;
+  }
+
   if(!isLoggedIn() || !canEnterAnyResult()){
     showError("Bạn cần quyền nhập kết quả.");
     return;
