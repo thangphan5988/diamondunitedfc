@@ -76,9 +76,12 @@
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,#0f2744 0%,#07111f 100%)
 }
+.teamCardPortraitBtn{cursor:pointer}
+.teamCardPortraitBtn:hover img{transform:scale(1.02);filter:brightness(1.06)}
+.teamCardPortraitBtn:focus-visible{outline:2px solid #38bdf8;outline-offset:-2px}
 .teamCardPortrait img{
   width:100%;height:100%;object-fit:contain;object-position:center top;
-  display:block
+  display:block;transition:transform .18s ease,filter .18s ease
 }
 
 .teamCardFoot{
@@ -126,4 +129,39 @@
   .teamCardName{font-size:12px}
   .teamCardInfoMain b{font-size:18px}
   .teamCardInfoMain span{font-size:9px}
+}
+
+/* Popup chi tiết cầu thủ */
+.teamPlayerModalBox{width:min(440px,96vw)}
+.teamPlayerModalHead{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px
+}
+.teamPlayerModalHead h2{margin:0}
+.teamPlayerModalClose{
+  width:auto;margin:0;padding:6px 12px;flex:0 0 auto;font-size:14px
+}
+.teamPlayerModalBody{padding:0;display:flex;flex-direction:column}
+.teamPlayerModalPortrait{
+  background:linear-gradient(180deg,#0f2744,#07111f);
+  display:flex;align-items:center;justify-content:center;
+  min-height:min(68vh,520px);max-height:72vh;padding:8px
+}
+.teamPlayerModalPortrait img{
+  max-width:100%;max-height:min(68vh,520px);width:auto;height:auto;
+  object-fit:contain;object-position:center top;
+  filter:drop-shadow(0 12px 28px rgba(0,0,0,.45))
+}
+.teamPlayerModalInfo{
+  padding:14px 16px 16px;display:grid;gap:8px;
+  border-top:1px solid var(--line);background:#0a1628
+}
+.teamPlayerInfoRow{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 10px;border-radius:10px;background:#020617;border:1px solid var(--line)
+}
+.teamPlayerInfoRow span{font-size:11px;color:#94a3b8;font-weight:700}
+.teamPlayerInfoRow b{font-size:14px;color:#f8fafc;font-weight:900}
+.teamPlayerModalDesc{
+  margin:0;padding:12px 16px 16px;font-size:12px;line-height:1.55;font-style:italic;
+  color:#cbd5e1;border-top:1px solid rgba(56,189,248,.12);background:#07111f
 }

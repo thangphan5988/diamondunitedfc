@@ -80,6 +80,7 @@ async function main() {
       base_rating: Number(existing.base_rating ?? existing.rating) || 5,
       mvp_count: Number(existing.mvp_count) || 0,
       jersey_number: existing.jersey_number ?? "",
+      description: existing.description || "",
       joined_at: existing.joined_at || "",
       last_match_at: existing.last_match_at || "",
       avatar,

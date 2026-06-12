@@ -73,7 +73,10 @@ function teamCardHtml(p){
     <div class="teamCardInner">
       <span class="teamCardCorner" aria-hidden="true"></span>
       <span class="teamCardCorner teamCardCorner--br" aria-hidden="true"></span>
-      <div class="teamCardPortrait">
+      <div class="teamCardPortrait teamCardPortraitBtn" role="button" tabindex="0"
+        data-player-name="${escapeAttr(p.name)}"
+        onclick="openTeamPlayerModal(this.dataset.playerName)"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTeamPlayerModal(this.dataset.playerName)}">
         <img src="${escapeAttr(portrait)}" alt="" loading="lazy"
           onerror="this.src='${escapeAttr(defaultAvatar(p.name))}'">
       </div>
@@ -137,4 +140,61 @@ async function renderTeams(){
 function invalidateTeamsStats(){
   teamsStatsLoaded = false;
   teamsStatsMap = new Map();
+}
+
+function teamPlayerInfoRow(label, value){
+  if(value == null || value === "") return "";
+  return `<div class="teamPlayerInfoRow"><span>${escapeHtml(label)}</span><b>${escapeHtml(String(value))}</b></div>`;
+}
+
+function openTeamPlayerModal(name){
+  const key = normalizeName(name);
+  const raw = players.find(p => normalizeName(p.name) === key);
+  if(!raw) return;
+
+  const p = enrichPlayerForTeams(raw);
+  const display = playerDisplayName(p);
+  const portrait = profileCardSrc(p.profile_card, p.name, p.avatar);
+  const jersey = p.jersey_number != null && p.jersey_number !== "" ? String(Number(p.jersey_number)) : "—";
+  const rating = Number.isFinite(Number(p.rating)) ? Number(p.rating) : 5;
+  const mvp = Number(p.mvp_count) || 0;
+  const goals = Number(p.total_goals) || 0;
+  const assists = Number(p.total_assists) || 0;
+
+  const modal = document.getElementById("teamPlayerModal");
+  const img = document.getElementById("teamPlayerModalImg");
+  const info = document.getElementById("teamPlayerModalInfo");
+  if(!modal || !img || !info) return;
+
+  document.getElementById("teamPlayerModalName").textContent = display;
+  const canonEl = document.getElementById("teamPlayerModalCanon");
+  if(canonEl){
+    canonEl.textContent = p.display_name && p.display_name !== p.name ? `@${p.name}` : "";
+  }
+
+  img.src = portrait;
+  img.alt = display;
+  img.onerror = () => { img.src = defaultAvatar(p.name); };
+
+  const rows = [
+    teamPlayerInfoRow("Số áo", jersey),
+    teamPlayerInfoRow("Vị trí", p.main),
+    teamPlayerInfoRow("Rating", rating),
+    mvp > 0 ? teamPlayerInfoRow("MVP", mvp) : "",
+    goals > 0 ? teamPlayerInfoRow("Bàn thắng", goals) : "",
+    assists > 0 ? teamPlayerInfoRow("Kiến tạo", assists) : ""
+  ].filter(Boolean).join("");
+
+  info.innerHTML = rows || `<div class="meta">Chưa có thông tin thêm.</div>`;
+
+  const descEl = document.getElementById("teamPlayerModalDesc");
+  if(descEl) descEl.textContent = playerDescription(p);
+
+  modal.classList.add("show");
+  syncModalOpenState();
+}
+
+function closeTeamPlayerModal(){
+  document.getElementById("teamPlayerModal")?.classList.remove("show");
+  syncModalOpenState();
 }

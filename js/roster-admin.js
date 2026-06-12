@@ -63,6 +63,40 @@ function rosterLabeledInput(key, field, label, hint, attrs){
   </label>`;
 }
 
+function rosterLabeledTextarea(key, field, label, hint, value){
+  const id = rosterFieldId(key, field);
+  const hintHtml = hint ? `<span class="rosterFieldHint">${escapeHtml(hint)}</span>` : "";
+  return `<label class="rosterFieldGroup" for="${id}">
+    <span class="rosterFieldLabel">${escapeHtml(label)}${hintHtml}</span>
+    <textarea id="${id}" rows="3" placeholder="Câu tự giới thiệu ngầu & vui...">${escapeHtml(value || "")}</textarea>
+  </label>`;
+}
+
+function rosterDescriptionFieldHtml(key, data){
+  const desc = String(data?.description || "").trim();
+  return `<div class="rosterDescriptionField">
+    ${rosterLabeledTextarea(key, "description", "Mô tả (bio)", "Để trống → tự sinh khi lưu", desc)}
+    <button type="button" class="secondary rosterSuggestDescBtn" onclick="suggestRosterDescription('${escapeAttr(key)}')">✨ Gợi ý mô tả</button>
+  </div>`;
+}
+
+function suggestRosterDescription(key){
+  const form = readRosterForm(key);
+  const ta = document.getElementById(rosterFieldId(key, "description"));
+  if(!ta) return;
+  if(!form.name) return alert("Nhập tên cầu thủ trước.");
+  ta.value = generatePlayerDescription({
+    name: form.name,
+    display_name: form.display_name,
+    main: form.position,
+    position: form.position,
+    profile_card: form.profile_card,
+    avatar: form.avatar,
+    jersey_number: form.jersey_number,
+    rating: form.base_rating
+  });
+}
+
 function rosterAvatarPreviewInner(avatarUrl, name){
   if(!avatarUrl) return `<span class="meta rosterAvatarEmpty">Chưa có avatar</span>`;
   return `<img class="rosterAvatarPreviewImg" src="${escapeAttr(avatarSrc(avatarUrl, name))}" alt="" onerror="this.src='${defaultAvatar(name || 'DUFC')}'">`;
@@ -121,6 +155,7 @@ function rosterFormFieldsHtml(key, p){
       ${rosterLabeledInput(key, "mvp", "Số MVP", "", `type="number" min="0" step="1" placeholder="0" value="${escapeAttr(String(Number(data.mvp_count) || 0))}"`)}
     </div>
     ${rosterAvatarFieldsHtml(key, data)}
+    ${rosterDescriptionFieldHtml(key, data)}
     <div class="rosterAdminFormRow">
       ${rosterLabeledInput(key, "joined_at", "Ngày tham gia", "", `type="date" value="${escapeAttr(toDateInputValue(data.joined_at))}"`)}
       ${rosterLabeledInput(key, "last_match_at", "Trận gần nhất", "", `type="date" value="${escapeAttr(toDateInputValue(data.last_match_at))}"`)}
@@ -147,6 +182,7 @@ function readRosterForm(key){
     mvp_count: Number(val("mvp")),
     avatar: val("avatar").trim(),
     profile_card: val("profile_card").trim(),
+    description: val("description").trim(),
     joined_at: fromDateInputValue(val("joined_at")),
     last_match_at: fromDateInputValue(val("last_match_at"))
   };
@@ -254,6 +290,19 @@ async function saveRosterPlayer(key){
   if(!form.name) return alert("Nhập tên cầu thủ (name).");
   if(!form.position) return alert("Nhập vị trí sở trường (mục đầu trong chuỗi).");
 
+  if(!form.description.trim()){
+    form.description = generatePlayerDescription({
+      name: form.name,
+      display_name: form.display_name,
+      main: form.position,
+      position: form.position,
+      profile_card: form.profile_card,
+      avatar: form.avatar,
+      jersey_number: form.jersey_number,
+      rating: form.base_rating
+    });
+  }
+
   const payload = {
     name: form.name,
     display_name: form.display_name,
@@ -265,6 +314,7 @@ async function saveRosterPlayer(key){
     mvp_count: Number.isFinite(form.mvp_count) ? form.mvp_count : 0,
     avatar: form.avatar,
     profile_card: form.profile_card,
+    description: form.description,
     joined_at: form.joined_at,
     last_match_at: form.last_match_at
   };

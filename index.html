@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.41">
   <link rel="stylesheet" href="css/latest-match.css?v=2.4.32">
-  <link rel="stylesheet" href="css/teams.css?v=2.4.54">
+  <link rel="stylesheet" href="css/teams.css?v=2.4.60">
 </head>
 <body>
 <div class="wrap">
@@ -25,7 +25,7 @@
       <p class="siteTagline">Sân 7 · Football Club</p>
     </div>
   </header>
-  <div class="buildVersion">Build v2.4.57</div>
+  <div class="buildVersion">Build v2.4.59</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -289,7 +289,6 @@
       <div class="teamsViewHead">
         <div>
           <h2>Teams</h2>
-          <div class="meta">Danh sách cầu thủ DUFC · thẻ full avatar & thông tin đội</div>
           <div id="teamsCount" class="meta" style="margin-top:4px"></div>
         </div>
         <div class="teamsToolbar">
@@ -377,6 +376,25 @@
   </div>
 </div>
 
+<div id="teamPlayerModal" class="confirmModal" onclick="if(event.target===this) closeTeamPlayerModal()">
+  <div class="modalBox teamPlayerModalBox">
+    <div class="modalHead teamPlayerModalHead">
+      <div>
+        <h2 id="teamPlayerModalName">Cầu thủ</h2>
+        <div id="teamPlayerModalCanon" class="meta"></div>
+      </div>
+      <button type="button" class="teamPlayerModalClose secondary" onclick="closeTeamPlayerModal()">✕</button>
+    </div>
+    <div class="modalBody teamPlayerModalBody">
+      <div class="teamPlayerModalPortrait">
+        <img id="teamPlayerModalImg" src="" alt="">
+      </div>
+      <div id="teamPlayerModalInfo" class="teamPlayerModalInfo"></div>
+      <p id="teamPlayerModalDesc" class="teamPlayerModalDesc"></p>
+    </div>
+  </div>
+</div>
+
 <div id="toastStack" class="toastStack" aria-live="polite"></div>
 
 <div id="overlay" class="overlay">
@@ -437,10 +455,10 @@
   <script src="js/roster-admin.js?v=2.4.43"></script>
   <script src="js/latest-match.js?v=2.4.34"></script>
   <script src="js/tabs-history.js?v=2.4.56"></script>
-  <script src="js/player-helpers.js?v=2.4.43"></script>
+  <script src="js/player-helpers.js?v=2.4.60"></script>
   <script src="js/lineup-confirm.js?v=2.4.0"></script>
-  <script src="js/roster.js?v=2.4.44"></script>
-  <script src="js/teams.js?v=2.4.57"></script>
+  <script src="js/roster.js?v=2.4.60"></script>
+  <script src="js/teams.js?v=2.4.60"></script>
   <script src="js/lineup-algorithm.js?v=2.4.0"></script>
   <script src="js/lineup-random.js?v=2.4.34"></script>
   <script src="js/lineup-hlv.js?v=2.4.34"></script>
