@@ -2,7 +2,7 @@
  * Import trận nội bộ đầu tiên (lineup từ ảnh xuất) + điểm random 7/8/9.
  * Usage: node cloudflare/scripts/import-first-match.mjs
  */
-const WORKER_URL = process.env.WORKER_URL || "https://dufc-api.thangpt5988.workers.dev";
+const WORKER_URL = process.env.WORKER_URL || "https://api.diamondunitedfc.com";
 const PASSWORD = process.env.DUFC_PASSWORD || "dufc2026";
 
 const FORMATION = "3-1-2";

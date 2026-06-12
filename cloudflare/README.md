@@ -33,13 +33,27 @@ npx wrangler secret put MIGRATE_SECRET
 npm run deploy
 ```
 
-Sau deploy, copy URL Worker (vd: `https://dufc-api.<account>.workers.dev`).
+Sau deploy, API production:
+
+- **Custom domain:** `https://api.diamondunitedfc.com` (cấu hình trong `wrangler.toml` → `[[routes]]`)
+- **Fallback workers.dev:** `https://dufc-api.thangpt5988.workers.dev`
+
+### Custom domain `api.diamondunitedfc.com`
+
+1. Thêm site `diamondunitedfc.com` vào [Cloudflare Dashboard](https://dash.cloudflare.com) (cùng account với Worker).
+2. `npm run deploy` — Wrangler tự tạo DNS record cho subdomain `api`.
+3. Nếu nameserver vẫn ở **PA Việt Nam** (web GitHub Pages): vào Cloudflare → Workers → dufc-api → Custom Domains, copy CNAME target rồi thêm trên PA:
+   - **Host:** `api`
+   - **Loại:** CNAME
+   - **Value:** target Cloudflare hiển thị (vd `dufc-api.thangpt5988.workers.dev`)
+
+Frontend (`js/config.js`): `API_BASE_URL = "https://api.diamondunitedfc.com"`.
 
 ## Migrate dữ liệu từ Google Sheets
 
 ```bash
 MIGRATE_SECRET=your-secret \
-WORKER_URL=https://dufc-api.<account>.workers.dev \
+WORKER_URL=https://api.diamondunitedfc.com \
 npm run migrate:sheets
 ```
 
@@ -50,10 +64,10 @@ Script sẽ:
 
 ## Cập nhật Frontend
 
-Trong `index.html`, đổi:
+`js/config.js`:
 
 ```javascript
-const API_BASE_URL = "https://dufc-api.<account>.workers.dev";
+const API_BASE_URL = "https://api.diamondunitedfc.com";
 ```
 
 ## API
