@@ -42,6 +42,7 @@ function applyRosterFromApi(rows){
       mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
       jersey_number: row.jersey_number != null && row.jersey_number !== "" ? Number(row.jersey_number) : null,
       description: String(row.description || "").trim(),
+      birth_date: String(row.birth_date || "").trim(),
       profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,

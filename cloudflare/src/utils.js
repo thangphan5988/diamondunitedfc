@@ -101,6 +101,28 @@ export function parseJerseyNumber(value) {
   return n;
 }
 
+/** Ngày sinh YYYY-MM-DD; null = chưa có. */
+export function parseBirthDate(value) {
+  if (value == null || String(value).trim() === "") return null;
+  const norm = normalizeMatchDate(value);
+  if (!norm) throw new Error("Ngày sinh không hợp lệ (dd/mm/yyyy hoặc chọn trên lịch).");
+
+  const [y, m, d] = norm.split("-").map(Number);
+  const yearNow = new Date().getFullYear();
+  if (y < 1900 || y > yearNow) throw new Error("Năm sinh không hợp lệ.");
+
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) {
+    throw new Error("Ngày sinh không hợp lệ.");
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (dt > today) throw new Error("Ngày sinh không thể ở tương lai.");
+
+  return norm;
+}
+
 export function clampPositiveIntScore(value, fallback = 0) {
   if (value == null || String(value).trim() === "") {
     const fb = Number(fallback);

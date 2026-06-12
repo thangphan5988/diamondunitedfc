@@ -160,6 +160,7 @@ function openTeamPlayerModal(name){
   const mvp = Number(p.mvp_count) || 0;
   const goals = Number(p.total_goals) || 0;
   const assists = Number(p.total_assists) || 0;
+  const birthDisplay = birthDateLabel(p.birth_date);
 
   const modal = document.getElementById("teamPlayerModal");
   const img = document.getElementById("teamPlayerModalImg");
@@ -179,6 +180,7 @@ function openTeamPlayerModal(name){
   const rows = [
     teamPlayerInfoRow("Số áo", jersey),
     teamPlayerInfoRow("Vị trí", p.main),
+    birthDisplay ? teamPlayerInfoRow("Ngày sinh", birthDisplay) : "",
     teamPlayerInfoRow("Rating", rating),
     mvp > 0 ? teamPlayerInfoRow("MVP", mvp) : "",
     goals > 0 ? teamPlayerInfoRow("Bàn thắng", goals) : "",
@@ -188,7 +190,7 @@ function openTeamPlayerModal(name){
   info.innerHTML = rows || `<div class="meta">Chưa có thông tin thêm.</div>`;
 
   const descEl = document.getElementById("teamPlayerModalDesc");
-  if(descEl) descEl.textContent = playerDescription(p);
+  if(descEl) descEl.textContent = generatePlayerDescription(p);
 
   modal.classList.add("show");
   syncModalOpenState();

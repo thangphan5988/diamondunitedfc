@@ -39,6 +39,9 @@ function rosterSideLabel(p){
 
 function toDateInputValue(value){
   if(!value) return "";
+  const s = String(value).trim();
+  const iso = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if(iso) return iso[1];
   const d = new Date(value);
   if(Number.isNaN(d.getTime())) return "";
   return d.toISOString().slice(0, 10);
@@ -75,8 +78,8 @@ function rosterLabeledTextarea(key, field, label, hint, value){
 function rosterDescriptionFieldHtml(key, data){
   const desc = String(data?.description || "").trim();
   return `<div class="rosterDescriptionField">
-    ${rosterLabeledTextarea(key, "description", "Mô tả (bio)", "Để trống → tự sinh khi lưu", desc)}
-    <button type="button" class="secondary rosterSuggestDescBtn" onclick="suggestRosterDescription('${escapeAttr(key)}')">✨ Gợi ý mô tả</button>
+    ${rosterLabeledTextarea(key, "description", "Mô tả (bio)", "Để trống → gán câu nói huyền thoại phù hợp", desc)}
+    <button type="button" class="secondary rosterSuggestDescBtn" onclick="suggestRosterDescription('${escapeAttr(key)}')">✨ Gợi ý câu nói</button>
   </div>`;
 }
 
@@ -90,10 +93,12 @@ function suggestRosterDescription(key){
     display_name: form.display_name,
     main: form.position,
     position: form.position,
+    secondary_positions: form.secondary_positions,
     profile_card: form.profile_card,
     avatar: form.avatar,
     jersey_number: form.jersey_number,
-    rating: form.base_rating
+    rating: form.base_rating,
+    mvp_count: form.mvp_count
   });
 }
 
@@ -157,6 +162,7 @@ function rosterFormFieldsHtml(key, p){
     ${rosterAvatarFieldsHtml(key, data)}
     ${rosterDescriptionFieldHtml(key, data)}
     <div class="rosterAdminFormRow">
+      ${rosterLabeledInput(key, "birth_date", "Ngày sinh", "Chọn ngày/tháng/năm · để trống nếu chưa biết", `type="date" value="${escapeAttr(toDateInputValue(data.birth_date))}"`)}
       ${rosterLabeledInput(key, "joined_at", "Ngày tham gia", "", `type="date" value="${escapeAttr(toDateInputValue(data.joined_at))}"`)}
       ${rosterLabeledInput(key, "last_match_at", "Trận gần nhất", "", `type="date" value="${escapeAttr(toDateInputValue(data.last_match_at))}"`)}
     </div>
@@ -183,6 +189,7 @@ function readRosterForm(key){
     avatar: val("avatar").trim(),
     profile_card: val("profile_card").trim(),
     description: val("description").trim(),
+    birth_date: val("birth_date").trim(),
     joined_at: fromDateInputValue(val("joined_at")),
     last_match_at: fromDateInputValue(val("last_match_at"))
   };
@@ -266,6 +273,8 @@ function renderAdminPlayerList(){
     const side = sideText ? ` · ${escapeHtml(sideText)}` : "";
     const inactive = Number(p.inactivity_penalty) > 0 ? ` · −${p.inactivity_penalty} vắng` : "";
     const jersey = p.jersey_number != null && p.jersey_number !== "" ? ` · #${Number(p.jersey_number)}` : "";
+    const birth = birthDateLabel(p.birth_date);
+    const birthMeta = birth ? ` · 🎂 ${birth}` : "";
 
     parts.push(`<div class="rosterAdminCard${expanded ? " expanded" : ""}">
       <div class="rosterAdminCardHead" onclick="toggleRosterPlayer(${Number(p.id)})">
@@ -273,7 +282,7 @@ function renderAdminPlayerList(){
           <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'" alt="">
           <div>
             <b>${escapeHtml(label)}</b>${canonical}
-            <div class="meta">${escapeHtml(posText)}${side}${jersey} · ⭐ ${Number(p.rating) || 5}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>
+            <div class="meta">${escapeHtml(posText)}${side}${jersey}${birthMeta} · ⭐ ${Number(p.rating) || 5}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>
           </div>
         </div>
         <span class="rosterExpandIcon">${expanded ? "▾" : "▸"}</span>
@@ -296,10 +305,12 @@ async function saveRosterPlayer(key){
       display_name: form.display_name,
       main: form.position,
       position: form.position,
+      secondary_positions: form.secondary_positions,
       profile_card: form.profile_card,
       avatar: form.avatar,
       jersey_number: form.jersey_number,
-      rating: form.base_rating
+      rating: form.base_rating,
+      mvp_count: form.mvp_count
     });
   }
 
@@ -315,6 +326,7 @@ async function saveRosterPlayer(key){
     avatar: form.avatar,
     profile_card: form.profile_card,
     description: form.description,
+    birth_date: form.birth_date,
     joined_at: form.joined_at,
     last_match_at: form.last_match_at
   };

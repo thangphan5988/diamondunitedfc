@@ -7,6 +7,38 @@ function jerseyLabel(jerseyNumber){
   return `#${Math.round(n)}`;
 }
 
+function formatBirthDateDisplay(value){
+  const s = String(value || "").trim();
+  if(!s) return "";
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  const vn = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(vn) return `${String(vn[1]).padStart(2, "0")}/${String(vn[2]).padStart(2, "0")}/${vn[3]}`;
+  return s;
+}
+
+function playerAgeFromBirthDate(value){
+  const s = String(value || "").trim();
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!iso) return null;
+  const y = Number(iso[1]);
+  const m = Number(iso[2]);
+  const d = Number(iso[3]);
+  if(!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  const monthDiff = today.getMonth() + 1 - m;
+  if(monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) age--;
+  return age >= 0 && age < 120 ? age : null;
+}
+
+function birthDateLabel(value){
+  const formatted = formatBirthDateDisplay(value);
+  if(!formatted) return "";
+  const age = playerAgeFromBirthDate(value);
+  return age != null ? `${formatted} (${age} tuổi)` : formatted;
+}
+
 function playerDisplayName(pOrName){
   if(pOrName && typeof pOrName === "object"){
     const dn = String(pOrName.display_name || "").trim();
@@ -138,81 +170,33 @@ function sideFit(playerSide, slotSide){
   return -8;
 }
 
-function playerDescSeed(name){
-  const s = normalizeName(name);
+function playerDescSeed(text){
+  const s = normalizeName(text);
   let h = 0;
   for(let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
   return Math.abs(h);
+}
+
+function playerDescPick(seed, salt, arr){
+  if(!arr?.length) return "";
+  return arr[Math.abs((seed + salt * 9973) | 0) % arr.length];
+}
+
+function playerFirstName(name){
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : String(name || "").trim();
 }
 
 function playerHasFullCard(p){
   return !!String(p?.profile_card || "").trim();
 }
 
+function playerPosLabel(pos){
+  return ({ GK: "thủ môn", DEF: "hậu vệ", MID: "tiền vệ", FWD: "tiền đạo" })[pos] || "cầu thủ";
+}
+
 function generatePlayerDescription(p){
-  const name = playerDisplayName(p);
-  const pos = normalizePos(p?.main || p?.position || "MID");
-  const seed = playerDescSeed(p?.name || name);
-  const jersey = p?.jersey_number != null && p?.jersey_number !== "" ? Number(p.jersey_number) : null;
-  const poster = playerHasFullCard(p);
-  const rating = Number(p?.rating ?? p?.base_rating) || 5;
-
-  const avatarHints = poster ? [
-    "ảnh poster full chất như MV bóng đá",
-    "face card full HD — nhìn phát biết main character",
-    "avatar full oai, đăng story không cần filter"
-  ] : [
-    "avatar Zalo tròn nhưng skill vuông vức",
-    "nút like Zalo nhiều, xứng đáng like trên sân",
-    "chụp Zalo thì hiền, vào sân thì hơi ác"
-  ];
-
-  const byPos = {
-    GK: [
-      "{name} – thủ thành {hint}. Tay bắt bóng nhanh hơn tay rep tin nhắn nhóm.",
-      "{name} – khung thành là vùng cấm, kể cả drama. {hint}.",
-      "{name} – người duy nhất được phép dùng tay mà vẫn ngầu. {hint}.",
-      "{name} – catwalk giữa cột dọc, {hint}."
-    ],
-    DEF: [
-      "{name} – hậu vệ {hint}. Phá bóng sạch, phá vibe đối thủ cũng sạch.",
-      "{name} – bức tường sân 7, {hint}. Đối phương muốn qua thì xin phép trước.",
-      "{name} – thích chơi đùa nhưng không thích đùa với tiền đạo. {hint}.",
-      "{name} – clear bóng mạnh như clear lịch cuối tuần. {hint}."
-    ],
-    MID: [
-      "{name} – tiền vệ {hint}. Chuyền bóng như share vibe, chuyền trách nhiệm thì hạn chế.",
-      "{name} – engine sân cỏ, {hint}. Chạy nhiều nhưng than trời thì ít.",
-      "{name} – nhìn map sân như nhìn bàn nhậu: ai cũng phải có bóng. {hint}.",
-      "{name} – kiêm DJ sân 7, {hint}. Drop beat bằng đường chọc khe."
-    ],
-    FWD: [
-      "{name} – máy dội biên người, {hint}. Thỉnh thoảng quên bóng ở… lưới đối phương.",
-      "{name} – tiền đạo {hint}. Sút xa được, sức hút spotlight cũng xa được.",
-      "{name} – vào vòng cấm như vào trend: tự nhiên mà cháy. {hint}.",
-      "{name} – ăn bóng như ăn vạ… à không, ăn bóng như ăn cơm. {hint}."
-    ]
-  };
-
-  const templates = byPos[pos] || byPos.MID;
-  const hint = avatarHints[(seed >> 2) % avatarHints.length];
-  let line = templates[seed % templates.length]
-    .replace("{name}", name)
-    .replace("{hint}", hint);
-
-  if(Number.isFinite(jersey) && jersey > 0){
-    const jerseyLines = [
-      ` Áo #${jersey} — mang vào auto +2 swagger.`,
-      ` Số ${jersey} trên lưng, tên trên caption.`,
-      ` #${jersey} là mật mã, đối thủ tự hiểu.`
-    ];
-    line += jerseyLines[(seed >> 4) % jerseyLines.length];
-  }
-
-  if(rating >= 9) line += " Rating cỡ này thì hơi bị gian lận luật đẹp trai.";
-  else if(rating >= 7) line += " Form ổn, meme ổn hơn.";
-
-  return line;
+  return lookupPlayerLegendQuote(p);
 }
 
 function playerDescription(p){

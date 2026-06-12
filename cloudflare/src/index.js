@@ -7,6 +7,7 @@ import {
   clampBaseRating,
   clampStatCount,
   parseJerseyNumber,
+  parseBirthDate,
   clampPositiveIntScore,
   formatSummaryScore,
   boolish,
@@ -167,7 +168,7 @@ async function getRoster(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating,
-      mvp_count, avatar, profile_card, jersey_number, description, last_match_at, joined_at
+      mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -193,6 +194,7 @@ async function getRoster(db) {
       profile_card: row.profile_card || "",
       jersey_number: row.jersey_number != null ? row.jersey_number : null,
       description: row.description || "",
+      birth_date: row.birth_date || null,
       last_match_at: meta.last_match_at,
       joined_at: row.joined_at || null,
       inactivity_penalty: meta.inactivity_penalty,
@@ -217,6 +219,7 @@ function mapPlayerRow(row) {
     profile_card: row.profile_card || "",
     jersey_number: row.jersey_number != null ? row.jersey_number : null,
     description: row.description || "",
+    birth_date: row.birth_date || null,
     joined_at: row.joined_at || "",
     last_match_at: row.last_match_at || ""
   };
@@ -241,7 +244,7 @@ async function adminListPlayers(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT id, name, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, last_match_at, joined_at
+      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -272,6 +275,7 @@ async function adminSavePlayer(db, payload) {
   const profileCard = String(payload.profile_card || "").trim();
   const jerseyNumber = parseJerseyNumber(payload.jersey_number);
   const description = String(payload.description || "").trim();
+  const birthDate = parseBirthDate(payload.birth_date);
   const joinedAt = String(payload.joined_at || "").trim();
   const lastMatchAt = String(payload.last_match_at || "").trim();
   const nowIso = new Date().toISOString();
@@ -302,14 +306,14 @@ async function adminSavePlayer(db, payload) {
         name = ?, name_norm = ?, display_name = ?, position = ?,
         secondary_positions = ?, preferred_side = ?,
         rating = ?, base_rating = ?, mvp_count = ?, avatar = ?, profile_card = ?,
-        jersey_number = ?, description = ?,
+        jersey_number = ?, description = ?, birth_date = ?,
         joined_at = CASE WHEN ? != '' THEN ? ELSE joined_at END,
         last_match_at = ?
       WHERE id = ?
     `).bind(
       name, nameNorm, displayName, position,
       secondaryPositions, preferredSide,
-      baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description,
+      baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
       joinedAt, joinedAt, lastMatchAt, id
     ).run();
 
@@ -322,12 +326,12 @@ async function adminSavePlayer(db, payload) {
   const result = await db.prepare(`
     INSERT INTO players (
       name, name_norm, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, joined_at, last_match_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     name, nameNorm, displayName, position,
     secondaryPositions, preferredSide,
-    baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description,
+    baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
     joinedAt || nowIso, lastMatchAt
   ).run();
 
@@ -1267,8 +1271,8 @@ async function importData(db, payload, secret, pepper) {
     const ins = db.prepare(`
       INSERT OR REPLACE INTO players (
         name, name_norm, display_name, position, secondary_positions, preferred_side,
-        rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, joined_at, last_match_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const stmts = payload.players.map((p) => {
       const base = clampBaseRating(p.rating || 5);
@@ -1286,6 +1290,7 @@ async function importData(db, payload, secret, pepper) {
         p.profile_card || "",
         parseJerseyNumber(p.jersey_number),
         String(p.description || "").trim(),
+        parseBirthDate(p.birth_date),
         p.joined_at || nowIso,
         p.last_match_at || ""
       );
