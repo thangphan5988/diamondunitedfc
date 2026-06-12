@@ -26,17 +26,19 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(
   margin:0;max-width:720px;font-size:13px;line-height:1.55;font-weight:500;
   color:#cbd5e1
 }
-.friendlyMatchBar{margin:-4px 0 14px}
 .friendlyMatchBtn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  width:auto;max-width:100%;margin:0;padding:11px 18px;
-  background:#0068ff;border:1px solid rgba(255,255,255,.12);border-radius:12px;
-  font-size:13px;font-weight:800;color:#fff;text-decoration:none;cursor:pointer
+  position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));
+  z-index:900;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  width:auto;max-width:min(300px,calc(100vw - 24px));margin:0;padding:10px 14px;
+  background:#0068ff;border:1px solid rgba(255,255,255,.12);border-radius:999px;
+  font-size:12px;font-weight:800;color:#fff;text-decoration:none;cursor:pointer;
+  box-shadow:0 10px 28px rgba(0,0,0,.35)
 }
 .friendlyMatchBtn:hover,.friendlyMatchBtn:focus-visible{
   filter:brightness(1.08);color:#fff;text-decoration:none
 }
-.friendlyMatchBtnIcon{font-size:16px;line-height:1}
+.friendlyMatchBtnIcon{font-size:15px;line-height:1;flex:0 0 auto}
+.friendlyMatchBtnText{line-height:1.25;text-align:left}
 h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:10px;margin-bottom:12px}.ocrStatus{font-size:10px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
 .sub{color:var(--muted);margin-bottom:16px}
 .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
@@ -88,7 +90,13 @@ button.danger:hover{filter:brightness(1.15)}
   .siteHeader{gap:12px;margin-bottom:10px}
   .siteLogo{width:52px;height:52px;margin-top:0}
   .siteBrand h1{font-size:18px;margin-bottom:6px}
-  .siteIntro{font-size:11px;line-height:1.5}
+  .siteIntro{font-size:11px;line-height:1.5;padding-right:92px}
+  .friendlyMatchBtn{
+    top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));
+    max-width:min(168px,calc(100vw - 20px));padding:8px 11px;font-size:10px;gap:5px
+  }
+  .friendlyMatchBtnText{display:none}
+  .friendlyMatchBtn::after{content:"Liên hệ giao hữu";line-height:1.2}
   h1{font-size:20px;margin-bottom:4px}
   .buildVersion{display:none}
   .card{padding:12px;border-radius:16px}
