@@ -45,7 +45,10 @@ function switchTab(tab){
     switchStatsTab(currentStatsTab);
     renderStats();
   }
-  if(tab === "teams") renderTeams();
+  if(tab === "teams"){
+    invalidateTeamsStats();
+    renderTeams();
+  }
   if(tab === "admin"){
     if(canManageUsers()) switchAdminSection("users");
     else if(canManageRoster()) switchAdminSection("roster");

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.41">
   <link rel="stylesheet" href="css/latest-match.css?v=2.4.32">
-  <link rel="stylesheet" href="css/teams.css?v=2.4.44">
+  <link rel="stylesheet" href="css/teams.css?v=2.4.54">
 </head>
 <body>
 <div class="wrap">
@@ -25,7 +25,7 @@
       <p class="siteTagline">Sân 7 · Football Club</p>
     </div>
   </header>
-  <div class="buildVersion">Build v2.4.44</div>
+  <div class="buildVersion">Build v2.4.57</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -293,13 +293,6 @@
           <div id="teamsCount" class="meta" style="margin-top:4px"></div>
         </div>
         <div class="teamsToolbar">
-          <input id="teamsSearch" type="text" placeholder="Tìm tên, số áo, vị trí..." oninput="renderTeams()">
-          <select id="teamsSort" onchange="teamsSort=this.value;renderTeams()">
-            <option value="rating">Sắp xếp: Rating</option>
-            <option value="name">Sắp xếp: Tên</option>
-            <option value="jersey">Sắp xếp: Số áo</option>
-            <option value="position">Sắp xếp: Vị trí</option>
-          </select>
           <div class="teamsPosFilters">
             <button type="button" class="teamsPosBtn active" data-pos="" onclick="setTeamsPosFilter('')">Tất cả</button>
             <button type="button" class="teamsPosBtn" data-pos="GK" onclick="setTeamsPosFilter('GK')">GK</button>
@@ -443,11 +436,11 @@
   <script src="js/auth-admin.js?v=2.4.22"></script>
   <script src="js/roster-admin.js?v=2.4.43"></script>
   <script src="js/latest-match.js?v=2.4.34"></script>
-  <script src="js/tabs-history.js?v=2.4.44"></script>
+  <script src="js/tabs-history.js?v=2.4.56"></script>
   <script src="js/player-helpers.js?v=2.4.43"></script>
   <script src="js/lineup-confirm.js?v=2.4.0"></script>
   <script src="js/roster.js?v=2.4.44"></script>
-  <script src="js/teams.js?v=2.4.44"></script>
+  <script src="js/teams.js?v=2.4.57"></script>
   <script src="js/lineup-algorithm.js?v=2.4.0"></script>
   <script src="js/lineup-random.js?v=2.4.34"></script>
   <script src="js/lineup-hlv.js?v=2.4.34"></script>

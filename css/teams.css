@@ -1,4 +1,4 @@
-/* Teams — FIFA-style player cards */
+/* Teams — player gallery cards */
 
 .teamsViewHead{
   display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin-bottom:14px
@@ -17,105 +17,113 @@
 }
 .teamsPosBtn.active{background:#0284c7;border-color:#0284c7;color:#fff}
 .teamsGrid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;margin-top:4px
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px;margin-top:4px
 }
 .teamsEmpty{padding:24px;text-align:center;color:var(--muted);font-size:12px}
 
-.futCard{
-  position:relative;aspect-ratio:2/2.85;max-width:220px;margin:0 auto;width:100%;
-  filter:drop-shadow(0 10px 24px rgba(0,0,0,.45))
+/* Khung vuông — viền gradient + góc cắt trang trí */
+.teamCard{
+  position:relative;aspect-ratio:1/1.48;max-width:240px;margin:0 auto;width:100%;
+  border-radius:18px;padding:2px;
+  background:linear-gradient(145deg,#67e8f9 0%,#0284c7 40%,#0369a1 70%,#38bdf8 100%);
+  box-shadow:0 16px 32px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.06) inset;
+  transition:transform .18s ease,box-shadow .18s ease
 }
-.futCardInner{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  clip-path:polygon(0 6%,5% 0,95% 0,100% 6%,100% 70%,50% 100%,0 70%);
-  background:linear-gradient(165deg,#0a1e3d 0%,#061528 42%,#020b18 100%);
-  border:1px solid rgba(77,239,255,.35);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 0 18px rgba(56,189,248,.12)
+.teamCard:hover{
+  transform:translateY(-3px);
+  box-shadow:0 20px 36px rgba(0,0,0,.48),0 0 24px rgba(56,189,248,.14)
 }
-.futCard--gold .futCardInner{
-  background:linear-gradient(165deg,#3d2a08 0%,#1a1204 38%,#0f0a02 100%);
-  border-color:rgba(250,204,21,.55);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 22px rgba(250,204,21,.18)
+.teamCard--gold{
+  background:linear-gradient(145deg,#fde68a 0%,#f59e0b 35%,#b45309 65%,#fbbf24 100%);
+  box-shadow:0 16px 32px rgba(0,0,0,.42),0 0 28px rgba(250,204,21,.12)
 }
-.futCard--blue .futCardInner{
-  background:linear-gradient(165deg,#0c2848 0%,#071a32 42%,#030d18 100%);
-  border-color:rgba(56,189,248,.45)
+.teamCard--gold:hover{box-shadow:0 20px 36px rgba(0,0,0,.48),0 0 32px rgba(250,204,21,.18)}
+.teamCard--silver{
+  background:linear-gradient(145deg,#e2e8f0 0%,#94a3b8 45%,#64748b 75%,#cbd5e1 100%);
+  box-shadow:0 14px 28px rgba(0,0,0,.38)
 }
-.futCard--silver .futCardInner{
-  background:linear-gradient(165deg,#1e293b 0%,#111827 42%,#0a0f18 100%);
-  border-color:rgba(148,163,184,.35)
+
+.teamCardInner{
+  position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  border-radius:16px;background:#07111f
 }
-.futCardInner::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+.teamCardInner::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
-    radial-gradient(circle at 18% 78%,rgba(56,189,248,.12) 0,transparent 42%),
-    repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 2px,transparent 2px 8px)
+    linear-gradient(180deg,rgba(255,255,255,.06) 0,transparent 18%,transparent 72%,rgba(0,0,0,.35) 100%),
+    radial-gradient(circle at 100% 0%,rgba(56,189,248,.08) 0,transparent 42%)
 }
-.futCardTop{
-  position:relative;flex:1 1 auto;min-height:0;display:grid;
-  grid-template-columns:52px 1fr;gap:0;padding:10px 8px 0
+.teamCard--gold .teamCardInner::before{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.08) 0,transparent 18%,transparent 72%,rgba(0,0,0,.38) 100%),
+    radial-gradient(circle at 100% 0%,rgba(250,204,21,.1) 0,transparent 42%)
 }
-.futCardMeta{
-  position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding-top:2px
+
+/* Góc trang trí */
+.teamCardCorner{
+  position:absolute;top:0;left:0;z-index:4;width:28px;height:28px;pointer-events:none;
+  border-top:2px solid rgba(255,255,255,.35);border-left:2px solid rgba(255,255,255,.35);
+  border-radius:14px 0 0 0
 }
-.futRating{
-  font-size:28px;font-weight:900;line-height:1;color:#e0f2fe;
-  text-shadow:0 0 12px rgba(56,189,248,.65)
+.teamCardCorner--br{
+  top:auto;left:auto;right:0;bottom:0;
+  border-top:0;border-left:0;border-bottom:2px solid rgba(255,255,255,.2);border-right:2px solid rgba(255,255,255,.2);
+  border-radius:0 0 14px 0
 }
-.futCard--gold .futRating{color:#fef08a;text-shadow:0 0 12px rgba(250,204,21,.55)}
-.futPos{font-size:11px;font-weight:900;letter-spacing:.04em;color:#bae6fd}
-.futJersey{
-  font-size:10px;font-weight:800;color:#7dd3fc;opacity:.95;margin-top:1px
+
+.teamCardPortrait{
+  position:relative;flex:1 1 auto;min-height:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#0f2744 0%,#07111f 100%)
 }
-.futFlag{
-  width:22px;height:14px;margin-top:4px;border-radius:2px;object-fit:cover;
-  box-shadow:0 1px 4px rgba(0,0,0,.35)
+.teamCardPortrait img{
+  width:100%;height:100%;object-fit:contain;object-position:center top;
+  display:block
 }
-.futClub{
-  width:24px;height:24px;margin-top:4px;object-fit:contain;
-  filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))
+
+.teamCardFoot{
+  position:relative;z-index:3;flex:0 0 auto;padding:10px 10px 11px;
+  background:linear-gradient(180deg,rgba(7,17,31,.98),#07111f);
+  border-top:1px solid rgba(125,211,252,.12)
 }
-.futPortraitWrap{
-  position:relative;align-self:stretch;display:flex;align-items:flex-end;justify-content:center;
-  overflow:hidden;margin:-4px -6px 0 0
+.teamCard--gold .teamCardFoot{border-top-color:rgba(250,204,21,.18)}
+.teamCardName{
+  font-size:13px;font-weight:900;line-height:1.2;color:#f8fafc;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px;text-align:center
 }
-.futPortrait{
-  width:118%;max-width:none;height:auto;max-height:112%;object-fit:cover;object-position:center top;
-  transform:translateY(6%);filter:drop-shadow(0 6px 14px rgba(0,0,0,.55))
+.teamCardInfoRow{
+  display:flex;align-items:stretch;justify-content:center;gap:8px
 }
-.futName{
-  position:relative;z-index:3;margin:0 8px;padding:5px 6px 6px;
-  text-align:center;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
-  color:#e0f2fe;background:linear-gradient(180deg,rgba(2,8,20,.92),rgba(2,8,20,.98));
-  border-top:1px solid rgba(56,189,248,.25);border-bottom:1px solid rgba(56,189,248,.15);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+.teamCardInfoMain{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  flex:0 0 auto;min-width:46px;min-height:52px;padding:6px 10px;border-radius:12px;
+  background:rgba(14,165,233,.12);border:1px solid rgba(56,189,248,.28)
 }
-.futCard--gold .futName{color:#fef9c3;border-color:rgba(250,204,21,.28)}
-.futStats{
-  position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:0 8px;
-  padding:6px 12px 8px;font-size:10px;color:#cbd5e1;flex:0 0 auto
+.teamCard--gold .teamCardInfoMain{border-color:rgba(250,204,21,.32);background:rgba(245,158,11,.1)}
+.teamCardInfoMain b{
+  font-size:20px;font-weight:900;line-height:1;color:#f0f9ff
 }
-.futStats::before{
-  content:"";position:absolute;left:50%;top:6px;bottom:10px;width:1px;
-  background:linear-gradient(180deg,transparent,rgba(148,163,184,.35),transparent)
+.teamCard--gold .teamCardInfoMain b{color:#fef08a}
+.teamCardInfoMain span{font-size:10px;font-weight:900;letter-spacing:.06em;color:#7dd3fc;line-height:1}
+.teamCardInfoStats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;
+  align-content:center;flex:1 1 auto;max-width:120px
 }
-.futStat{display:flex;align-items:baseline;gap:4px;line-height:1.35}
-.futStat b{font-size:12px;font-weight:900;color:#f0f9ff;min-width:18px}
-.futStat span{font-size:9px;font-weight:800;color:#7dd3fc;letter-spacing:.03em}
-.futExtra{
-  position:relative;z-index:3;flex:0 0 auto;
-  padding:0 8px 8px;font-size:8px;color:#64748b;text-align:center;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+.teamCardInfoItem{
+  display:inline-flex;align-items:center;justify-content:center;gap:3px;
+  min-height:24px;padding:3px 6px;border-radius:999px;
+  font-size:10px;font-weight:800;color:#bae6fd;
+  background:rgba(14,165,233,.1);border:1px solid rgba(56,189,248,.22)
 }
-.futCardMvp{
-  position:absolute;top:8px;right:8px;z-index:4;font-size:9px;font-weight:800;
-  padding:2px 5px;border-radius:999px;background:rgba(2,8,20,.75);color:#fbbf24;
-  border:1px solid rgba(250,204,21,.35)
+.teamCardInfoItem b{font-size:11px;font-weight:900;color:#f0f9ff;line-height:1}
+.teamCardInfoItem span{font-size:9px;line-height:1}
+.teamCardInfoItem--mvp{
+  color:#fde68a;background:rgba(245,158,11,.12);border-color:rgba(250,204,21,.28)
 }
 
 @media(max-width:760px){
-  .teamsGrid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
-  .futRating{font-size:24px}
-  .futName{font-size:10px}
-  .futStat b{font-size:11px}
+  .teamsGrid{grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:12px}
+  .teamCardName{font-size:12px}
+  .teamCardInfoMain b{font-size:18px}
+  .teamCardInfoMain span{font-size:9px}
 }
