@@ -1,5 +1,90 @@
 /* Tab switching, match history list */
 
+const MAIN_TAB_ORDER = ["latest", "history", "stats", "teams", "lineup", "admin"];
+const MAIN_TAB_IDS = {
+  latest: "tabLatest",
+  history: "tabHistory",
+  stats: "tabStats",
+  teams: "tabTeams",
+  lineup: "tabLineup",
+  admin: "tabAdmin"
+};
+
+function mainTabButton(key){
+  return document.getElementById(MAIN_TAB_IDS[key] || "");
+}
+
+function closeMobileTabMenu(){
+  const menu = document.getElementById("mainNavMobileMenu");
+  const btn = document.getElementById("mainNavMobileBtn");
+  if(menu) menu.hidden = true;
+  if(btn) btn.setAttribute("aria-expanded", "false");
+  document.removeEventListener("click", closeMobileTabMenuOnOutside, true);
+}
+
+function closeMobileTabMenuOnOutside(event){
+  if(event.target.closest("#mainNavMobile")) return;
+  closeMobileTabMenu();
+}
+
+function toggleMobileTabMenu(event){
+  if(event?.stopPropagation) event.stopPropagation();
+  const menu = document.getElementById("mainNavMobileMenu");
+  const btn = document.getElementById("mainNavMobileBtn");
+  if(!menu || !btn) return;
+  const willOpen = menu.hidden;
+  if(willOpen){
+    rebuildMobileTabMenu(getActiveMainTab());
+    menu.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    document.addEventListener("click", closeMobileTabMenuOnOutside, true);
+  }else{
+    closeMobileTabMenu();
+  }
+}
+
+function pickMobileTab(tab){
+  closeMobileTabMenu();
+  if(typeof trackSiteInteraction === "function"){
+    trackSiteInteraction("mobile_tab_menu", { tab });
+  }
+  switchTab(tab);
+}
+
+function getActiveMainTab(){
+  for(const key of MAIN_TAB_ORDER){
+    const btn = mainTabButton(key);
+    if(btn?.classList.contains("active")) return key;
+  }
+  return "latest";
+}
+
+function rebuildMobileTabMenu(activeTab){
+  const menu = document.getElementById("mainNavMobileMenu");
+  if(!menu) return;
+  const current = activeTab || getActiveMainTab();
+  const parts = [];
+  MAIN_TAB_ORDER.forEach(key => {
+    const btn = mainTabButton(key);
+    if(!btn || btn.style.display === "none") return;
+    const label = btn.textContent.trim();
+    const active = key === current ? " active" : "";
+    parts.push(`<button type="button" class="mainNavMobileItem${active}" role="option" onclick="pickMobileTab('${key}')">${escapeHtml(label)}</button>`);
+  });
+  menu.innerHTML = parts.join("");
+}
+
+function syncMobileTabNav(activeTab){
+  const tab = activeTab || getActiveMainTab();
+  const btn = mainTabButton(tab);
+  const menuBtn = document.getElementById("mainNavMobileBtn");
+  if(menuBtn && btn){
+    menuBtn.setAttribute("aria-label", `Menu — ${btn.textContent.trim()}`);
+  }
+  rebuildMobileTabMenu(tab);
+  closeMobileTabMenu();
+}
+
 function formatHistoryScore(value){
   if(value == null || String(value).trim() === "") return "?";
   const s = String(value).trim().replace(",", ".");
@@ -57,6 +142,7 @@ function switchTab(tab){
   if(tab === "lineup" && shouldRestorePending()) restorePendingMatchIfAny();
   if(shouldPollPendingMatch()) startConfirmPolling();
   else stopConfirmPolling();
+  syncMobileTabNav(tab);
 }
 
 async function loadMatchHistory(){

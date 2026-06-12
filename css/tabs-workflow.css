@@ -4,6 +4,33 @@
   display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;
   scrollbar-width:none;padding-bottom:2px
 }
+.mainNav{position:relative;margin-bottom:14px}
+.mainNavMobile{display:none;position:relative;flex:0 0 auto}
+.mainNav .tabs{margin-bottom:0}
+.mainNavHamburger{
+  width:42px;height:42px;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center;
+  background:#1e293b;border:1px solid var(--line);border-radius:10px;cursor:pointer;color:#fff
+}
+.mainNavHamburger[aria-expanded="true"]{background:#0284c7;border-color:#0284c7}
+.mainNavHamburgerIcon{
+  width:18px;height:12px;display:flex;flex-direction:column;justify-content:space-between
+}
+.mainNavHamburgerIcon span{
+  display:block;height:2px;width:100%;border-radius:999px;background:currentColor
+}
+.mainNavMobileMenu{
+  position:absolute;left:0;top:calc(100% + 6px);z-index:50;min-width:min(280px,calc(100vw - 48px));
+  background:#0f172a;border:1px solid var(--line);border-radius:14px;padding:6px;
+  box-shadow:0 16px 40px rgba(0,0,0,.45)
+}
+.mainNavMobileMenu[hidden]{display:none!important}
+.mainNavMobileItem{
+  display:block;width:100%;margin:0;text-align:left;padding:11px 12px;border-radius:10px;
+  background:transparent;border:0;color:#cbd5e1;font-weight:800;font-size:12px;cursor:pointer
+}
+.mainNavMobileItem.active,.mainNavMobileItem:hover{background:rgba(2,132,199,.18);color:#fff}
+.authBarMain{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.authBarMain .meta{min-width:0}
 .tabs::-webkit-scrollbar{display:none}
 .tab{
   background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:10px 16px;border-radius:12px;
@@ -97,13 +124,9 @@
 .statAssists{background:rgba(167,139,250,.18);color:#c4b5fd}
 @media(max-width:1100px){.grid,.teams{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){
-  .tabs{
-    position:sticky;top:0;z-index:30;margin:0 0 12px;padding:8px 0;
-    background:linear-gradient(180deg,rgba(2,6,23,.98) 70%,rgba(2,6,23,0));
-    backdrop-filter:blur(8px)
-  }
-  .tab{padding:9px 14px;font-size:11px}
-  .authBar{margin-bottom:8px;gap:6px}
+  .mainNav{display:none}
+  .mainNavMobile{display:block}
+  .authBar{margin-bottom:8px;gap:8px;align-items:center}
   .authBar .meta{font-size:9px;line-height:1.35}
   .authActions button{padding:7px 10px;font-size:10px}
   .statsTabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding-bottom:2px}

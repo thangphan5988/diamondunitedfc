@@ -250,10 +250,12 @@ function applyAuthUI(){
 
   if(loggedIn){
     label.textContent = `Đăng nhập: ${authSession.display_name || authSession.username} · ${permLabelList(authSession.permissions)}`;
+    label.style.display = "";
     btnLogin.style.display = "none";
     btnLogout.style.display = "";
   }else{
-    label.textContent = "Chế độ xem công khai — đăng nhập để quản lý trận";
+    label.textContent = "";
+    label.style.display = "none";
     btnLogin.style.display = "";
     btnLogout.style.display = "none";
     document.getElementById("lockBanner").classList.remove("show");
@@ -316,6 +318,7 @@ function applyAuthUI(){
   updateResultModalPerms();
   if(matchLocked) applyLockUI(true);
   if(document.getElementById("tabHistory").classList.contains("active")) loadMatchHistory();
+  syncMobileTabNav();
 }
 
 async function initAuth(){
