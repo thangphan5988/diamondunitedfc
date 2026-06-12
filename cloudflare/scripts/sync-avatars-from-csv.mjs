@@ -1,5 +1,5 @@
 /**
- * Cập nhật avatar cầu thủ từ members.csv lên D1 qua API.
+ * Đồng bộ avatar Zalo + profile card full từ members.csv lên D1.
  * Usage: node cloudflare/scripts/sync-avatars-from-csv.mjs
  */
 import { readFileSync } from "node:fs";
@@ -67,7 +67,8 @@ async function main() {
       continue;
     }
     const avatar = String(row.avatar || "").trim();
-    if (!avatar) continue;
+    const profileCard = String(row.profile_card || "").trim();
+    if (!avatar && !profileCard) continue;
     await apiPost("admin_save_player", {
       session_token: token,
       id: existing.id,
@@ -80,12 +81,13 @@ async function main() {
       mvp_count: Number(existing.mvp_count) || 0,
       joined_at: existing.joined_at || "",
       last_match_at: existing.last_match_at || "",
-      avatar
+      avatar,
+      profile_card: profileCard
     });
     updated++;
-    console.log(`   ✓ ${row.name} → ${avatar}`);
+    console.log(`   ✓ ${row.name} → avatar: ${avatar || "—"} | card: ${profileCard || "—"}`);
   }
-  console.log(`\n✅ Đã cập nhật avatar ${updated}/${rows.length} cầu thủ`);
+  console.log(`\n✅ Đã cập nhật ${updated}/${rows.length} cầu thủ`);
 }
 
 main().catch(err => {

@@ -14,7 +14,7 @@ function playerDisplayName(pOrName){
   return String(pOrName || "").trim();
 }
 
-const AVATAR_CACHE_BUST = "20260612";
+const AVATAR_CACHE_BUST = "zalo-v1";
 
 function defaultAvatar(name){
   const initials = encodeURIComponent((name||"?").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());

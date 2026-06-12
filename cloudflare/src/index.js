@@ -166,7 +166,7 @@ async function getRoster(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating,
-      mvp_count, avatar, last_match_at, joined_at
+      mvp_count, avatar, profile_card, last_match_at, joined_at
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -189,6 +189,7 @@ async function getRoster(db) {
       base_rating: meta.base_rating,
       mvp_count: row.mvp_count,
       avatar: row.avatar,
+      profile_card: row.profile_card || "",
       last_match_at: meta.last_match_at,
       joined_at: row.joined_at || null,
       inactivity_penalty: meta.inactivity_penalty,
@@ -210,6 +211,7 @@ function mapPlayerRow(row) {
     base_rating: row.base_rating != null ? row.base_rating : row.rating,
     mvp_count: row.mvp_count,
     avatar: row.avatar || "",
+    profile_card: row.profile_card || "",
     joined_at: row.joined_at || "",
     last_match_at: row.last_match_at || ""
   };
@@ -234,7 +236,7 @@ async function adminListPlayers(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT id, name, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, last_match_at, joined_at
+      rating, base_rating, mvp_count, avatar, profile_card, last_match_at, joined_at
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -262,6 +264,7 @@ async function adminSavePlayer(db, payload) {
   const baseRating = clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
   const mvpCount = Math.max(0, Math.round(Number(payload.mvp_count) || 0));
   const avatar = String(payload.avatar || "").trim();
+  const profileCard = String(payload.profile_card || "").trim();
   const joinedAt = String(payload.joined_at || "").trim();
   const lastMatchAt = String(payload.last_match_at || "").trim();
   const nowIso = new Date().toISOString();
@@ -291,14 +294,14 @@ async function adminSavePlayer(db, payload) {
       UPDATE players SET
         name = ?, name_norm = ?, display_name = ?, position = ?,
         secondary_positions = ?, preferred_side = ?,
-        rating = ?, base_rating = ?, mvp_count = ?, avatar = ?,
+        rating = ?, base_rating = ?, mvp_count = ?, avatar = ?, profile_card = ?,
         joined_at = CASE WHEN ? != '' THEN ? ELSE joined_at END,
         last_match_at = ?
       WHERE id = ?
     `).bind(
       name, nameNorm, displayName, position,
       secondaryPositions, preferredSide,
-      baseRating, baseRating, mvpCount, avatar,
+      baseRating, baseRating, mvpCount, avatar, profileCard,
       joinedAt, joinedAt, lastMatchAt, id
     ).run();
 
@@ -311,12 +314,12 @@ async function adminSavePlayer(db, payload) {
   const result = await db.prepare(`
     INSERT INTO players (
       name, name_norm, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, joined_at, last_match_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      rating, base_rating, mvp_count, avatar, profile_card, joined_at, last_match_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     name, nameNorm, displayName, position,
     secondaryPositions, preferredSide,
-    baseRating, baseRating, mvpCount, avatar,
+    baseRating, baseRating, mvpCount, avatar, profileCard,
     joinedAt || nowIso, lastMatchAt
   ).run();
 
@@ -383,14 +386,14 @@ async function adminUploadAvatar(env, payload, origin) {
 
   const ext = contentType === "image/jpeg" ? "jpg" : contentType === "image/webp" ? "webp" : "png";
   const slug = slugifyAvatarFilename(payload.filename_base || payload.name || "player");
-  const key = `avatars/${slug}.${ext}`;
+  const key = `avatars/full/${slug}.${ext}`;
 
   await env.AVATARS.put(key, bytes, {
     metadata: { contentType }
   });
 
-  const avatar = `${String(origin || "https://api.diamondunitedfc.com").replace(/\/$/, "")}/${key}`;
-  return { ok: true, version: APP_VERSION, avatar, key };
+  const profileCard = `${String(origin || "https://api.diamondunitedfc.com").replace(/\/$/, "")}/${key}`;
+  return { ok: true, version: APP_VERSION, profile_card: profileCard, avatar: profileCard, key };
 }
 
 async function getMatchList(db, params) {
@@ -1251,8 +1254,8 @@ async function importData(db, payload, secret, pepper) {
     const ins = db.prepare(`
       INSERT OR REPLACE INTO players (
         name, name_norm, display_name, position, secondary_positions, preferred_side,
-        rating, base_rating, mvp_count, avatar, joined_at, last_match_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        rating, base_rating, mvp_count, avatar, profile_card, joined_at, last_match_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const stmts = payload.players.map((p) => {
       const base = clampBaseRating(p.rating || 5);
@@ -1267,6 +1270,7 @@ async function importData(db, payload, secret, pepper) {
         base,
         Math.max(0, Math.round(Number(p.mvp_count) || 0)),
         p.avatar || "",
+        p.profile_card || "",
         p.joined_at || nowIso,
         p.last_match_at || ""
       );

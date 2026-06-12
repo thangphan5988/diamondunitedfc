@@ -70,21 +70,31 @@ function rosterAvatarPreviewInner(avatarUrl, name){
 
 function rosterAvatarFieldsHtml(key, data){
   const avatar = String(data?.avatar || "").trim();
+  const profileCard = String(data?.profile_card || "").trim();
   const playerName = String(data?.name || "").trim();
   return `<div class="rosterAvatarField">
-    <span class="rosterFieldLabel">Avatar <span class="rosterFieldHint">Upload PNG/JPG/WebP · tối đa 2MB</span></span>
+    <span class="rosterFieldLabel">Avatar Zalo <span class="rosterFieldHint">Dùng trên sân / card cầu thủ</span></span>
     <div class="rosterAvatarRow">
       <div class="rosterAvatarPreview" id="rosterAvatarPreview_${escapeAttr(key)}">
         ${rosterAvatarPreviewInner(avatar, playerName)}
       </div>
+    </div>
+    ${rosterLabeledInput(key, "avatar", "Link avatar Zalo", "VD: avatars/ten-file.png", `type="text" placeholder="avatars/ten-file.png" value="${escapeAttr(avatar)}" oninput="updateRosterAvatarPreview('${escapeAttr(key)}')"`)} 
+  </div>
+  <div class="rosterAvatarField rosterProfileCardField">
+    <span class="rosterFieldLabel">Player card full <span class="rosterFieldHint">Ảnh poster · dùng cho danh sách full sau</span></span>
+    <div class="rosterAvatarRow">
+      <div class="rosterAvatarPreview rosterProfileCardPreview" id="rosterProfileCardPreview_${escapeAttr(key)}">
+        ${profileCard ? rosterAvatarPreviewInner(profileCard, playerName) : `<span class="meta rosterAvatarEmpty">Chưa có card full</span>`}
+      </div>
       <div class="rosterAvatarActions">
         <label class="fileUploadBtn rosterAvatarUploadBtn">
-          <span class="fileUploadIcon">📷</span> Chọn ảnh
-          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleRosterAvatarFile('${escapeAttr(key)}', this)">
+          <span class="fileUploadIcon">🃏</span> Upload card full
+          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleRosterProfileCardFile('${escapeAttr(key)}', this)">
         </label>
       </div>
     </div>
-    ${rosterLabeledInput(key, "avatar", "Link avatar", "Tự điền sau upload · hoặc dán avatars/ten.png", `type="text" placeholder="avatars/ten-file.png" value="${escapeAttr(avatar)}" oninput="updateRosterAvatarPreview('${escapeAttr(key)}')"`)} 
+    ${rosterLabeledInput(key, "profile_card", "Link card full", "Tự điền sau upload · avatars/full/ten.png", `type="text" placeholder="avatars/full/ten-file.png" value="${escapeAttr(profileCard)}" oninput="updateRosterProfileCardPreview('${escapeAttr(key)}')"`)} 
   </div>`;
 }
 
@@ -128,6 +138,7 @@ function readRosterForm(key){
     base_rating: Number(val("rating")),
     mvp_count: Number(val("mvp")),
     avatar: val("avatar").trim(),
+    profile_card: val("profile_card").trim(),
     joined_at: fromDateInputValue(val("joined_at")),
     last_match_at: fromDateInputValue(val("last_match_at"))
   };
@@ -243,6 +254,7 @@ async function saveRosterPlayer(key){
     base_rating: Number.isFinite(form.base_rating) ? form.base_rating : 5,
     mvp_count: Number.isFinite(form.mvp_count) ? form.mvp_count : 0,
     avatar: form.avatar,
+    profile_card: form.profile_card,
     joined_at: form.joined_at,
     last_match_at: form.last_match_at
   };
@@ -314,7 +326,17 @@ function updateRosterAvatarPreview(key){
   preview.innerHTML = rosterAvatarPreviewInner(avatar, name);
 }
 
-async function handleRosterAvatarFile(key, input){
+function updateRosterProfileCardPreview(key){
+  const preview = document.getElementById(`rosterProfileCardPreview_${key}`);
+  if(!preview) return;
+  const profileCard = document.getElementById(rosterFieldId(key, "profile_card"))?.value?.trim() || "";
+  const name = document.getElementById(rosterFieldId(key, "name"))?.value?.trim() || "";
+  preview.innerHTML = profileCard
+    ? rosterAvatarPreviewInner(profileCard, name)
+    : `<span class="meta rosterAvatarEmpty">Chưa có card full</span>`;
+}
+
+async function handleRosterProfileCardFile(key, input){
   const file = input?.files?.[0];
   if(!file) return;
   if(!/^image\/(png|jpeg|webp)$/i.test(file.type || "")){
@@ -328,7 +350,7 @@ async function handleRosterAvatarFile(key, input){
     return;
   }
 
-  const preview = document.getElementById(`rosterAvatarPreview_${key}`);
+  const preview = document.getElementById(`rosterProfileCardPreview_${key}`);
   if(preview) preview.innerHTML = `<span class="meta">Đang upload...</span>`;
 
   try{
@@ -339,13 +361,13 @@ async function handleRosterAvatarFile(key, input){
       content_type: file.type,
       image_base64: imageBase64
     });
-    const avatarInput = document.getElementById(rosterFieldId(key, "avatar"));
-    if(avatarInput) avatarInput.value = data.avatar || "";
-    updateRosterAvatarPreview(key);
-    showToast("Đã upload avatar.", "success");
+    const profileInput = document.getElementById(rosterFieldId(key, "profile_card"));
+    if(profileInput) profileInput.value = data.profile_card || data.avatar || "";
+    updateRosterProfileCardPreview(key);
+    showToast("Đã upload player card full.", "success");
   }catch(e){
-    updateRosterAvatarPreview(key);
-    alert(e.message || "Upload avatar thất bại.");
+    updateRosterProfileCardPreview(key);
+    alert(e.message || "Upload card full thất bại.");
   }finally{
     input.value = "";
   }

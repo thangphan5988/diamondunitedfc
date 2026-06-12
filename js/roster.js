@@ -40,6 +40,7 @@ function applyRosterFromApi(rows){
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
       mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
+      profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,
       selected: true
