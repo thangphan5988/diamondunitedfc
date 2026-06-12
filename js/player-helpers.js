@@ -129,3 +129,59 @@ function sideFit(playerSide, slotSide){
   if(slotSide === "CENTER" && (primary === "LEFT" || primary === "RIGHT")) return -3;
   return -8;
 }
+
+function isFallbackAvatarUrl(url){
+  return String(url || "").includes("ui-avatars.com");
+}
+
+function playerCardFitMeta(p){
+  const fitClass = p.fit === 2 ? "fitOk" : p.fit === 1 ? "fitAlt" : "fitBad";
+  const fitSym = p.fit === 2 ? "✓" : p.fit === 1 ? "↔" : "⚠";
+  const fitTitle = p.fit === 2 ? "Đúng sở trường" : p.fit === 1 ? "Vị trí phụ" : "Trái vị trí";
+  return { fitClass, fitSym, fitTitle };
+}
+
+/** Full-card portrait art block (avatar PNG + overlay badges). */
+function playerCardArtHtml(p, opts = {}){
+  const src = avatarSrc(p.avatar, p.name);
+  const fallback = defaultAvatar(p.name);
+  const fallbackCls = isFallbackAvatarUrl(p.avatar) ? " playerCardArt--fallback" : "";
+  const assigned = opts.assigned ?? p.assigned ?? p.main ?? "";
+  const rating = opts.rating ?? p.rating ?? 5;
+  const captain = opts.captain ?? !!p.captain;
+  const showFit = opts.showFit !== false && p.fit !== undefined;
+  const { fitClass, fitSym, fitTitle } = playerCardFitMeta(p);
+  const captainEl = captain ? `<span class="captainBadge">C</span>` : "";
+  const ratingEl = `<span class="ratingBadge">${rating}</span>`;
+  const posEl = assigned ? `<span class="ppos">${escapeHtml(assigned)}</span>` : "";
+  const fitEl = showFit
+    ? `<span class="fit ${fitClass}" title="${escapeAttr(fitTitle)}"${p.fit === 2 ? ' style="display:none"' : ""}>${fitSym}</span>`
+    : "";
+  const topExtra = opts.topExtra || "";
+  return `<div class="playerCardArt${fallbackCls}">
+    <img class="playerCardImg" src="${escapeAttr(src)}" alt="" onerror="this.src='${fallback}'">
+    <div class="playerCardShade"></div>
+    ${topExtra}
+    ${captainEl}${ratingEl}${posEl}${fitEl}
+  </div>`;
+}
+
+function pitchCardHtml(p, teamClass){
+  const captainCls = p.captain ? " captainCard" : "";
+  const showName = isFallbackAvatarUrl(p.avatar);
+  const nameEl = showName
+    ? `<div class="playerCardMeta"><div class="pname">${escapeHtml(playerDisplayName(p))}</div></div>`
+    : "";
+  return `<div class="cardPlayer ${teamClass || ""}${captainCls}">${playerCardArtHtml(p, { captain: p.captain })}${nameEl}</div>`;
+}
+
+function benchItemHtml(p){
+  return `<span class="benchRating">${p.rating || 5}</span>
+    <span class="benchThumb">${playerCardArtHtml(p, { showFit: false, captain: false })}</span>
+    <span class="benchItemText">${escapeHtml(playerDisplayName(p))} · ${escapeHtml(p.main || "")}</span>`;
+}
+
+function rosterThumbHtml(p){
+  const src = avatarSrc(p.avatar, p.name);
+  return `<span class="rosterThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main })}</span>`;
+}

@@ -86,35 +86,33 @@ function latestResultCaptainBadgeHtml(){
 
 function latestResultPitchCardHtml(p, teamClass, stat, isCap){
   const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
-  const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
-  const avatar = avatarSrc(p.avatar, p.name);
+  const showName = isFallbackAvatarUrl(p.avatar);
+  const nameEl = showName ? `<div class="lrName">${escapeHtml(playerDisplayName(p))}</div>` : "";
   return `<div class="lrCard ${teamClass}${captainClass}">
-    ${captain}
-    ${mvp}
-    <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
-    <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
-    <div class="lrScore">${escapeHtml(String(score))} điểm</div>
-    ${latestResultPlayerStatsHtml(stat)}
-    ${latestResultDeltaHtml(stat.rating_delta)}
+    ${playerCardArtHtml(p, { captain: p.captain, topExtra: mvp })}
+    <div class="lrCardFoot">
+      ${nameEl}
+      <div class="lrScore">${escapeHtml(String(score))} điểm</div>
+      ${latestResultPlayerStatsHtml(stat)}
+      ${latestResultDeltaHtml(stat.rating_delta)}
+    </div>
   </div>`;
 }
 
 function latestResultBenchCardHtml(p, teamClass, stat, isCap){
   const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
-  const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
   const score = stat.match_score ?? "—";
-  const avatar = avatarSrc(p.avatar, p.name);
   const capStats = latestResultPlayerStatsHtml(stat);
   const delta = latestResultDeltaHtml(stat.rating_delta);
+  const showName = isFallbackAvatarUrl(p.avatar);
+  const nameEl = showName ? `<div class="lrName">${escapeHtml(playerDisplayName(p))}</div>` : "";
   return `<div class="lrBenchCard ${teamClass}${captainClass}">
-    ${captain}
-    ${mvp}
-    <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
+    <span class="benchThumb">${playerCardArtHtml(p, { showFit: false, captain: p.captain, topExtra: mvp })}</span>
     <div class="lrBenchMeta">
-      <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
+      ${nameEl || `<div class="lrName">${escapeHtml(playerDisplayName(p))}</div>`}
       <div class="lrScore">${escapeHtml(String(score))} điểm · dự bị</div>
       ${capStats}
       ${delta}
@@ -243,7 +241,7 @@ function renderPreviewBench(benchId, bench){
     return;
   }
   el.innerHTML = bench.map(p =>
-    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
+    `<div class="benchItem"><span class="benchThumb">${playerCardArtHtml(p, { showFit: false, captain: false })}</span><span class="benchItemText">${escapeHtml(playerDisplayName(p))} · ${escapeHtml(p.main || "")}</span></div>`
   ).join("");
 }
 

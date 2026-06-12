@@ -145,12 +145,19 @@ function updateDraggedCardMeta(el, player, assigned){
   if(ppos) ppos.textContent = assigned;
   if(fitEl){
     const f = fit(player, assigned);
-    fitEl.textContent = f === 2 ? "✓ Đúng sở trường" : f === 1 ? "↔ Vị trí phụ" : "⚠ Trái vị trí";
+    player.fit = f;
+    const fitClass = f === 2 ? "fitOk" : f === 1 ? "fitAlt" : "fitBad";
+    const fitSym = f === 2 ? "✓" : f === 1 ? "↔" : "⚠";
+    const fitTitle = f === 2 ? "Đúng sở trường" : f === 1 ? "Vị trí phụ" : "Trái vị trí";
+    fitEl.className = `fit ${fitClass}`;
+    fitEl.textContent = fitSym;
+    fitEl.title = fitTitle;
+    fitEl.style.display = f === 2 ? "none" : "";
   }
 }
 
 function benchItemInnerHtml(p){
-  return `<span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}`;
+  return benchItemHtml(p);
 }
 
 function isPointerOnPitch(team, clientX, clientY){

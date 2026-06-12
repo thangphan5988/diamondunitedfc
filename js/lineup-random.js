@@ -73,7 +73,7 @@ async function suspense(list){
   while(Date.now()<end){
     const p=list[Math.floor(Math.random()*list.length)];
     count.textContent="Đang chia đội...";
-    rolling.innerHTML=`<img src="${escapeAttr(avatarSrc(p.avatar, p.name))}"><span>${escapeHtml(playerDisplayName(p))}</span>`;
+    rolling.innerHTML=`${playerCardArtHtml(p, { showFit: false, captain: false, assigned: "" })}<span>${escapeHtml(playerDisplayName(p))}</span>`;
     await wait(120);
   }
 

@@ -1,0 +1,205 @@
+/* Full-card portrait player avatars — pitch, bench, roster, results */
+
+.playerCardArt{
+  position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:inherit;
+  background:#0f172a;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)
+}
+.playerCardImg{
+  width:100%;height:100%;object-fit:cover;object-position:center top;display:block;
+  border:0;border-radius:0;background:#1e293b
+}
+.playerCardArt--fallback .playerCardImg{object-fit:cover;object-position:center}
+.playerCardShade{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(2,6,23,0) 42%,rgba(2,6,23,.55) 78%,rgba(2,6,23,.88) 100%)
+}
+.playerCardArt .captainBadge,
+.playerCardArt .ratingBadge,
+.playerCardArt .ppos,
+.playerCardArt .fit{
+  position:absolute;z-index:2;line-height:1
+}
+.playerCardArt .ratingBadge{
+  top:4px;right:4px;width:17px;height:17px;border-radius:50%;
+  background:rgba(250,204,21,.96);color:#000;font-size:9px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35)
+}
+.playerCardArt .captainBadge{
+  top:4px;left:4px;width:17px;height:17px;border-radius:50%;
+  background:#38bdf8;color:#00111f;font-size:9px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px rgba(56,189,248,.75)
+}
+.playerCardArt .ppos{
+  bottom:5px;left:50%;transform:translateX(-50%);
+  font-size:8px;font-weight:900;padding:2px 6px;border-radius:999px;
+  background:rgba(2,6,23,.78);border:1px solid rgba(125,211,252,.42);color:#7dd3fc;
+  white-space:nowrap;max-width:calc(100% - 10px);overflow:hidden;text-overflow:ellipsis
+}
+.playerCardArt .fit{
+  bottom:5px;right:5px;font-size:9px;font-weight:900;
+  width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center
+}
+.playerCardArt .fit.fitAlt{background:rgba(56,189,248,.85);color:#00111f}
+.playerCardArt .fit.fitBad{background:rgba(239,68,68,.9);color:#fff}
+
+/* Pitch slot card */
+.cardPlayer{
+  width:62px;padding:0;overflow:visible;text-align:center;
+  background:transparent;border:0;border-radius:10px;
+  box-shadow:none;backdrop-filter:none;min-height:0
+}
+.cardPlayer .playerCardArt{
+  border-radius:10px;
+  box-shadow:0 8px 20px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.12)
+}
+.cardPlayer.redTeam .playerCardArt{box-shadow:0 0 0 2px #ef4444,0 8px 20px rgba(239,68,68,.28)}
+.cardPlayer.yellowTeam .playerCardArt{box-shadow:0 0 0 2px #facc15,0 8px 20px rgba(250,204,21,.28)}
+.cardPlayer.capTeam .playerCardArt{box-shadow:0 0 0 2px #38bdf8,0 8px 20px rgba(56,189,248,.28)}
+.cardPlayer.capSubTeam .playerCardArt{box-shadow:0 0 0 2px #a78bfa,0 8px 20px rgba(167,139,250,.28)}
+.cardPlayer.captainCard .playerCardArt{
+  box-shadow:0 0 0 2px #facc15,0 0 16px rgba(250,204,21,.42),0 8px 20px rgba(0,0,0,.38)!important
+}
+.cardPlayer .playerCardMeta{padding:4px 2px 0}
+.cardPlayer .pname{
+  font-size:8px;font-weight:900;line-height:1.15;margin:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0
+}
+.cardPlayer > .pname,
+.cardPlayer > .ppos,
+.cardPlayer > .fit,
+.cardPlayer > .ratingBadge,
+.cardPlayer > .captainBadge,
+.cardPlayer > img{display:none!important}
+
+/* Bench */
+.benchItem{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(2,6,23,.92);border:1px solid var(--line);border-radius:12px;
+  padding:5px 10px 5px 5px;font-size:10px;max-width:100%
+}
+.benchItem img:not(.playerCardImg){display:none}
+.benchThumb{
+  flex:0 0 34px;width:34px;display:block;border-radius:7px;overflow:hidden
+}
+.benchThumb .playerCardArt{aspect-ratio:3/4;border-radius:7px}
+.benchThumb .playerCardArt .ratingBadge,
+.benchThumb .playerCardArt .captainBadge,
+.benchThumb .playerCardArt .ppos,
+.benchThumb .playerCardArt .fit{display:none}
+.benchThumb .playerCardShade{opacity:.35}
+.benchItemText{min-width:0;line-height:1.25;font-weight:800}
+.benchRating{flex-shrink:0}
+
+/* Roster picker */
+.row.row--portrait{grid-template-columns:28px 46px 1fr auto;align-items:center}
+.row .rosterThumb{
+  display:block;width:42px;border-radius:8px;overflow:hidden
+}
+.row .rosterThumb .playerCardArt{border-radius:8px}
+.row .rosterThumb .playerCardArt .ratingBadge{display:none}
+.row .rosterThumb .playerCardArt .captainBadge{display:none}
+.row .rosterThumb .playerCardArt .fit{display:none}
+.row .rosterThumb .playerCardArt .ppos{
+  bottom:3px;font-size:7px;padding:1px 4px
+}
+.row > img{display:none}
+
+/* Confirm modal */
+.confirmPlayer{grid-template-columns:28px 44px 1fr}
+.confirmPlayer .confirmThumb{display:block;width:40px;border-radius:8px;overflow:hidden}
+.confirmPlayer .confirmThumb .playerCardArt{border-radius:8px}
+.confirmPlayer .confirmThumb .playerCardArt .ratingBadge,
+.confirmPlayer .confirmThumb .playerCardArt .captainBadge,
+.confirmPlayer .confirmThumb .playerCardArt .fit{display:none}
+.confirmPlayer > img{display:none}
+
+/* Latest match / result cards */
+.lrCard{
+  width:72px;padding:0;overflow:visible;text-align:center;
+  background:transparent;border:0;border-radius:10px;
+  box-shadow:none;min-height:0;position:relative
+}
+.lrCard .playerCardArt{border-radius:10px;box-shadow:0 8px 18px rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,255,255,.1)}
+.lrCard.redTeam .playerCardArt{box-shadow:0 0 0 2px #ef4444,0 8px 18px rgba(239,68,68,.22)}
+.lrCard.yellowTeam .playerCardArt{box-shadow:0 0 0 2px #facc15,0 8px 18px rgba(250,204,21,.22)}
+.lrCard.capTeam .playerCardArt{box-shadow:0 0 0 2px #38bdf8,0 8px 18px rgba(56,189,248,.22)}
+.lrCard.capSubTeam .playerCardArt{box-shadow:0 0 0 2px #a78bfa,0 8px 18px rgba(167,139,250,.22)}
+.lrCard.captainCard .playerCardArt{
+  box-shadow:0 0 0 2px #facc15,0 0 14px rgba(250,204,21,.42),0 8px 18px rgba(0,0,0,.35)!important
+}
+.lrCard > img{display:none!important}
+.lrCardFoot{padding:5px 2px 2px}
+.lrCardFoot .lrName{
+  font-size:8px;font-weight:900;margin:0 0 2px;line-height:1.15;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.lrCardFoot .lrScore{font-size:10px;margin-top:0}
+.lrCardFoot .lrDelta{margin-top:3px}
+.lrCardFoot .lrStatRow{margin-top:2px}
+.lrCard .lrMvpBadge{top:0;transform:translate(-50%,-48%)}
+
+.lrBenchCard{
+  display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;
+  border-radius:12px;min-width:0;flex:1 1 200px;max-width:280px
+}
+.lrBenchCard > img{display:none!important}
+.lrBenchCard .benchThumb{flex:0 0 36px;width:36px}
+.lrBenchCard .lrMvpBadge{top:2px;left:50%;transform:translate(-50%,-50%)}
+
+/* Random rolling overlay */
+.rolling .playerCardArt{width:76px;border-radius:12px}
+.rolling .playerCardArt .ppos,
+.rolling .playerCardArt .fit{display:none}
+.rolling img:not(.playerCardImg){display:none}
+
+/* Admin roster */
+.rosterAdminRowMain .rosterThumb{
+  flex:0 0 44px;width:44px;display:block;border-radius:8px;overflow:hidden
+}
+.rosterAdminRowMain .rosterThumb .playerCardArt{border-radius:8px}
+.rosterAdminRowMain .rosterThumb .playerCardArt .ratingBadge,
+.rosterAdminRowMain .rosterThumb .playerCardArt .captainBadge,
+.rosterAdminRowMain .rosterThumb .playerCardArt .fit{display:none}
+.rosterAdminRowMain > img{display:none}
+
+/* Result entry + stats */
+.resultPlayer{grid-template-columns:42px 1fr 58px 46px 46px 40px}
+.resultPlayer.noStats{grid-template-columns:42px 1fr 70px 52px}
+.resultPlayer > img{display:none}
+.resultPlayerThumb{display:block;width:40px;border-radius:8px;overflow:hidden}
+.resultPlayerThumb .playerCardArt{border-radius:8px}
+.resultPlayerThumb .playerCardArt .ratingBadge,
+.resultPlayerThumb .playerCardArt .captainBadge,
+.resultPlayerThumb .playerCardArt .fit{display:none}
+.statRow{grid-template-columns:36px 42px 1fr auto}
+.statRow > img{display:none}
+.statRowThumb{display:block;width:38px;border-radius:8px;overflow:hidden}
+.statRowThumb .playerCardArt{border-radius:8px}
+.statRowThumb .playerCardArt .ratingBadge,
+.statRowThumb .playerCardArt .captainBadge,
+.statRowThumb .playerCardArt .fit{display:none}
+
+@media(max-width:760px){
+  .cardPlayer{width:min(54px,15.5vw)}
+  .cardPlayer .playerCardArt .ratingBadge,
+  .cardPlayer .playerCardArt .captainBadge{width:14px;height:14px;font-size:8px;top:3px}
+  .cardPlayer .playerCardArt .ratingBadge{right:3px}
+  .cardPlayer .playerCardArt .captainBadge{left:3px}
+  .cardPlayer .playerCardArt .ppos{font-size:7px;bottom:4px;padding:1px 4px}
+
+  .benchItem{font-size:9px;padding:4px 8px 4px 4px;gap:6px;border-radius:10px}
+  .benchThumb{flex-basis:30px;width:30px}
+
+  .row.row--portrait{grid-template-columns:28px 40px 1fr}
+  .row .rosterThumb{width:36px}
+
+  .lrCard{width:min(58px,16.5vw)}
+  .lrCardFoot .lrScore{font-size:9px}
+  .lrCardFoot .lrName{font-size:7px}
+  .lrBenchCard{
+    flex:0 1 auto;max-width:calc(100% - 4px);padding:4px 8px 4px 4px;border-radius:10px
+  }
+  .lrBenchCard .benchThumb{flex-basis:30px;width:30px}
+}

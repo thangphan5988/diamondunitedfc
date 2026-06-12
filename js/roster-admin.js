@@ -189,7 +189,7 @@ function renderAdminPlayerList(){
     parts.push(`<div class="rosterAdminCard${expanded ? " expanded" : ""}">
       <div class="rosterAdminCardHead" onclick="toggleRosterPlayer(${Number(p.id)})">
         <div class="rosterAdminRowMain">
-          <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'" alt="">
+          <span class="rosterThumb">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: p.main || p.position })}</span>
           <div>
             <b>${escapeHtml(label)}</b>${canonical}
             <div class="meta">${escapeHtml(posText)}${side} · ⭐ ${Number(p.rating) || 5}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>
