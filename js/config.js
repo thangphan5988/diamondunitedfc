@@ -112,3 +112,35 @@ const WEEKDAYS_VI = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5",
 // Cloudflare Worker API (D1)
 const API_BASE_URL = "https://api.diamondunitedfc.com";
 const MATCH_HISTORY_WEB_APP_URL = API_BASE_URL;
+
+/** Liên hệ đá giao hữu — SĐT VN (0xxx / 84xxx) hoặc URL Zalo đầy đủ (https://zalo.me/...) */
+const ZALO_FRIENDLY_MATCH_CONTACT = "0916507405";
+
+function zaloFriendlyMatchUrl(){
+  const raw = String(ZALO_FRIENDLY_MATCH_CONTACT || "").trim();
+  if(!raw) return "";
+  if(/^https?:\/\//i.test(raw)) return raw;
+  const digits = raw.replace(/\D/g, "");
+  if(!digits) return "";
+  let phone = digits;
+  if(phone.startsWith("0")) phone = "84" + phone.slice(1);
+  else if(!phone.startsWith("84")) phone = "84" + phone;
+  return `https://zalo.me/${phone}`;
+}
+
+function openZaloFriendlyMatch(event){
+  if(event?.preventDefault) event.preventDefault();
+  const url = zaloFriendlyMatchUrl();
+  if(!url){
+    alert("Chưa cấu hình Zalo liên hệ. Cập nhật ZALO_FRIENDLY_MATCH_CONTACT trong js/config.js.");
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function initFriendlyMatchButton(){
+  const btn = document.getElementById("btnFriendlyMatch");
+  if(!btn) return;
+  const url = zaloFriendlyMatchUrl();
+  if(url) btn.href = url;
+}

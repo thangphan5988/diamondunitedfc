@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.4.67">
+  <link rel="stylesheet" href="css/base.css?v=2.4.68">
   <link rel="stylesheet" href="css/lineup.css?v=2.4.10">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.41">
@@ -25,7 +25,13 @@
       <p class="siteIntro">Đội bóng anh em Diamond Riverside và khu vực lân cận. Ra sân vì đam mê, chơi đúng chuẩn mực, giữ tinh thần fair-play và lan tỏa sự chia sẻ — trên sân lẫn ngoài đời.</p>
     </div>
   </header>
-  <div class="buildVersion">Build v2.4.67</div>
+  <div id="friendlyMatchBar" class="friendlyMatchBar">
+    <a id="btnFriendlyMatch" class="friendlyMatchBtn" href="#" target="_blank" rel="noopener noreferrer" onclick="openZaloFriendlyMatch(event)">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">💬</span>
+      Liên hệ đá giao hữu qua Zalo
+    </a>
+  </div>
+  <div class="buildVersion">Build v2.4.69</div>
 
   <div class="authBar">
     <div id="authUserLabel" class="meta">Chế độ xem công khai — đăng nhập để quản lý trận</div>
@@ -446,7 +452,7 @@
 </div>
 
 
-  <script src="js/config.js?v=2.4.23"></script>
+  <script src="js/config.js?v=2.4.69"></script>
   <script src="js/utils.js?v=2.4.24"></script>
   <script src="js/permissions.js?v=2.4.8"></script>
   <script src="js/api.js?v=2.4.19"></script>
@@ -468,7 +474,7 @@
   <script src="js/workflow.js?v=2.4.22"></script>
   <script src="js/lineup-render.js?v=2.4.34"></script>
   <script src="js/lineup-export.js?v=2.4.16"></script>
-  <script src="js/app.js?v=2.4.9"></script>
+  <script src="js/app.js?v=2.4.69"></script>
 
 </body>
 </html>

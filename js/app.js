@@ -13,6 +13,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyLineupRoleUI();
   initFormationSegControls();
   initLineupTeamSwitchers();
+  initFriendlyMatchButton();
 });
 document.addEventListener("visibilitychange", () => {
   if(document.visibilityState === "visible" && shouldPollPendingMatch() &&
