@@ -861,6 +861,7 @@ async function saveMatchResult(){
     closeResultModal();
     unlockMatchState();
     await loadDefaultRoster();
+    invalidateTeamsStats();
 
     document.getElementById("ocrStatus").innerHTML =
       `Đã kết thúc trận <b>${data.match_label || displayMatchLabel()}</b>. MVP: <b>${(data.mvp_players || []).join(", ") || "—"}</b>. Rating đã cập nhật.`;

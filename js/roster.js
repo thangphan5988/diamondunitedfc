@@ -44,6 +44,8 @@ function applyRosterFromApi(rows){
       profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,
+      inactivity_penalty: Number(row.inactivity_penalty) || 0,
+      days_inactive: Number(row.days_inactive) || 0,
       selected: true
     };
   }).filter(Boolean);
@@ -53,6 +55,7 @@ function applyRosterFromApi(rows){
   renderPlayerPicker();
   updateStats();
   if(document.getElementById("statsView")?.style.display !== "none") renderStats();
+  if(document.getElementById("teamsView")?.style.display !== "none") renderTeams();
   maybeAutoOptimizeCapAfterImport();
 }
 

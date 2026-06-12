@@ -1,0 +1,121 @@
+/* Teams — FIFA-style player cards */
+
+.teamsViewHead{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin-bottom:14px
+}
+.teamsViewHead h2{margin:0;font-size:22px}
+.teamsToolbar{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%
+}
+.teamsToolbar input,.teamsToolbar select{
+  width:auto;min-width:160px;flex:1 1 160px;margin:0;padding:9px 11px;font-size:11px
+}
+.teamsPosFilters{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%}
+.teamsPosBtn{
+  margin:0;padding:7px 12px;width:auto;border-radius:999px;font-size:10px;font-weight:800;
+  background:#020617;border:1px solid var(--line);color:#94a3b8;cursor:pointer
+}
+.teamsPosBtn.active{background:#0284c7;border-color:#0284c7;color:#fff}
+.teamsGrid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;margin-top:4px
+}
+.teamsEmpty{padding:24px;text-align:center;color:var(--muted);font-size:12px}
+
+.futCard{
+  position:relative;aspect-ratio:2/2.85;max-width:220px;margin:0 auto;width:100%;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.45))
+}
+.futCardInner{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  clip-path:polygon(0 6%,5% 0,95% 0,100% 6%,100% 70%,50% 100%,0 70%);
+  background:linear-gradient(165deg,#0a1e3d 0%,#061528 42%,#020b18 100%);
+  border:1px solid rgba(77,239,255,.35);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 0 18px rgba(56,189,248,.12)
+}
+.futCard--gold .futCardInner{
+  background:linear-gradient(165deg,#3d2a08 0%,#1a1204 38%,#0f0a02 100%);
+  border-color:rgba(250,204,21,.55);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 22px rgba(250,204,21,.18)
+}
+.futCard--blue .futCardInner{
+  background:linear-gradient(165deg,#0c2848 0%,#071a32 42%,#030d18 100%);
+  border-color:rgba(56,189,248,.45)
+}
+.futCard--silver .futCardInner{
+  background:linear-gradient(165deg,#1e293b 0%,#111827 42%,#0a0f18 100%);
+  border-color:rgba(148,163,184,.35)
+}
+.futCardInner::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background:
+    radial-gradient(circle at 18% 78%,rgba(56,189,248,.12) 0,transparent 42%),
+    repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 2px,transparent 2px 8px)
+}
+.futCardTop{
+  position:relative;flex:1 1 auto;min-height:0;display:grid;
+  grid-template-columns:52px 1fr;gap:0;padding:10px 8px 0
+}
+.futCardMeta{
+  position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding-top:2px
+}
+.futRating{
+  font-size:28px;font-weight:900;line-height:1;color:#e0f2fe;
+  text-shadow:0 0 12px rgba(56,189,248,.65)
+}
+.futCard--gold .futRating{color:#fef08a;text-shadow:0 0 12px rgba(250,204,21,.55)}
+.futPos{font-size:11px;font-weight:900;letter-spacing:.04em;color:#bae6fd}
+.futJersey{
+  font-size:10px;font-weight:800;color:#7dd3fc;opacity:.95;margin-top:1px
+}
+.futFlag{
+  width:22px;height:14px;margin-top:4px;border-radius:2px;object-fit:cover;
+  box-shadow:0 1px 4px rgba(0,0,0,.35)
+}
+.futClub{
+  width:24px;height:24px;margin-top:4px;object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))
+}
+.futPortraitWrap{
+  position:relative;align-self:stretch;display:flex;align-items:flex-end;justify-content:center;
+  overflow:hidden;margin:-4px -6px 0 0
+}
+.futPortrait{
+  width:118%;max-width:none;height:auto;max-height:112%;object-fit:cover;object-position:center top;
+  transform:translateY(6%);filter:drop-shadow(0 6px 14px rgba(0,0,0,.55))
+}
+.futName{
+  position:relative;z-index:3;margin:0 8px;padding:5px 6px 6px;
+  text-align:center;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+  color:#e0f2fe;background:linear-gradient(180deg,rgba(2,8,20,.92),rgba(2,8,20,.98));
+  border-top:1px solid rgba(56,189,248,.25);border-bottom:1px solid rgba(56,189,248,.15);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.futCard--gold .futName{color:#fef9c3;border-color:rgba(250,204,21,.28)}
+.futStats{
+  position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:0 8px;
+  padding:6px 12px 8px;font-size:10px;color:#cbd5e1;flex:0 0 auto
+}
+.futStats::before{
+  content:"";position:absolute;left:50%;top:6px;bottom:10px;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(148,163,184,.35),transparent)
+}
+.futStat{display:flex;align-items:baseline;gap:4px;line-height:1.35}
+.futStat b{font-size:12px;font-weight:900;color:#f0f9ff;min-width:18px}
+.futStat span{font-size:9px;font-weight:800;color:#7dd3fc;letter-spacing:.03em}
+.futExtra{
+  position:relative;z-index:3;flex:0 0 auto;
+  padding:0 8px 8px;font-size:8px;color:#64748b;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.futCardMvp{
+  position:absolute;top:8px;right:8px;z-index:4;font-size:9px;font-weight:800;
+  padding:2px 5px;border-radius:999px;background:rgba(2,8,20,.75);color:#fbbf24;
+  border:1px solid rgba(250,204,21,.35)
+}
+
+@media(max-width:760px){
+  .teamsGrid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+  .futRating{font-size:24px}
+  .futName{font-size:10px}
+  .futStat b{font-size:11px}
+}

@@ -14,6 +14,7 @@ function switchTab(tab){
   const isLineup = tab === "lineup";
   const isHistory = tab === "history";
   const isStats = tab === "stats";
+  const isTeams = tab === "teams";
   const isAdmin = tab === "admin";
 
   if(isLineup && !canUseLineupTab()){
@@ -27,12 +28,14 @@ function switchTab(tab){
   document.getElementById("lineupView").style.display = tab === "lineup" ? "" : "none";
   document.getElementById("historyView").style.display = tab === "history" ? "" : "none";
   document.getElementById("statsView").style.display = tab === "stats" ? "" : "none";
+  document.getElementById("teamsView").style.display = tab === "teams" ? "" : "none";
   document.getElementById("adminView").style.display = tab === "admin" ? "" : "none";
 
   document.getElementById("tabLatest").classList.toggle("active", tab === "latest");
   document.getElementById("tabLineup").classList.toggle("active", tab === "lineup");
   document.getElementById("tabHistory").classList.toggle("active", tab === "history");
   document.getElementById("tabStats").classList.toggle("active", tab === "stats");
+  document.getElementById("tabTeams").classList.toggle("active", tab === "teams");
   document.getElementById("tabAdmin").classList.toggle("active", tab === "admin");
 
   if(tab === "latest") loadLatestMatch();
@@ -42,6 +45,7 @@ function switchTab(tab){
     switchStatsTab(currentStatsTab);
     renderStats();
   }
+  if(tab === "teams") renderTeams();
   if(tab === "admin"){
     if(canManageUsers()) switchAdminSection("users");
     else if(canManageRoster()) switchAdminSection("roster");
@@ -126,9 +130,11 @@ async function deleteHistoryMatch(idx, ev){
   try{
     await apiPost("delete_match", { match_id: match.match_id });
     await loadDefaultRoster();
+    invalidateTeamsStats();
     await loadMatchHistory();
     if(document.getElementById("tabLatest").classList.contains("active")) loadLatestMatch();
     if(document.getElementById("tabStats").classList.contains("active")) renderStats();
+    if(document.getElementById("tabTeams").classList.contains("active")) renderTeams();
   }catch(e){
     showError(e.message || "Không xóa được trận.");
   }
