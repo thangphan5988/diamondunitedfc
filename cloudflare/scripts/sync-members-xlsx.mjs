@@ -9,7 +9,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
-const WORKER_URL = process.env.WORKER_URL || "https://dufc-api.thangpt5988.workers.dev";
+const WORKER_URL = process.env.WORKER_URL || "https://api.diamondunitedfc.com";
 const PASSWORD = process.env.DUFC_PASSWORD || "dufc2026";
 const USERNAME = process.env.DUFC_USERNAME || "admin";
 const XLSX_PATH = process.argv[2] || "/Users/thangphan/Downloads/DiamondUnitedFC-Members.xlsx";

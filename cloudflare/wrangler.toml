@@ -2,6 +2,7 @@ name = "dufc-api"
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 account_id = "a0689f8484ba33ce434c65657ecc1092"
+workers_dev = true
 
 [[d1_databases]]
 binding = "DB"
@@ -11,6 +12,10 @@ database_id = "cffa592a-5a19-4ce9-9d51-0a6690127f6a"
 [vars]
 APP_VERSION = "v2.0.0"
 AUTH_PEPPER = "dufc-auth-pepper-v1"
+
+[[routes]]
+pattern = "api.diamondunitedfc.com"
+custom_domain = true
 
 # wrangler secret put MIGRATE_SECRET
 
