@@ -12,18 +12,19 @@
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#123,#020617);color:var(--text)}
 .wrap{max-width:1440px;margin:auto;padding:22px}
 .siteHeader{
-  display:flex;align-items:center;gap:16px;margin-bottom:14px
+  display:flex;align-items:flex-start;gap:16px;margin-bottom:14px
 }
 .siteLogo{
-  width:72px;height:72px;flex:0 0 auto;object-fit:contain;
+  width:72px;height:72px;flex:0 0 auto;object-fit:contain;margin-top:2px;
   filter:drop-shadow(0 4px 14px rgba(0,0,0,.45))
 }
-.siteBrand{min-width:0}
+.siteBrand{min-width:0;flex:1 1 auto}
 .siteBrand h1{
-  margin:0 0 4px;font-size:28px;line-height:1.1;letter-spacing:.02em
+  margin:0 0 8px;font-size:28px;line-height:1.1;letter-spacing:.02em
 }
-.siteTagline{
-  margin:0;font-size:13px;font-weight:700;color:#fbbf24;letter-spacing:.06em;text-transform:uppercase
+.siteIntro{
+  margin:0;max-width:720px;font-size:13px;line-height:1.55;font-weight:500;
+  color:#cbd5e1
 }
 h1{margin:0 0 6px;font-size:30px}.buildVersion{color:#94a3b8;font-size:10px;margin-bottom:12px}.ocrStatus{font-size:10px;color:#94a3b8;line-height:1.4;margin:8px 0 4px}
 .sub{color:var(--muted);margin-bottom:16px}
@@ -74,9 +75,9 @@ button.danger:hover{filter:brightness(1.15)}
     overflow-x:hidden;max-width:100%
   }
   .siteHeader{gap:12px;margin-bottom:10px}
-  .siteLogo{width:52px;height:52px}
-  .siteBrand h1{font-size:18px;margin-bottom:2px}
-  .siteTagline{font-size:10px}
+  .siteLogo{width:52px;height:52px;margin-top:0}
+  .siteBrand h1{font-size:18px;margin-bottom:6px}
+  .siteIntro{font-size:11px;line-height:1.5}
   h1{font-size:20px;margin-bottom:4px}
   .buildVersion{display:none}
   .card{padding:12px;border-radius:16px}
