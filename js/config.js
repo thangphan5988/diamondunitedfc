@@ -108,9 +108,7 @@ let confirmPollTimer = null;
 let authSession = null;
 const WEEKDAYS_VI = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 // Cloudflare Worker API (D1)
-const API_CUSTOM_URL = "https://api.diamondunitedfc.com";
-const API_FALLBACK_URL = "https://dufc-api.thangpt5988.workers.dev";
-const API_BASE_URL = API_CUSTOM_URL;
+const API_BASE_URL = "https://api.diamondunitedfc.com";
 const LEGACY_API_URL = "https://script.google.com/macros/s/AKfycbzBU3DIXutU2WkAKGgeBvUMaLllR_CowJtiPr92Flpdqo3qXaYCH_xZDDjOpMi0kvqH/exec";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Ffv-98Ld8jW2AKu-1NmGXFbhsuWJogw83F5p0q0HRGU/gviz/tq?tqx=out:csv&gid=545791527";
 const MATCH_HISTORY_WEB_APP_URL = API_BASE_URL || LEGACY_API_URL;
