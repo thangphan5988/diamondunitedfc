@@ -1,5 +1,12 @@
 /* Position/side normalization helpers */
 
+function jerseyLabel(jerseyNumber){
+  if(jerseyNumber == null || jerseyNumber === "") return "";
+  const n = Number(jerseyNumber);
+  if(!Number.isFinite(n) || n < 0) return "";
+  return `#${Math.round(n)}`;
+}
+
 function playerDisplayName(pOrName){
   if(pOrName && typeof pOrName === "object"){
     const dn = String(pOrName.display_name || "").trim();

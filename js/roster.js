@@ -40,6 +40,7 @@ function applyRosterFromApi(rows){
       secondary,
       rating: Number.isFinite(rating) ? rating : 5,
       mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
+      jersey_number: row.jersey_number != null && row.jersey_number !== "" ? Number(row.jersey_number) : null,
       profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,
@@ -66,7 +67,7 @@ function renderPlayerPicker(){
     .map((p, i) => ({p, i}))
     .filter(({p}) => {
       if(!keyword) return true;
-      const haystack = normalizeName(`${p.name} ${p.display_name || ""} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)}`);
+      const haystack = normalizeName(`${p.name} ${p.display_name || ""} ${p.main} ${p.secondary.join(" ")} ${sideLabel(p.side)} ${jerseyLabel(p.jersey_number)}`);
       return haystack.includes(keyword);
     })
     .sort((a, b) => {
@@ -83,7 +84,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
-      <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
+      <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${jerseyLabel(p.jersey_number) ? `<span class="metaJersey">${escapeHtml(jerseyLabel(p.jersey_number))} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }

@@ -91,6 +91,16 @@ export function clampStatCount(value) {
   return Math.max(0, Math.min(99, Math.round(Number(value) || 0)));
 }
 
+/** Số áo 0–99; null = chưa gán. */
+export function parseJerseyNumber(value) {
+  if (value == null || String(value).trim() === "") return null;
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n) || n < 0 || n > 99) {
+    throw new Error("Số áo phải từ 0–99.");
+  }
+  return n;
+}
+
 export function clampPositiveIntScore(value, fallback = 0) {
   if (value == null || String(value).trim() === "") {
     const fb = Number(fallback);
