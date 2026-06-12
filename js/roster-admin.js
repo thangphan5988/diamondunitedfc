@@ -63,6 +63,32 @@ function rosterLabeledInput(key, field, label, hint, attrs){
   </label>`;
 }
 
+function rosterAvatarPreviewInner(avatarUrl, name){
+  if(!avatarUrl) return `<span class="meta rosterAvatarEmpty">Chưa có avatar</span>`;
+  const p = { name: name || "DUFC", avatar: avatarUrl, main: "", rating: 5 };
+  return `<span class="rosterAvatarPreviewCard">${playerCardArtHtml(p, { showFit: false, captain: false, assigned: "" })}</span>`;
+}
+
+function rosterAvatarFieldsHtml(key, data){
+  const avatar = String(data?.avatar || "").trim();
+  const playerName = String(data?.name || "").trim();
+  return `<div class="rosterAvatarField">
+    <span class="rosterFieldLabel">Avatar <span class="rosterFieldHint">Upload PNG/JPG/WebP · tối đa 2MB</span></span>
+    <div class="rosterAvatarRow">
+      <div class="rosterAvatarPreview" id="rosterAvatarPreview_${escapeAttr(key)}">
+        ${rosterAvatarPreviewInner(avatar, playerName)}
+      </div>
+      <div class="rosterAvatarActions">
+        <label class="fileUploadBtn rosterAvatarUploadBtn">
+          <span class="fileUploadIcon">📷</span> Chọn ảnh
+          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleRosterAvatarFile('${escapeAttr(key)}', this)">
+        </label>
+      </div>
+    </div>
+    ${rosterLabeledInput(key, "avatar", "Link avatar", "Tự điền sau upload · hoặc dán avatars/ten.png", `type="text" placeholder="avatars/ten-file.png" value="${escapeAttr(avatar)}" oninput="updateRosterAvatarPreview('${escapeAttr(key)}')"`)} 
+  </div>`;
+}
+
 function rosterFormFieldsHtml(key, p){
   const isNew = key === "new";
   const data = p || {};
@@ -78,7 +104,7 @@ function rosterFormFieldsHtml(key, p){
       ${rosterLabeledInput(key, "rating", "Rating", "", `type="number" min="0" step="1" placeholder="5" value="${escapeAttr(String(data.base_rating ?? data.rating ?? (isNew ? 5 : "")))}"`)}
       ${rosterLabeledInput(key, "mvp", "Số MVP", "", `type="number" min="0" step="1" placeholder="0" value="${escapeAttr(String(Number(data.mvp_count) || 0))}"`)}
     </div>
-    ${rosterLabeledInput(key, "avatar", "Avatar URL", "Để trống = tự tạo từ tên", `type="text" placeholder="avatars/ten-file.png" value="${escapeAttr(data.avatar || "")}"`)}
+    ${rosterAvatarFieldsHtml(key, data)}
     <div class="rosterAdminFormRow">
       ${rosterLabeledInput(key, "joined_at", "Ngày tham gia", "", `type="date" value="${escapeAttr(toDateInputValue(data.joined_at))}"`)}
       ${rosterLabeledInput(key, "last_match_at", "Trận gần nhất", "", `type="date" value="${escapeAttr(toDateInputValue(data.last_match_at))}"`)}
@@ -259,4 +285,69 @@ async function deleteRosterPlayer(id, ev){
 
 function clearRosterPlayerForm(){
   openNewRosterPlayer();
+}
+
+function avatarFilenameBase(name){
+  return String(name || "player")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "player";
+}
+
+function readFileAsBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Không đọc được file ảnh."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function updateRosterAvatarPreview(key){
+  const preview = document.getElementById(`rosterAvatarPreview_${key}`);
+  if(!preview) return;
+  const avatar = document.getElementById(rosterFieldId(key, "avatar"))?.value?.trim() || "";
+  const name = document.getElementById(rosterFieldId(key, "name"))?.value?.trim() || "";
+  preview.innerHTML = rosterAvatarPreviewInner(avatar, name);
+}
+
+async function handleRosterAvatarFile(key, input){
+  const file = input?.files?.[0];
+  if(!file) return;
+  if(!/^image\/(png|jpeg|webp)$/i.test(file.type || "")){
+    alert("Chọn file PNG, JPG hoặc WebP.");
+    input.value = "";
+    return;
+  }
+  if(file.size > 2 * 1024 * 1024){
+    alert("Ảnh tối đa 2MB.");
+    input.value = "";
+    return;
+  }
+
+  const preview = document.getElementById(`rosterAvatarPreview_${key}`);
+  if(preview) preview.innerHTML = `<span class="meta">Đang upload...</span>`;
+
+  try{
+    const imageBase64 = await readFileAsBase64(file);
+    const nameBase = document.getElementById(rosterFieldId(key, "name"))?.value?.trim() || "player";
+    const data = await apiPost("admin_upload_avatar", {
+      filename_base: avatarFilenameBase(nameBase),
+      content_type: file.type,
+      image_base64: imageBase64
+    });
+    const avatarInput = document.getElementById(rosterFieldId(key, "avatar"));
+    if(avatarInput) avatarInput.value = data.avatar || "";
+    updateRosterAvatarPreview(key);
+    showToast("Đã upload avatar.", "success");
+  }catch(e){
+    updateRosterAvatarPreview(key);
+    alert(e.message || "Upload avatar thất bại.");
+  }finally{
+    input.value = "";
+  }
 }

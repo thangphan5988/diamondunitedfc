@@ -308,3 +308,24 @@ export function mapSummary(row) {
     highlight_video_url: row.highlight_video_url || ""
   };
 }
+
+export function slugifyAvatarFilename(value) {
+  return String(value || "player")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "player";
+}
+
+export function decodeBase64Image(raw) {
+  const text = String(raw || "").trim();
+  if (!text) throw new Error("Thiếu dữ liệu ảnh.");
+  const base64 = text.includes(",") ? text.split(",").pop() : text;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}

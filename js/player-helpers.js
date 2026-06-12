@@ -25,6 +25,7 @@ function defaultAvatar(name){
 function avatarSrc(url, fallbackName){
   const u = String(url || "").trim();
   if(!u) return fallbackName ? defaultAvatar(fallbackName) : defaultAvatar("?");
+  if(u.startsWith("data:")) return u;
   if(u.startsWith("http://") || u.startsWith("https://")) {
     if(u.includes("ui-avatars.com")) return u;
   }

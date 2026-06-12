@@ -17,7 +17,9 @@ import {
   normalizeVideoUrl,
   normalizeGoalVideoUrls,
   json,
-  corsPreflight
+  corsPreflight,
+  slugifyAvatarFilename,
+  decodeBase64Image
 } from "./utils.js";
 import {
   ensureDefaultAdmin,
@@ -43,13 +45,17 @@ export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return corsPreflight();
 
+    const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname.startsWith("/avatars/")) {
+      return serveAvatarObject(env, url.pathname.slice(1));
+    }
+
     const db = env.DB;
     const pepper = env.AUTH_PEPPER || "dufc-auth-pepper-v1";
 
     try {
       await ensureDefaultAdmin(db, pepper);
 
-      const url = new URL(request.url);
       let payload = {};
       let params = Object.fromEntries(url.searchParams.entries());
 
@@ -73,7 +79,7 @@ export default {
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats",
             "admin_validate_session", "admin_list_users", "admin_list_players",
-            "admin_save_player", "admin_delete_player", "import_data"
+            "admin_save_player", "admin_delete_player", "admin_upload_avatar", "import_data"
           ]
         });
       }
@@ -118,6 +124,9 @@ export default {
         case "admin_delete_player":
           await requireAuth(db, token, ["manage_roster"]);
           return json(await adminDeletePlayer(db, payload));
+        case "admin_upload_avatar":
+          await requireAuth(db, token, ["manage_roster"]);
+          return json(await adminUploadAvatar(env, payload, url.origin));
         case "save_match_history":
           await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
@@ -335,6 +344,53 @@ async function adminDeletePlayer(db, payload) {
 
   await db.prepare("DELETE FROM players WHERE id = ?").bind(id).run();
   return { ok: true, version: APP_VERSION, id, name: existing.name };
+}
+
+async function serveAvatarObject(env, key) {
+  if (!env.AVATARS) {
+    return new Response("Avatar storage chưa cấu hình.", { status: 503 });
+  }
+  const safeKey = String(key || "").replace(/^\/+/, "");
+  if (!safeKey.startsWith("avatars/") || safeKey.includes("..")) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  const stored = await env.AVATARS.getWithMetadata(safeKey, "arrayBuffer");
+  if (!stored?.value) return new Response("Not found", { status: 404 });
+
+  const contentType = stored.metadata?.contentType || "image/png";
+  return new Response(stored.value, {
+    headers: {
+      "Content-Type": contentType,
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=86400"
+    }
+  });
+}
+
+async function adminUploadAvatar(env, payload, origin) {
+  if (!env.AVATARS) throw new Error("Avatar storage chưa cấu hình trên server.");
+
+  const contentType = String(payload.content_type || "image/png").trim().toLowerCase();
+  const allowed = new Set(["image/png", "image/jpeg", "image/webp"]);
+  if (!allowed.has(contentType)) {
+    throw new Error("Chỉ hỗ trợ PNG, JPG hoặc WebP.");
+  }
+
+  const bytes = decodeBase64Image(payload.image_base64);
+  if (!bytes.length) throw new Error("File ảnh trống.");
+  if (bytes.length > 2 * 1024 * 1024) throw new Error("Ảnh tối đa 2MB.");
+
+  const ext = contentType === "image/jpeg" ? "jpg" : contentType === "image/webp" ? "webp" : "png";
+  const slug = slugifyAvatarFilename(payload.filename_base || payload.name || "player");
+  const key = `avatars/${slug}.${ext}`;
+
+  await env.AVATARS.put(key, bytes, {
+    metadata: { contentType }
+  });
+
+  const avatar = `${String(origin || "https://api.diamondunitedfc.com").replace(/\/$/, "")}/${key}`;
+  return { ok: true, version: APP_VERSION, avatar, key };
 }
 
 async function getMatchList(db, params) {

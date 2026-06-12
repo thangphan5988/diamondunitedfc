@@ -9,6 +9,10 @@ binding = "DB"
 database_name = "dufc-db"
 database_id = "cffa592a-5a19-4ce9-9d51-0a6690127f6a"
 
+[[kv_namespaces]]
+binding = "AVATARS"
+id = "ff4826369f774432a700f786c9f1bf22"
+
 [vars]
 APP_VERSION = "v2.0.0"
 AUTH_PEPPER = "dufc-auth-pepper-v1"

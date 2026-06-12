@@ -143,6 +143,22 @@
 .rosterAdminRow{align-items:center}
 .rosterAdminRowMain{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .rosterAdminRowMain img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#1e293b}
+.rosterAvatarField{margin-top:10px}
+.rosterAvatarRow{display:flex;align-items:flex-start;gap:12px;margin:8px 0}
+.rosterAvatarPreview{
+  flex:0 0 72px;width:72px;min-height:96px;border-radius:10px;overflow:hidden;
+  background:rgba(2,6,23,.65);border:1px dashed rgba(148,163,184,.35);
+  display:flex;align-items:center;justify-content:center;padding:4px
+}
+.rosterAvatarPreviewCard{display:block;width:100%}
+.rosterAvatarPreviewCard .playerCardArt{border-radius:8px}
+.rosterAvatarPreviewCard .playerCardArt .ratingBadge,
+.rosterAvatarPreviewCard .playerCardArt .captainBadge,
+.rosterAvatarPreviewCard .playerCardArt .ppos,
+.rosterAvatarPreviewCard .playerCardArt .fit{display:none}
+.rosterAvatarEmpty{font-size:10px;line-height:1.35;text-align:center;padding:6px 4px}
+.rosterAvatarActions{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+.rosterAvatarUploadBtn{margin:0;width:100%;min-height:44px}
 .adminSectionTabs{margin-bottom:12px}
 .metaCanon{opacity:.75}
 @media(max-width:760px){.rosterAdminFormRow{grid-template-columns:1fr}}
