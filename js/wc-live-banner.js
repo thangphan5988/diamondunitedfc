@@ -106,7 +106,7 @@
     const liveIds = new Set(live.map((fx) => String(fx.id)));
     const upcoming = (upcomingData?.items || [])
       .filter((fx) => !liveIds.has(String(fx.id)) && fx.status !== "FT" && !LIVE_STATUSES.includes(fx.status))
-      .slice(0, 2);
+      .slice(0, 3);
 
     if (!live.length && !upcoming.length) {
       el.innerHTML = "";

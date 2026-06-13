@@ -522,6 +522,9 @@ html[data-theme="light"] .wcLiveHead{color:#b91c1c}
 html[data-theme="light"] .wcUpcomingHead{color:#1d4ed8}
 html[data-theme="light"] .wcLiveItem{border-top-color:rgba(185,28,28,.15)}
 html[data-theme="light"] .wcUpcomingItem{border-top-color:rgba(29,78,216,.12)}
+html[data-theme="light"] .wcLiveBanner--upcomingOnly .wcUpcomingItem{
+  border-color:rgba(29,78,216,.18);background:rgba(255,255,255,.55)
+}
 html[data-theme="light"] .wcLiveBanner .wcMatchStatus,
 html[data-theme="light"] .wcLiveBanner .wcMatchTime{color:#0284c7}
 html[data-theme="light"] .wcError{color:#b91c1c;background:#fef2f2;border-color:#fecaca}
