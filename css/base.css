@@ -123,7 +123,7 @@ button.danger:hover{filter:brightness(1.15)}
   }
   .friendlyMatchBtnIcon{font-size:13px}
   .friendlyMatchBtnText{display:none}
-  .friendlyMatchBtn:not(.friendlyMatchBtn--ad)::after{content:"Giao hữu";line-height:1.2;white-space:nowrap}
+  .friendlyMatchBtn:not(.friendlyMatchBtn--ad):not(.friendlyMatchBtn--wc)::after{content:"Giao hữu";line-height:1.2;white-space:nowrap}
   .friendlyMatchBtn--ad::after{content:"Quảng cáo";line-height:1.2;white-space:nowrap}
   h1{font-size:20px;margin-bottom:4px}
   .buildVersion{display:none}

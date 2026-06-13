@@ -138,21 +138,61 @@ function sanitizeInlineHtml(raw) {
     .trim();
 }
 
+const ARTICLE_JUNK_DIV_CLASS =
+  "popup|btn-save|btn-share|bv-lq|box-24h|bnrPtn|zplayer|minigame|linkOrigin|source-time|nguontin|see-now|readmore|sohatv-player-embed|v-24h-media|iframe-video|viewVideoPlay|viewVideo|box_bxh|box-24h-tntd|box-wc|cate-olym|professor_prebid";
+
+function isPromoWidgetImage(url) {
+  const s = String(url || "").toLowerCase();
+  return /wc2026-\d|\/ltd-\d|\/bxh-\d|width210height39|width243height39|width230height39/.test(s);
+}
+
+function isVideoCaptionText(text) {
+  const t = String(text || "").replace(/\s+/g, " ").trim();
+  if (!t) return false;
+  if (/^video\b/i.test(t)) return true;
+  if (/bản quyền thuộc về\s*vtv/i.test(t)) return true;
+  if (/nội dung video trong bài/i.test(t)) return true;
+  return false;
+}
+
+function removeJunkArticleBlocks(html) {
+  let out = String(html || "");
+  out = out.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
+  out = out.replace(/<video[\s\S]*?<\/video>/gi, "");
+  out = out.replace(/<object[\s\S]*?<\/object>/gi, "");
+  out = out.replace(/<embed\b[^>]*\/?>/gi, "");
+  const junkDivRe = new RegExp(
+    `<div[^>]*(?:class="[^"]*(?:${ARTICLE_JUNK_DIV_CLASS})[^"]*"|id="(?:ADS_[^"]*|professor_prebid-root)"[^>]*)>[\\s\\S]*?<\\/div>`,
+    "gi"
+  );
+  for (let i = 0; i < 8; i++) {
+    const next = out.replace(junkDivRe, "");
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
+function removeVideoCaptionBlocks(html) {
+  return String(html || "").replace(/<(p|div|figure|blockquote)[^>]*>[\s\S]*?<\/\1>/gi, (block) => {
+    const text = stripHtml(block).replace(/\u00a0/g, " ");
+    return isVideoCaptionText(text) ? "" : block;
+  });
+}
+
 function sanitizeArticleHtml(raw) {
   let html = String(raw || "");
   html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
   html = html.replace(/<style[\s\S]*?<\/style>/gi, "");
   html = html.replace(/<!--[\s\S]*?-->/g, "");
-  html = html.replace(/<iframe[\s\S]*?<\/iframe>/gi, '<p class="wcNewsVideoNote"><em>Nội dung video trong bài.</em></p>');
+  html = removeJunkArticleBlocks(html);
   html = html.replace(/<h2[^>]*id="article_sapo"[\s\S]*?<\/h2>/gi, "");
   html = html.replace(/<(?:nav|form|button|svg|section)[\s\S]*?<\/(?:nav|form|button|svg|section)>/gi, "");
-  html = html.replace(/<div[^>]*\bid="ADS_[^"]*"[\s\S]*?<\/div>/gi, "");
-  html = html.replace(/<div[^>]*class="[^"]*(?:popup|btn-save|btn-share|bv-lq|box-24h|bnrPtn|zplayer|minigame|linkOrigin|source-time|nguontin|see-now|readmore)[^"]*"[\s\S]*?<\/div>/gi, "");
   html = html.replace(/\s(on\w+|data-[\w-]+|style|class|id|align|width|height|onclick)\s*=\s*("[^"]*"|'[^']*')/gi, "");
 
   html = html.replace(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi, (tag, src) => {
     const abs = abs24hUrl(src);
-    if (!isAllowedMediaUrl(abs)) return "";
+    if (!isAllowedMediaUrl(abs) || isPromoWidgetImage(abs)) return "";
     const altMatch = tag.match(/\balt=["']([^"']*)["']/i);
     const alt = altMatch ? ` alt="${altMatch[1].replace(/"/g, "&quot;")}"` : "";
     return `<img src="${abs.replace(/"/g, "&quot;")}"${alt} loading="lazy">`;
@@ -163,9 +203,10 @@ function sanitizeArticleHtml(raw) {
   }
   html = html.replace(/<a\b[^>]*\/>/gi, "");
   html = html.replace(/<p[^>]*>\s*(?:Xem thêm|Đọc thêm|Xem chi tiết|Đọc trên 24h)[^<]*<\/p>/gi, "");
+  html = removeVideoCaptionBlocks(html);
 
   html = html.replace(/<\/?(?!p|br|strong|em|b|i|u|img|h2|h3|h4|ul|ol|li|blockquote|table|thead|tbody|tr|th|td|div|figure|figcaption)\w+[^>]*>/gi, "");
-  html = html.replace(/<p>\s*<\/p>/gi, "");
+  html = html.replace(/<p>\s*(?:&nbsp;|\s)*<\/p>/gi, "");
   html = html.replace(/<div>\s*<\/div>/gi, "");
   return html.replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -615,7 +656,7 @@ export async function wc2026NewsArticle(env, params = {}) {
   }
 
   const cacheId = encodeURIComponent(url).slice(0, 180);
-  const article = await getCached(env.AVATARS, `news_article:v2:${cacheId}`, TTL.newsArticle, async () => {
+  const article = await getCached(env.AVATARS, `news_article:v3:${cacheId}`, TTL.newsArticle, async () => {
     const res = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; DUFC/1.0; +https://diamondunitedfc.com)",

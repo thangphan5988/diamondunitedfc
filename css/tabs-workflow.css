@@ -138,7 +138,7 @@
   }
   .mainNavWcBtn--mobile .friendlyMatchBtnIcon{font-size:13px}
   .mainNavWcBtn--mobile .friendlyMatchBtnText{display:none}
-  .mainNavWcBtn--mobile::after{content:"WC 2026";line-height:1.2;white-space:nowrap}
+  .mainNavWcBtn--mobile::after{content:"World Cup 2026";line-height:1.2;white-space:nowrap}
   .authBar{margin-bottom:8px;gap:8px;align-items:center}
   .authBar .meta{font-size:9px;line-height:1.35}
   .authActions button{padding:7px 10px;font-size:10px}
