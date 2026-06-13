@@ -5,6 +5,7 @@
   border:1px solid var(--line);background:#0a1628
 }
 .homeWcLiveBanner{margin:0 0 12px}
+.wcPage .wcLiveBanner{margin:0 0 14px}
 
 /* WC hub — banner live đơn giản (chưa dùng grid) */
 .wcLiveBanner:not(:has(.wcBannerGrid)){

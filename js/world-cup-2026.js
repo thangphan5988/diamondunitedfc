@@ -376,23 +376,6 @@ function wcRenderTeams(data) {
     </article>`).join("")}</div>`;
 }
 
-function wcRenderLiveBanner(data) {
-  const el = wcEl("wcLiveBanner");
-  if (!el) return;
-  const live = (data.items || []).filter((fx) => ["1H", "HT", "2H", "ET", "P", "LIVE"].includes(fx.status));
-  if (!live.length) {
-    el.innerHTML = "";
-    el.hidden = true;
-    return;
-  }
-  el.hidden = false;
-  el.innerHTML = `<div class="wcLiveHead">🔴 Đang diễn ra</div>${live.slice(0, 3).map((fx) => `
-    <div class="wcLiveItem wcLiveItem--click" role="button" tabindex="0" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')">
-      <span>${wcEscapeHtml(fx.home?.name)} ${wcScoreLine(fx)} ${wcEscapeHtml(fx.away?.name)}</span>
-      <span class="wcMatchStatus">${wcEscapeHtml(wcStatusLabel(fx.status, fx.elapsed))}</span>
-    </div>`).join("")}`;
-}
-
 function wcCardKey(event, type, id) {
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
@@ -718,12 +701,6 @@ function wcInitTabs() {
 async function wcInitPage() {
   wcInitTabs();
   wcSetLoading("wcPanelNews");
-  try {
-    const liveData = await wcApiGet("wc2026_fixtures", { scope: "live" });
-    wcRenderLiveBanner(liveData);
-  } catch (_) {
-    /* live banner optional */
-  }
   const newsUrl = new URLSearchParams(location.search).get("news");
   if (newsUrl) {
     wcActiveTab = "news";

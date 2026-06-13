@@ -1,8 +1,9 @@
-/* Banner World Cup 2026 — trận đang diễn ra + sắp đá (trang chủ) */
+/* Banner World Cup 2026 — trận đang diễn ra + sắp đá (trang chủ + hub WC) */
 
-(function initHomeWcLiveBanner() {
+(function initWcLiveBanner() {
   const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "P", "LIVE"];
   const POLL_MS = 60000;
+  const BANNER_IDS = ["homeWcLiveBanner", "wcLiveBanner"];
   const MOBILE_MQ = window.matchMedia("(max-width:760px)");
   let pollTimer = null;
   let lastLiveData = null;
@@ -88,9 +89,18 @@
     return data;
   }
 
-  function liveItemHtml(fx) {
+  function matchLinkAttrs(fx) {
+    const id = escapeHtml(String(fx.id));
     const href = `/world-cup-2026.html?match=${encodeURIComponent(String(fx.id))}`;
-    return `<a class="wcLiveItem wcLiveItem--click" href="${escapeHtml(href)}">
+    const onHub = /world-cup-2026\.html$/i.test(location.pathname);
+    if (onHub && typeof window.wcOpenMatchDetail === "function") {
+      return `href="${href}" onclick="event.preventDefault();wcOpenMatchDetail('${id}')"`;
+    }
+    return `href="${escapeHtml(href)}"`;
+  }
+
+  function liveItemHtml(fx) {
+    return `<a class="wcLiveItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
       <div class="wcBannerMatchTeams">
         <span class="wcBannerTeam wcBannerTeam--home">${escapeHtml(fx.home?.name)}</span>
         <span class="wcBannerScore">${escapeHtml(scoreLine(fx))}</span>
@@ -101,8 +111,7 @@
   }
 
   function upcomingItemHtml(fx) {
-    const href = `/world-cup-2026.html?match=${encodeURIComponent(String(fx.id))}`;
-    return `<a class="wcUpcomingItem wcLiveItem--click" href="${escapeHtml(href)}">
+    return `<a class="wcUpcomingItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
       <div class="wcBannerMatchTeams">
         <span class="wcBannerTeam wcBannerTeam--home">${escapeHtml(fx.home?.name)}</span>
         <span class="wcBannerScore">vs</span>
@@ -119,8 +128,11 @@
     </section>`;
   }
 
-  function renderBanner(liveData, upcomingData) {
-    const el = document.getElementById("homeWcLiveBanner");
+  function getBannerElements() {
+    return BANNER_IDS.map((id) => document.getElementById(id)).filter(Boolean);
+  }
+
+  function renderBanner(el, liveData, upcomingData) {
     if (!el) return;
 
     const live = (liveData?.items || []).filter((fx) => LIVE_STATUSES.includes(fx.status));
@@ -154,6 +166,10 @@
     el.innerHTML = `<div class="wcBannerGrid">${liveCol}${upcomingCols}</div>`;
   }
 
+  function renderAllBanners(liveData, upcomingData) {
+    getBannerElements().forEach((el) => renderBanner(el, liveData, upcomingData));
+  }
+
   async function refreshBanner() {
     try {
       const [liveData, upcomingData] = await Promise.all([
@@ -162,23 +178,22 @@
       ]);
       lastLiveData = liveData;
       lastUpcomingData = upcomingData;
-      renderBanner(liveData, upcomingData);
+      renderAllBanners(liveData, upcomingData);
     } catch (_) {
-      const el = document.getElementById("homeWcLiveBanner");
-      if (el) {
+      getBannerElements().forEach((el) => {
         el.innerHTML = "";
         el.hidden = true;
-      }
+      });
     }
   }
 
   function start() {
-    if (!document.getElementById("homeWcLiveBanner")) return;
+    if (!getBannerElements().length) return;
     refreshBanner();
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(refreshBanner, POLL_MS);
     MOBILE_MQ.addEventListener("change", () => {
-      if (lastLiveData || lastUpcomingData) renderBanner(lastLiveData, lastUpcomingData);
+      if (lastLiveData || lastUpcomingData) renderAllBanners(lastLiveData, lastUpcomingData);
     });
   }
 
