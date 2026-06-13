@@ -126,18 +126,50 @@
   width:74px;min-height:84px;border-radius:12px;padding:5px 3px 6px;
   box-shadow:0 8px 18px rgba(0,0,0,.35)
 }
-.lrCard.redTeam{border-color:#ef4444;box-shadow:0 0 0 1px rgba(239,68,68,.4),0 10px 22px rgba(239,68,68,.18)}
-.lrCard.yellowTeam{border-color:#facc15;box-shadow:0 0 0 1px rgba(250,204,21,.4),0 10px 22px rgba(250,204,21,.18)}
-.lrCard.capTeam{border-color:#38bdf8;box-shadow:0 0 0 1px rgba(56,189,248,.4),0 10px 22px rgba(56,189,248,.18)}
-.lrCard.capSubTeam{border-color:#a78bfa;box-shadow:0 0 0 1px rgba(167,139,250,.4),0 10px 22px rgba(167,139,250,.18)}
+.lrCard.redTeam{
+  background:linear-gradient(165deg,#f87171 0%,#ef4444 42%,#b91c1c 100%);
+  border-color:#fecaca;
+  box-shadow:0 0 0 1px rgba(127,29,29,.45),0 10px 22px rgba(185,28,28,.32)
+}
+.lrCard.yellowTeam{
+  background:linear-gradient(165deg,#fde047 0%,#facc15 46%,#ca8a04 100%);
+  border-color:#fef9c3;
+  box-shadow:0 0 0 1px rgba(161,98,7,.4),0 10px 22px rgba(202,138,4,.28)
+}
+.lrCard.capTeam{
+  background:linear-gradient(165deg,#38bdf8 0%,#0284c7 48%,#0369a1 100%);
+  border-color:#bae6fd;
+  box-shadow:0 0 0 1px rgba(3,105,161,.45),0 10px 22px rgba(2,132,199,.28)
+}
+.lrCard.capSubTeam{
+  background:linear-gradient(165deg,#c4b5fd 0%,#8b5cf6 46%,#6d28d9 100%);
+  border-color:#ddd6fe;
+  box-shadow:0 0 0 1px rgba(91,33,182,.4),0 10px 22px rgba(109,40,217,.26)
+}
+.lrCard.redTeam .lrName{color:#fff;text-shadow:0 1px 2px rgba(127,29,29,.45)}
+.lrCard.redTeam .lrScore{color:#fff}
+.lrCard.yellowTeam .lrName{color:#1c1408;text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.lrCard.yellowTeam .lrScore{color:#713f12}
+.lrCard.capTeam .lrName,.lrCard.capTeam .lrScore{color:#fff;text-shadow:0 1px 2px rgba(3,105,161,.35)}
+.lrCard.capSubTeam .lrName,.lrCard.capSubTeam .lrScore{color:#fff;text-shadow:0 1px 2px rgba(91,33,182,.35)}
+.lrCard.redTeam .lrDelta.up{background:rgba(255,255,255,.2);color:#dcfce7}
+.lrCard.redTeam .lrDelta.down{background:rgba(0,0,0,.18);color:#fecaca}
+.lrCard.yellowTeam .lrDelta.up{background:rgba(22,101,52,.14);color:#166534}
+.lrCard.yellowTeam .lrDelta.down{background:rgba(153,27,27,.12);color:#991b1b}
+.lrCard.redTeam .lrStatRow .goals{color:#bbf7d0}
+.lrCard.redTeam .lrStatRow .assists{color:#e9d5ff}
+.lrCard.yellowTeam .lrStatRow .goals{color:#166534}
+.lrCard.yellowTeam .lrStatRow .assists{color:#6d28d9}
+.lrCard.capTeam .lrStatRow .goals,.lrCard.capSubTeam .lrStatRow .goals{color:#bbf7d0}
+.lrCard.capTeam .lrStatRow .assists,.lrCard.capSubTeam .lrStatRow .assists{color:#f5d0fe}
 .lrCard img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.35)}
 .lrPitch .lrCard img{width:34px;height:34px}
 .lrPitch .lrName{font-size:9px;margin-top:4px}
 .lrPitch .lrScore{font-size:11px;margin-top:2px}
 .lrPitch .lrDelta{font-size:8px;padding:1px 5px;margin-top:3px}
 .lrPitch .lrStatRow{font-size:8px;margin-top:2px}
-.lrName{font-size:10px;font-weight:900;margin-top:5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lrScore{font-size:12px;font-weight:900;color:#7dd3fc;margin-top:3px}
+.lrName{font-size:10px;font-weight:900;margin-top:5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--player-name,inherit)}
+.lrScore{font-size:12px;font-weight:900;color:var(--player-score,#7dd3fc);margin-top:3px}
 .lrMvpBadge{
   position:absolute;top:0;left:50%;z-index:3;
   transform:translate(-50%,-46%);
@@ -165,7 +197,12 @@
 .lrCard.captainCard,.lrBenchCard.captainCard{
   box-shadow:0 0 0 2px #facc15,0 0 14px rgba(250,204,21,.42),0 8px 18px rgba(0,0,0,.35)!important
 }
-.lrCard.captainCard .lrName,.lrBenchCard.captainCard .lrName{color:#38bdf8}
+.lrCard.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName,
+.lrBenchCard.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName{color:#38bdf8}
+.lrCard.redTeam.captainCard .lrName,.lrBenchCard.redTeam.captainCard .lrName{color:#fef08a;text-shadow:0 1px 2px rgba(127,29,29,.5)}
+.lrCard.yellowTeam.captainCard .lrName,.lrBenchCard.yellowTeam.captainCard .lrName{color:#92400e;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.lrCard.capTeam.captainCard .lrName,.lrBenchCard.capTeam.captainCard .lrName,
+.lrCard.capSubTeam.captainCard .lrName,.lrBenchCard.capSubTeam.captainCard .lrName{color:#fef08a;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 .lrDelta{font-size:9px;font-weight:900;border-radius:999px;padding:2px 6px;margin-top:4px;display:inline-block}
 .lrDelta.up{background:rgba(34,197,94,.22);color:#86efac}
 .lrDelta.down{background:rgba(239,68,68,.22);color:#fca5a5}

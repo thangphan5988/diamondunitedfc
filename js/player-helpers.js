@@ -39,6 +39,14 @@ function birthDateLabel(value){
   return age != null ? `${formatted} (${age} tuổi)` : formatted;
 }
 
+function playerEventDateLabel(value){
+  return formatBirthDateDisplay(value);
+}
+
+function playerPosDisplayLabel(pos){
+  return ({ GK: "Thủ môn", DEF: "Hậu vệ", MID: "Tiền vệ", FWD: "Tiền đạo" })[pos] || String(pos || "").trim();
+}
+
 function playerDisplayName(pOrName){
   if(pOrName && typeof pOrName === "object"){
     const dn = String(pOrName.display_name || "").trim();

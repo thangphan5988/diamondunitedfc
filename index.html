@@ -23,19 +23,25 @@
   <meta name="twitter:title" content="Diamond United FC — Giao Hữu & Quảng Cáo" />
   <meta name="twitter:description" content="Đội bóng sân 7 Diamond Riverside, TP.HCM. Giao hữu fair-play · Banner quảng cáo cộng đồng bóng đá." />
   <meta name="twitter:image" content="https://diamondunitedfc.com/assets/logo.png" />
-  <meta name="theme-color" content="#07111f" />
+  <meta name="theme-color" content="#d4e4f2" />
+  <script>
+  (function(){try{var k=localStorage.getItem("dufc_theme");var t;if(k==="light")t="light";else if(k==="dark")t="dark";else{var h=(new Date().getUTCHours()+7+24)%24;t=(h>=6&&h<18)?"light":"dark";}if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();
+  </script>
   <link rel="icon" href="assets/logo.png" type="image/png" />
   <link rel="apple-touch-icon" href="assets/logo.png" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.4.92">
-  <link rel="stylesheet" href="css/lineup.css?v=2.4.10">
+  <link rel="stylesheet" href="css/base.css?v=2.6.3">
+  <link rel="stylesheet" href="css/theme.css?v=2.6.7">
+  <link rel="stylesheet" href="css/lineup.css?v=2.6.7">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
-  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.4.98">
-  <link rel="stylesheet" href="css/latest-match.css?v=2.4.32">
-  <link rel="stylesheet" href="css/teams.css?v=2.4.70">
+  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.5.1">
+  <link rel="stylesheet" href="css/latest-match.css?v=2.6.7">
+  <link rel="stylesheet" href="css/teams.css?v=2.5.9">
+  <link rel="stylesheet" href="css/teams-cards.css?v=2.6.0">
   <link rel="stylesheet" href="css/ads.css?v=2.4.87">
+  <link rel="stylesheet" href="css/wc-live-banner.css?v=2.7.1">
   <link rel="stylesheet" href="css/seo.css?v=2.4.93">
   <link rel="stylesheet" href="css/analytics.css?v=2.4.96">
   <script type="application/ld+json">
@@ -109,16 +115,26 @@
       </a>
     </div>
   </header>
-  <div class="buildVersion">Build v2.4.99</div>
+  <div class="buildVersion">Build v2.6.3</div>
+
+  <div id="homeWcLiveBanner" class="wcLiveBanner homeWcLiveBanner" hidden aria-live="polite"></div>
 
   <div class="authBar">
     <div class="authBarMain">
+      <button type="button" class="themeToggle" id="themeToggle" onclick="toggleTheme()">
+        <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
+        <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
+      </button>
       <div class="mainNavMobile" id="mainNavMobile">
         <button type="button" class="mainNavHamburger" id="mainNavMobileBtn" aria-expanded="false" aria-haspopup="listbox" aria-label="Menu điều hướng" onclick="toggleMobileTabMenu(event)">
           <span class="mainNavHamburgerIcon" aria-hidden="true"><span></span><span></span><span></span></span>
         </button>
         <div class="mainNavMobileMenu" id="mainNavMobileMenu" role="listbox" hidden></div>
       </div>
+      <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/world-cup-2026.html" title="World Cup 2026">
+        <span class="friendlyMatchBtnIcon" aria-hidden="true">🏆</span>
+        <span class="friendlyMatchBtnText">World Cup 2026</span>
+      </a>
       <div id="authUserLabel" class="meta" style="display:none"></div>
     </div>
     <div class="authActions">
@@ -128,6 +144,10 @@
   </div>
 
   <nav class="mainNav" id="mainNav">
+    <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/world-cup-2026.html" title="World Cup 2026">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">🏆</span>
+      <span class="friendlyMatchBtnText">World Cup 2026</span>
+    </a>
     <div class="tabs" id="mainTabs">
       <button id="tabLatest" class="tab active" onclick="switchTab('latest')">Trận đấu gần nhất</button>
       <button id="tabHistory" class="tab" onclick="switchTab('history')">Lịch sử trận</button>
@@ -485,6 +505,7 @@
       © Diamond United FC · diamondunitedfc.com · Đội bóng sân 7 Diamond Riverside, TP. Hồ Chí Minh
     </div>
     <nav class="siteFooterSeo" aria-label="Liên kết SEO">
+      <a href="/world-cup-2026.html">World Cup 2026 — tin, lịch, BXH →</a>
       <a href="/giao-huu.html">Đá giao hữu sân 7 tại Diamond Riverside →</a>
       <a href="/quang-cao.html">Đặt quảng cáo trên website DUFC →</a>
     </nav>
@@ -601,12 +622,14 @@
 
 
   <script src="js/config.js?v=2.4.96"></script>
+  <script src="js/wc-live-banner.js?v=2.7.0"></script>
+  <script src="js/theme.js?v=2.6.0"></script>
   <script src="js/utils.js?v=2.4.24"></script>
   <script src="js/permissions.js?v=2.4.74"></script>
   <script src="js/api.js?v=2.4.19"></script>
   <script src="js/analytics.js?v=2.4.96"></script>
   <script src="js/match-data.js?v=2.4.23"></script>
-  <script src="js/match-result.js?v=2.4.44"></script>
+  <script src="js/match-result.js?v=2.4.45"></script>
   <script src="js/stats.js?v=2.4.0"></script>
   <script src="js/auth-admin.js?v=2.4.99"></script>
   <script src="js/roster-admin.js?v=2.4.74"></script>
@@ -615,11 +638,11 @@
   <script src="js/analytics-admin.js?v=2.4.96"></script>
   <script src="js/latest-match.js?v=2.4.34"></script>
   <script src="js/tabs-history.js?v=2.4.98"></script>
-  <script src="js/player-quotes.js?v=2.4.66"></script>
-  <script src="js/player-helpers.js?v=2.4.66"></script>
+  <script src="js/player-quotes.js?v=2.4.67"></script>
+  <script src="js/player-helpers.js?v=2.4.67"></script>
   <script src="js/lineup-confirm.js?v=2.4.0"></script>
-  <script src="js/roster.js?v=2.4.64"></script>
-  <script src="js/teams.js?v=2.4.66"></script>
+  <script src="js/roster.js?v=2.4.65"></script>
+  <script src="js/teams.js?v=2.4.68"></script>
   <script src="js/lineup-algorithm.js?v=2.4.0"></script>
   <script src="js/lineup-random.js?v=2.4.34"></script>
   <script src="js/lineup-hlv.js?v=2.4.34"></script>

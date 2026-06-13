@@ -169,14 +169,17 @@ function legendQuoteSeed(text){
 }
 
 function lookupPlayerLegendQuote(p){
+  return formatLegendQuote(lookupPlayerLegendQuoteEntry(p));
+}
+
+function lookupPlayerLegendQuoteEntry(p){
   const key = normalizeName(p?.name || "");
   const hit = PLAYER_LEGEND_QUOTES[key];
-  if(hit) return formatLegendQuote(hit);
+  if(hit) return hit;
 
   const posRaw = String(p?.main || p?.position || "MID").trim().toUpperCase();
   const pos = ["GK", "DEF", "MID", "FWD"].includes(posRaw) ? posRaw : "MID";
   const pool = LEGEND_QUOTES_BY_POS[pos] || LEGEND_QUOTES_BY_POS.MID;
   const seed = legendQuoteSeed(`${key}|${pos}|legend`);
-  const pick = pool[Math.abs(seed) % pool.length];
-  return formatLegendQuote(pick);
+  return pool[Math.abs(seed) % pool.length];
 }

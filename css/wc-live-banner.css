@@ -1,0 +1,83 @@
+/* World Cup 2026 — banner trận đang diễn ra + sắp đá (trang chủ + WC hub) */
+
+.wcLiveBanner{
+  border-radius:14px;margin-bottom:14px;overflow:hidden;
+  border:1px solid var(--line);background:#0a1628
+}
+.homeWcLiveBanner{margin:0 0 12px}
+
+/* WC hub — banner live đơn giản (chưa dùng grid) */
+.wcLiveBanner:not(:has(.wcBannerGrid)){
+  background:linear-gradient(135deg,#450a0a,#7f1d1d);border-color:rgba(248,113,113,.35);
+  padding:12px 14px;color:#fecaca
+}
+
+.wcBannerGrid{
+  display:grid;grid-template-columns:1fr;gap:0
+}
+.wcBannerGrid:has(.wcBannerCol--live):has(.wcBannerCol--upcoming){
+  grid-template-columns:repeat(2,minmax(0,1fr))
+}
+
+.wcBannerCol{padding:12px 14px;min-width:0}
+.wcBannerCol--live{
+  background:linear-gradient(135deg,#450a0a,#7f1d1d);color:#fecaca
+}
+.wcBannerCol--upcoming{
+  background:linear-gradient(135deg,#0c2340,#1e3a5f);color:#bfdbfe
+}
+.wcBannerGrid:has(.wcBannerCol--live):has(.wcBannerCol--upcoming) .wcBannerCol--live{
+  border-right:1px solid rgba(248,113,113,.25)
+}
+
+.wcLiveHead,.wcUpcomingHead{font-size:12px;font-weight:900;margin-bottom:8px;line-height:1.2}
+.wcLiveHead{color:#fca5a5}
+.wcUpcomingHead{color:#93c5fd}
+
+.wcLiveItem,.wcUpcomingItem{
+  display:flex;flex-direction:column;align-items:stretch;gap:4px;
+  font-size:12px;font-weight:700;padding:6px 0;border-top:1px solid rgba(255,255,255,.12)
+}
+.wcLiveItem:first-of-type,.wcUpcomingItem:first-of-type{border-top:0;padding-top:0}
+.wcLiveItem--click{cursor:pointer;color:inherit;text-decoration:none}
+.wcLiveItem--click:hover{opacity:.92;text-decoration:none;color:inherit}
+
+.wcBannerMatchTeams{
+  display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;gap:6px;min-width:0
+}
+.wcBannerTeam{
+  font-size:11px;line-height:1.25;font-weight:800;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.wcBannerTeam--home{text-align:right}
+.wcBannerTeam--away{text-align:left}
+.wcBannerScore{
+  font-size:12px;font-weight:900;line-height:1;white-space:nowrap;text-align:center
+}
+
+.wcMatchStatus,.wcMatchTime{
+  color:var(--accent-brand);font-weight:900;font-size:11px;
+  line-height:1.2;white-space:nowrap
+}
+
+@media(max-width:760px){
+  .wcBannerCol{padding:8px 10px}
+  .wcLiveHead,.wcUpcomingHead{font-size:10px;margin-bottom:5px}
+  .wcLiveItem,.wcUpcomingItem{gap:3px;padding:4px 0;font-size:10px}
+  .wcBannerMatchTeams{
+    grid-template-columns:1fr;gap:1px;text-align:center
+  }
+  .wcBannerTeam{font-size:9px;line-height:1.2}
+  .wcBannerTeam--home,.wcBannerTeam--away{text-align:center}
+  .wcBannerScore{font-size:10px}
+  .wcMatchStatus,.wcMatchTime{font-size:9px}
+  .wcUpcomingList .wcUpcomingItem:nth-child(n+2){display:none}
+}
+
+@media(min-width:761px){
+  .wcLiveItem,.wcUpcomingItem{
+    flex-direction:row;justify-content:space-between;align-items:center;gap:10px
+  }
+  .wcMatchStatus,.wcMatchTime{text-align:right;flex:0 0 auto}
+}

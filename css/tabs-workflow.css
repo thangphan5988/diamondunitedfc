@@ -4,9 +4,16 @@
   display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;
   scrollbar-width:none;padding-bottom:2px
 }
-.mainNav{position:relative;margin-bottom:14px}
+.mainNav{
+  position:relative;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;flex-wrap:nowrap
+}
+.mainNavWcBtn{
+  flex:0 0 auto;width:auto;margin:0;padding:10px 14px;font-size:12px
+}
+.mainNavWcBtn--mobile{display:none}
+.mainNav .tabs{flex:1;min-width:0;margin-bottom:0}
 .mainNavMobile{display:none;position:relative;flex:0 0 auto}
-.mainNav .tabs{margin-bottom:0}
 .mainNavHamburger{
   width:42px;height:42px;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center;
   background:#1e293b;border:1px solid var(--line);border-radius:10px;cursor:pointer;color:#fff
@@ -126,6 +133,12 @@
 @media(max-width:760px){
   .mainNav{display:none}
   .mainNavMobile{display:block}
+  .mainNavWcBtn--mobile{
+    display:inline-flex;flex:0 0 auto;padding:8px 10px;font-size:10px;gap:4px
+  }
+  .mainNavWcBtn--mobile .friendlyMatchBtnIcon{font-size:13px}
+  .mainNavWcBtn--mobile .friendlyMatchBtnText{display:none}
+  .mainNavWcBtn--mobile::after{content:"WC 2026";line-height:1.2;white-space:nowrap}
   .authBar{margin-bottom:8px;gap:8px;align-items:center}
   .authBar .meta{font-size:9px;line-height:1.35}
   .authActions button{padding:7px 10px;font-size:10px}

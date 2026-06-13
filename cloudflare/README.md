@@ -78,6 +78,22 @@ Giữ nguyên contract với Apps Script cũ + thêm:
 |--------|--------|
 | `get_roster` | Danh sách cầu thủ (thay Google Sheet CSV) |
 | `import_data` | Migrate bulk (cần `migrate_secret`) |
+| `wc2026_news` | Tin World Cup 2026 từ RSS 24h (cache KV ~10 phút) |
+| `wc2026_fixtures` | Lịch / kết quả / live (`scope=upcoming\|results\|live\|all`) |
+| `wc2026_standings` | Bảng xếp hạng vòng bảng |
+| `wc2026_teams` | Danh sách đội tham dự |
+| `wc2026_team` | Chi tiết đội (BXH, lịch, đội hình Wikipedia) |
+| `wc2026_player` | Chi tiết cầu thủ (ảnh + bio Wikipedia, cache KV ~24h) |
+| `wc2026_hub` | Gộp tất cả (prefetch trang hub) |
+
+### World Cup 2026 (hybrid 24h + worldcup26.ir)
+
+- **Tin tức:** RSS bóng đá [24h.com.vn](https://www.24h.com.vn/world-cup-2026-c860.html) — không cần API key.
+- **Lịch / BXH / kết quả / đội:** [worldcup26.ir](https://worldcup26.ir) — API miễn phí, open-source, **không cần đăng ký**.
+
+Frontend: trang [`world-cup-2026.html`](../world-cup-2026.html) gọi các action `wc2026_*` qua `api.diamondunitedfc.com`.
+
+> Ghi chú: `api-football.com` thường bị chặn/khó truy cập từ VN — dự án dùng worldcup26.ir thay thế.
 
 ## Lệnh hữu ích
 

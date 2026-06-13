@@ -35,6 +35,7 @@ import {
 } from "./auth.js";
 import { applyInactivityDecay, inactivityMetaForPlayer } from "./inactivity.js";
 import { trackSiteEvent, adminGetAnalytics } from "./analytics.js";
+import { wc2026News, wc2026NewsArticle, wc2026Fixtures, wc2026Standings, wc2026Teams, wc2026Match, wc2026Team, wc2026PlayerProfile, wc2026Hub } from "./wc2026.js";
 
 export default {
   async scheduled(event, env) {
@@ -89,7 +90,8 @@ export default {
             "admin_save_player", "admin_delete_player", "admin_upload_avatar",
             "admin_list_sponsors", "admin_save_sponsor", "admin_delete_sponsor", "admin_upload_sponsor_image",
             "admin_get_analytics",
-            "import_data"
+            "import_data",
+            "wc2026_news", "wc2026_news_article", "wc2026_fixtures", "wc2026_standings", "wc2026_teams", "wc2026_match", "wc2026_team", "wc2026_player", "wc2026_hub"
           ]
         });
       }
@@ -186,6 +188,24 @@ export default {
           return json(await deleteCompletedMatch(db, payload));
         case "import_data":
           return json(await importData(db, payload, env.MIGRATE_SECRET, pepper));
+        case "wc2026_news":
+          return json(await wc2026News(env, params));
+        case "wc2026_news_article":
+          return json(await wc2026NewsArticle(env, params));
+        case "wc2026_fixtures":
+          return json(await wc2026Fixtures(env, params));
+        case "wc2026_standings":
+          return json(await wc2026Standings(env));
+        case "wc2026_teams":
+          return json(await wc2026Teams(env));
+        case "wc2026_match":
+          return json(await wc2026Match(env, params));
+        case "wc2026_team":
+          return json(await wc2026Team(env, params));
+        case "wc2026_player":
+          return json(await wc2026PlayerProfile(env, params));
+        case "wc2026_hub":
+          return json(await wc2026Hub(env));
         default:
           return json({ ok: false, error: "Invalid action: " + action }, 400);
       }

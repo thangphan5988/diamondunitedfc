@@ -122,29 +122,60 @@
 }
 
 .cardPlayer.redTeam{
-  border:3px solid #ef4444;
-  box-shadow:
-    0 0 0 1px rgba(239,68,68,.55),
-    0 10px 24px rgba(239,68,68,.28);
+  background:linear-gradient(165deg,#f87171 0%,#ef4444 42%,#b91c1c 100%);
+  border:3px solid #fecaca;
+  box-shadow:0 0 0 1px rgba(127,29,29,.45),0 10px 24px rgba(185,28,28,.35)
 }
 .cardPlayer.yellowTeam{
-  border:3px solid #facc15;
-  box-shadow:
-    0 0 0 1px rgba(250,204,21,.55),
-    0 10px 24px rgba(250,204,21,.28);
+  background:linear-gradient(165deg,#fde047 0%,#facc15 46%,#ca8a04 100%);
+  border:3px solid #fef9c3;
+  box-shadow:0 0 0 1px rgba(161,98,7,.4),0 10px 24px rgba(202,138,4,.32)
 }
 .cardPlayer.capTeam{
-  border:3px solid #38bdf8;
-  box-shadow:
-    0 0 0 1px rgba(56,189,248,.55),
-    0 10px 24px rgba(56,189,248,.28);
+  background:linear-gradient(165deg,#38bdf8 0%,#0284c7 48%,#0369a1 100%);
+  border:3px solid #bae6fd;
+  box-shadow:0 0 0 1px rgba(3,105,161,.45),0 10px 24px rgba(2,132,199,.32)
 }
 .cardPlayer.capSubTeam{
-  border:3px solid #a78bfa;
-  box-shadow:
-    0 0 0 1px rgba(167,139,250,.55),
-    0 10px 24px rgba(167,139,250,.28);
+  background:linear-gradient(165deg,#c4b5fd 0%,#8b5cf6 46%,#6d28d9 100%);
+  border:3px solid #ddd6fe;
+  box-shadow:0 0 0 1px rgba(91,33,182,.4),0 10px 24px rgba(109,40,217,.3)
 }
+.cardPlayer.redTeam .pname{color:#fff;text-shadow:0 1px 2px rgba(127,29,29,.45)}
+.cardPlayer.redTeam .ppos{color:rgba(255,255,255,.88)}
+.cardPlayer.redTeam .fit{color:rgba(255,255,255,.92)}
+.cardPlayer.redTeam .fit.fitOk{color:#dcfce7}
+.cardPlayer.redTeam .fit.fitAlt{color:#fef08a}
+.cardPlayer.redTeam .fit.fitBad{color:#fff;font-weight:900}
+.cardPlayer.redTeam img{background:rgba(0,0,0,.15);border-color:rgba(255,255,255,.55)}
+.cardPlayer.redTeam.captainCard .pname{color:#fef08a;text-shadow:0 1px 2px rgba(127,29,29,.5)}
+
+.cardPlayer.yellowTeam .pname{color:#1c1408;text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.cardPlayer.yellowTeam .ppos{color:#57534e}
+.cardPlayer.yellowTeam .fit{color:#44403c}
+.cardPlayer.yellowTeam .fit.fitOk{color:#166534;font-weight:800}
+.cardPlayer.yellowTeam .fit.fitAlt{color:#ea580c;font-weight:800}
+.cardPlayer.yellowTeam .fit.fitBad{color:#991b1b;font-weight:900}
+.cardPlayer.yellowTeam img{background:rgba(255,255,255,.42);border-color:rgba(66,32,6,.28)}
+.cardPlayer.yellowTeam.captainCard .pname{color:#92400e;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+
+.cardPlayer.capTeam .pname{color:#fff;text-shadow:0 1px 2px rgba(3,105,161,.4)}
+.cardPlayer.capTeam .ppos{color:rgba(255,255,255,.88)}
+.cardPlayer.capTeam .fit{color:rgba(255,255,255,.9)}
+.cardPlayer.capTeam .fit.fitOk{color:#dcfce7}
+.cardPlayer.capTeam .fit.fitAlt{color:#fef08a}
+.cardPlayer.capTeam .fit.fitBad{color:#fff;font-weight:900}
+.cardPlayer.capTeam img{background:rgba(0,0,0,.12);border-color:rgba(255,255,255,.5)}
+.cardPlayer.capTeam.captainCard .pname{color:#fef08a;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+
+.cardPlayer.capSubTeam .pname{color:#fff;text-shadow:0 1px 2px rgba(91,33,182,.4)}
+.cardPlayer.capSubTeam .ppos{color:rgba(255,255,255,.88)}
+.cardPlayer.capSubTeam .fit{color:rgba(255,255,255,.9)}
+.cardPlayer.capSubTeam .fit.fitOk{color:#dcfce7}
+.cardPlayer.capSubTeam .fit.fitAlt{color:#fef08a}
+.cardPlayer.capSubTeam .fit.fitBad{color:#fff;font-weight:900}
+.cardPlayer.capSubTeam img{background:rgba(0,0,0,.12);border-color:rgba(255,255,255,.5)}
+.cardPlayer.capSubTeam.captainCard .pname{color:#fef08a;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 .lineupModes{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .lineupMode{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
 .lineupMode.active{background:#0f766e;color:#fff;border-color:#0f766e}
@@ -272,8 +303,11 @@
 .opponentField label{display:block;font-size:11px;color:#94a3b8;font-weight:800;margin-bottom:6px}
 .cardPlayer img{width:39px;height:39px;border-radius:50%;object-fit:cover;background:#334155;border:2px solid rgba(255,255,255,.45)}
 .cardPlayer .pname{font-size:11px;font-weight:900;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cardPlayer .ppos{font-size:10px;color:#7dd3fc;margin-top:2px}
-.cardPlayer .fit{font-size:9px;color:#cbd5e1;margin-top:3px}
+.cardPlayer .ppos{font-size:10px;color:var(--player-pos,#7dd3fc);margin-top:2px}
+.cardPlayer .fit{font-size:9px;color:var(--player-fit,#cbd5e1);margin-top:3px}
+.cardPlayer .fit.fitOk{color:var(--player-fit-ok,#86efac)}
+.cardPlayer .fit.fitAlt{color:var(--player-fit-alt,#fde68a)}
+.cardPlayer .fit.fitBad{color:var(--player-fit-bad,#fca5a5)}
 .cardPlayer .captainBadge{
   position:absolute;
   top:-3px;
@@ -291,7 +325,7 @@
   box-shadow:0 0 10px rgba(250,204,21,.75);
 }
 .cardPlayer.captainCard{box-shadow:0 0 0 2px #facc15,0 0 18px rgba(250,204,21,.45),0 10px 24px rgba(0,0,0,.36)!important}
-.cardPlayer.captainCard .pname{color:#38bdf8;font-weight:800;text-shadow:0 0 10px rgba(56,189,248,.8)}
+.cardPlayer.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .pname{color:#38bdf8;font-weight:800;text-shadow:0 0 10px rgba(56,189,248,.8)}
 .ratingBadge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#facc15;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .bench{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
 

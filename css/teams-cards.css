@@ -1,0 +1,114 @@
+/* Teams — thẻ màu đậm (light theme) */
+
+html[data-theme="light"] .teamCard{
+  padding:0;background:none;box-shadow:none!important;border-radius:16px
+}
+html[data-theme="light"] .teamCard:hover{transform:translateY(-4px)}
+html[data-theme="light"] .teamCardInner{
+  border-radius:16px;overflow:hidden;border:2px solid rgba(255,255,255,.22)
+}
+html[data-theme="light"] .teamCardInner::before{display:none}
+html[data-theme="light"] .teamCardCorner{display:none}
+
+/* Blue tier */
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInner{
+  background:linear-gradient(180deg,#0284c7 0%,#0369a1 42%,#1e3a8a 100%);
+  border-color:rgba(186,230,253,.45);
+  box-shadow:0 10px 26px rgba(30,58,138,.35)
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver):hover .teamCardInner{
+  box-shadow:0 14px 32px rgba(30,58,138,.42)
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardPortrait{
+  background:linear-gradient(180deg,rgba(255,255,255,.08),transparent)
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardFoot{
+  background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.22));
+  border-top:1px solid rgba(255,255,255,.18);padding:10px 12px 12px
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardName{color:#fff}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInfoMain{
+  background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.28)
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInfoMain b{color:#fff}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInfoMain span{color:#bae6fd}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInfoItem{
+  background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.22);color:#e0f2fe
+}
+html[data-theme="light"] .teamCard:not(.teamCard--gold):not(.teamCard--silver) .teamCardInfoItem b{color:#fff}
+
+/* Gold tier */
+html[data-theme="light"] .teamCard--gold .teamCardInner{
+  background:linear-gradient(180deg,#f59e0b 0%,#d97706 40%,#b45309 100%);
+  border-color:rgba(254,243,199,.5);
+  box-shadow:0 10px 26px rgba(180,83,9,.35)
+}
+html[data-theme="light"] .teamCard--gold:hover .teamCardInner{
+  box-shadow:0 14px 32px rgba(180,83,9,.42)
+}
+html[data-theme="light"] .teamCard--gold .teamCardPortrait{
+  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent)
+}
+html[data-theme="light"] .teamCard--gold .teamCardFoot{
+  background:linear-gradient(180deg,rgba(0,0,0,.1),rgba(66,32,6,.28));
+  border-top:1px solid rgba(255,255,255,.2);padding:10px 12px 12px
+}
+html[data-theme="light"] .teamCard--gold .teamCardName{color:#fffbeb}
+html[data-theme="light"] .teamCard--gold .teamCardInfoMain{
+  background:rgba(66,32,6,.28);border-color:rgba(255,255,255,.25)
+}
+html[data-theme="light"] .teamCard--gold .teamCardInfoMain b{color:#fff}
+html[data-theme="light"] .teamCard--gold .teamCardInfoMain span{color:#fef3c7}
+html[data-theme="light"] .teamCard--gold .teamCardInfoItem{
+  background:rgba(66,32,6,.22);border-color:rgba(255,255,255,.2);color:#fef3c7
+}
+html[data-theme="light"] .teamCard--gold .teamCardInfoItem b{color:#fff}
+html[data-theme="light"] .teamCard--gold .teamCardInfoItem--mvp{
+  background:rgba(254,243,199,.92);border-color:#fde047;color:#78350f
+}
+html[data-theme="light"] .teamCard--gold .teamCardInfoItem--mvp b{color:#92400e}
+
+/* Silver tier */
+html[data-theme="light"] .teamCard--silver .teamCardInner{
+  background:linear-gradient(180deg,#64748b 0%,#475569 45%,#334155 100%);
+  border-color:rgba(226,232,240,.35);
+  box-shadow:0 10px 24px rgba(51,65,85,.32)
+}
+html[data-theme="light"] .teamCard--silver:hover .teamCardInner{
+  box-shadow:0 14px 30px rgba(51,65,85,.38)
+}
+html[data-theme="light"] .teamCard--silver .teamCardPortrait{
+  background:linear-gradient(180deg,rgba(255,255,255,.08),transparent)
+}
+html[data-theme="light"] .teamCard--silver .teamCardFoot{
+  background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.24));
+  border-top:1px solid rgba(255,255,255,.16);padding:10px 12px 12px
+}
+html[data-theme="light"] .teamCard--silver .teamCardName{color:#f8fafc}
+html[data-theme="light"] .teamCard--silver .teamCardInfoMain{
+  background:rgba(0,0,0,.22);border-color:rgba(255,255,255,.24)
+}
+html[data-theme="light"] .teamCard--silver .teamCardInfoMain b{color:#fff}
+html[data-theme="light"] .teamCard--silver .teamCardInfoMain span{color:#e2e8f0}
+html[data-theme="light"] .teamCard--silver .teamCardInfoItem{
+  background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.2);color:#e2e8f0
+}
+html[data-theme="light"] .teamCard--silver .teamCardInfoItem b{color:#fff}
+
+html[data-theme="light"] .teamCardPortrait img{filter:none}
+html[data-theme="light"] .teamCardPortraitBtn:hover img{filter:brightness(1.05)}
+html[data-theme="light"] .teamCardInfoItem--mvp{
+  background:#fef9c3;border-color:#fde047;color:#854d0e
+}
+html[data-theme="light"] .teamCardInfoItem--mvp b{color:#92400e}
+
+/* Popup chi tiết */
+html[data-theme="light"] .teamPlayerModalPortrait{background:linear-gradient(180deg,#dbeafe,#f8fafc)}
+html[data-theme="light"] .teamPlayerModalPortrait img{filter:drop-shadow(0 8px 18px rgba(15,41,75,.12))}
+html[data-theme="light"] .teamPlayerModalInfo{background:#fff;border-top-color:var(--line)}
+html[data-theme="light"] .teamPlayerInfoRow{background:var(--surface);border-color:var(--line)}
+html[data-theme="light"] .teamPlayerInfoRow span{color:var(--muted)}
+html[data-theme="light"] .teamPlayerInfoRow b{color:var(--text)}
+html[data-theme="light"] .teamPlayerModalDesc{
+  background:linear-gradient(180deg,#f8fafc,#fff);border-top-color:#bae6fd;color:var(--text-soft)
+}

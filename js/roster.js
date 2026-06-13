@@ -43,6 +43,8 @@ function applyRosterFromApi(rows){
       jersey_number: row.jersey_number != null && row.jersey_number !== "" ? Number(row.jersey_number) : null,
       description: String(row.description || "").trim(),
       birth_date: String(row.birth_date || "").trim(),
+      joined_at: String(row.joined_at || "").trim(),
+      last_match_at: String(row.last_match_at || "").trim(),
       profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,

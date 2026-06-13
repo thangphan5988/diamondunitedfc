@@ -1,0 +1,542 @@
+/* Light theme — palette "Sky Daylight", đồng bộ toàn site */
+
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#e8f0f8;
+  --bg-grad-1:#d4e4f2;
+  --bg-grad-2:#f6f9fc;
+  --card:#ffffff;
+  --card-alpha:#ffffff;
+  --surface:#f3f7fb;
+  --surface-2:#e8eef5;
+  --surface-3:#d9e3ef;
+  --line:#c5d4e3;
+  --text:#1e293b;
+  --text-soft:#475569;
+  --muted:#64748b;
+  --input-bg:#ffffff;
+  --overlay:rgba(30,41,59,.42);
+  --overlay-heavy:rgba(30,41,59,.55);
+  --shadow:0 1px 3px rgba(15,41,75,.05),0 6px 20px rgba(15,41,75,.06);
+  --row-line:rgba(30,41,59,.06);
+  --accent-brand:#0369a1;
+  --accent-soft:#e0f2fe;
+  --score-accent:#0284c7;
+  --player-card-bg:#ffffff;
+  --player-card-shadow:0 4px 14px rgba(15,41,75,.1);
+  --player-name:#1e293b;
+  --player-pos:#64748b;
+  --player-fit:#94a3b8;
+  --player-score:#0369a1;
+  --player-fit-ok:#15803d;
+  --player-fit-alt:#b45309;
+  --player-fit-bad:#dc2626;
+  --chip-done-bg:#dcfce7;--chip-done-text:#166534;--chip-done-border:#86efac;
+  --chip-wait-bg:#fef3c7;--chip-wait-text:#92400e;--chip-wait-border:#fcd34d;
+  --chip-mvp-bg:#fef9c3;--chip-mvp-text:#854d0e;--chip-mvp-border:#fde047;
+  --chip-info-bg:#e0f2fe;--chip-info-text:#0369a1;--chip-info-border:#7dd3fc;
+  --chip-neutral-bg:#f1f5f9;--chip-neutral-text:#475569;--chip-neutral-border:#cbd5e1;
+}
+
+html[data-theme="light"] body{
+  background:linear-gradient(165deg,var(--bg-grad-1) 0%,var(--bg-grad-2) 55%,#ffffff 100%);
+}
+
+/* Toggle */
+.themeToggle{
+  width:42px;height:42px;padding:0;margin:0;flex:0 0 42px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;color:var(--text);font-size:18px;line-height:1
+}
+.themeToggle:hover{filter:brightness(.96);border-color:var(--muted)}
+html[data-theme="light"] .themeToggleIcon--sun{display:none}
+html:not([data-theme="light"]) .themeToggleIcon--moon{display:none}
+
+/* Header & CTA */
+html[data-theme="light"] .friendlyMatchBtn{
+  box-shadow:0 4px 14px rgba(0,104,255,.22)
+}
+html[data-theme="light"] .friendlyMatchBtn--ad{
+  box-shadow:0 4px 14px rgba(15,118,110,.2)
+}
+html[data-theme="light"] .siteBrand h1{color:#0c4a6e}
+
+/* Nav tabs */
+html[data-theme="light"] .tab,
+html[data-theme="light"] .statsTab,
+html[data-theme="light"] .lineupMode,
+html[data-theme="light"] .mainNavHamburger,
+html[data-theme="light"] .teamsPosBtn{
+  background:var(--surface);color:var(--text-soft);border-color:var(--line);
+  box-shadow:0 1px 2px rgba(15,41,75,.04)
+}
+html[data-theme="light"] .tab.active,
+html[data-theme="light"] .statsTab.active,
+html[data-theme="light"] .lineupMode.active,
+html[data-theme="light"] .teamsPosBtn.active,
+html[data-theme="light"] .mainNavHamburger[aria-expanded="true"]{
+  background:#0284c7;color:#fff;border-color:#0284c7;
+  box-shadow:0 4px 12px rgba(2,132,199,.28)
+}
+html[data-theme="light"] .mainNavMobileMenu{
+  background:var(--card);border-color:var(--line);box-shadow:var(--shadow)
+}
+html[data-theme="light"] .mainNavMobileItem{color:var(--text-soft)}
+html[data-theme="light"] .mainNavMobileItem.active,
+html[data-theme="light"] .mainNavMobileItem:hover{
+  background:var(--accent-soft);color:var(--accent-brand)
+}
+
+/* Cards & lists */
+html[data-theme="light"] .card{
+  border-color:var(--line);box-shadow:var(--shadow)
+}
+html[data-theme="light"] .historyItem,
+html[data-theme="light"] .resultPlayer,
+html[data-theme="light"] .statRow,
+html[data-theme="light"] .benchItem,
+html[data-theme="light"] .confirmPlayer,
+html[data-theme="light"] .permItem,
+html[data-theme="light"] .rosterAdminCard,
+html[data-theme="light"] .adminUserRow,
+html[data-theme="light"] .lrBenchCard,
+html[data-theme="light"] pre{
+  background:var(--surface);border-color:var(--line);color:var(--text-soft)
+}
+html[data-theme="light"] .historyItem:hover{border-color:#0284c7}
+html[data-theme="light"] .historyVideoTag{color:var(--accent-brand)}
+
+/* Status chips — chữ tối trên nền pastel */
+html[data-theme="light"] .lrStatusChip.done,
+html[data-theme="light"] .lmPhaseBar.done,
+html[data-theme="light"] .lmConfirmBadge.done,
+html[data-theme="light"] .hlvResultBadge.done,
+html[data-theme="light"] .teamConfirmBadge:not(.pending){
+  background:var(--chip-done-bg);border-color:var(--chip-done-border);color:var(--chip-done-text)
+}
+html[data-theme="light"] .lrStatusChip.wait,
+html[data-theme="light"] .lmPhaseBar.wait,
+html[data-theme="light"] .lmConfirmBadge.pending,
+html[data-theme="light"] .teamConfirmBadge.pending,
+html[data-theme="light"] .hlvResultBadge.pending{
+  background:var(--chip-wait-bg);border-color:var(--chip-wait-border);color:var(--chip-wait-text)
+}
+html[data-theme="light"] .lrMvpBar,
+html[data-theme="light"] .lrMvpChip{
+  background:var(--chip-mvp-bg);border-color:var(--chip-mvp-border);color:var(--chip-mvp-text)
+}
+html[data-theme="light"] .lrMvpBar b,
+html[data-theme="light"] .lrMvpChip b{color:#a16207}
+html[data-theme="light"] .lrSummaryDetail,
+html[data-theme="light"] .lmFormBadge{
+  background:var(--chip-neutral-bg);border-color:var(--chip-neutral-border);color:var(--chip-neutral-text)
+}
+html[data-theme="light"] .lmPhaseBar:not(.done):not(.wait){
+  background:var(--chip-info-bg);border-color:var(--chip-info-border);color:var(--chip-info-text)
+}
+html[data-theme="light"] .lmPhaseDetail{color:var(--muted)}
+html[data-theme="light"] .roleTaskBanner{
+  background:var(--chip-info-bg);border-color:var(--chip-info-border);color:var(--chip-info-text)
+}
+html[data-theme="light"] .lockBanner{
+  background:var(--chip-wait-bg);border-color:var(--chip-wait-border);color:var(--chip-wait-text)
+}
+html[data-theme="light"] .lockBanner b{color:#78350f}
+
+/* Scoreboard */
+html[data-theme="light"] .lrScoreBoard{
+  background:linear-gradient(180deg,#ffffff,var(--accent-soft));
+  border-color:#bae6fd;box-shadow:0 2px 12px rgba(2,132,199,.08)
+}
+html[data-theme="light"] .lrTeamScore.opp .lrScoreNum{color:var(--muted)}
+html[data-theme="light"] .lrVs{color:var(--muted)}
+html[data-theme="light"] .lrMatchVideoLink{
+  background:#fee2e2;border-color:#fca5a5;color:#b91c1c
+}
+html[data-theme="light"] .lrMatchVideoLink:hover{background:#fecaca}
+html[data-theme="light"] .lrTeamGoalVideos--red .lrGoalVideoChip{
+  background:#fee2e2;border-color:#fca5a5;color:#b91c1c
+}
+html[data-theme="light"] .lrTeamGoalVideos--yellow .lrGoalVideoChip{
+  background:#fef9c3;border-color:#fde047;color:#854d0e
+}
+html[data-theme="light"] .lrTeamGoalVideos--blue .lrGoalVideoChip,
+html[data-theme="light"] .lrGoalVideoChip{
+  background:var(--accent-soft);border-color:#7dd3fc;color:var(--accent-brand)
+}
+html[data-theme="light"] .lrTeamGoalVideos--opp .lrGoalVideoChip{
+  background:var(--chip-neutral-bg);border-color:var(--chip-neutral-border);color:var(--chip-neutral-text)
+}
+
+/* Player cards trên sân — nền theo đội, chữ phân tầng rõ */
+html[data-theme="light"] .cardPlayer,
+html[data-theme="light"] .lrCard,
+html[data-theme="light"] .lrBenchCard{
+  backdrop-filter:none;
+  border-width:2px
+}
+html[data-theme="light"] .cardPlayer{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  border-color:#e2e8f0;
+  box-shadow:0 3px 12px rgba(15,41,75,.12)
+}
+html[data-theme="light"] .cardPlayer.redTeam{
+  background:linear-gradient(165deg,#f87171 0%,#ef4444 42%,#dc2626 100%);
+  border-color:#fecaca;
+  box-shadow:0 0 0 1px rgba(127,29,29,.3),0 6px 18px rgba(185,28,28,.32)
+}
+html[data-theme="light"] .cardPlayer.yellowTeam{
+  background:linear-gradient(165deg,#fde047 0%,#facc15 46%,#eab308 100%);
+  border-color:#fef9c3;
+  box-shadow:0 0 0 1px rgba(161,98,7,.28),0 6px 18px rgba(202,138,4,.28)
+}
+html[data-theme="light"] .cardPlayer.capTeam{
+  background:linear-gradient(165deg,#38bdf8 0%,#0284c7 48%,#0369a1 100%);
+  border-color:#bae6fd;
+  box-shadow:0 0 0 1px rgba(3,105,161,.28),0 6px 18px rgba(2,132,199,.26)
+}
+html[data-theme="light"] .cardPlayer.capSubTeam{
+  background:linear-gradient(165deg,#c4b5fd 0%,#8b5cf6 46%,#7c3aed 100%);
+  border-color:#ddd6fe;
+  box-shadow:0 0 0 1px rgba(91,33,182,.25),0 6px 18px rgba(109,40,217,.24)
+}
+
+html[data-theme="light"] .lrCard{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  border-color:#e2e8f0;
+  box-shadow:0 3px 12px rgba(15,41,75,.12)
+}
+html[data-theme="light"] .lrCard.redTeam{
+  background:linear-gradient(165deg,#f87171 0%,#ef4444 45%,#dc2626 100%);
+  border-color:#fecaca;
+  box-shadow:0 0 0 1px rgba(127,29,29,.3),0 6px 18px rgba(185,28,28,.32)
+}
+html[data-theme="light"] .lrCard.yellowTeam{
+  background:linear-gradient(165deg,#fde047 0%,#facc15 48%,#eab308 100%);
+  border-color:#fef9c3;
+  box-shadow:0 0 0 1px rgba(161,98,7,.28),0 6px 18px rgba(202,138,4,.28)
+}
+html[data-theme="light"] .lrCard.capTeam{
+  background:linear-gradient(165deg,#38bdf8 0%,#0284c7 48%,#0369a1 100%);
+  border-color:#bae6fd;
+  box-shadow:0 0 0 1px rgba(3,105,161,.28),0 6px 18px rgba(2,132,199,.26)
+}
+html[data-theme="light"] .lrCard.capSubTeam{
+  background:linear-gradient(165deg,#c4b5fd 0%,#8b5cf6 46%,#7c3aed 100%);
+  border-color:#ddd6fe;
+  box-shadow:0 0 0 1px rgba(91,33,182,.25),0 6px 18px rgba(109,40,217,.24)
+}
+html[data-theme="light"] .lrBenchCard{
+  background:#ffffff;border-color:var(--line);
+  box-shadow:0 2px 8px rgba(15,41,75,.06)
+}
+html[data-theme="light"] .lrBenchCard.redTeam{
+  background:linear-gradient(165deg,#f87171 0%,#ef4444 45%,#dc2626 100%);
+  border-color:#fecaca;box-shadow:0 4px 12px rgba(185,28,28,.22)
+}
+html[data-theme="light"] .lrBenchCard.yellowTeam{
+  background:linear-gradient(165deg,#fde047 0%,#facc15 48%,#eab308 100%);
+  border-color:#fef9c3;box-shadow:0 4px 12px rgba(202,138,4,.2)
+}
+html[data-theme="light"] .lrBenchCard.capTeam{
+  background:linear-gradient(165deg,#38bdf8 0%,#0284c7 48%,#0369a1 100%);
+  border-color:#bae6fd;color:#fff
+}
+html[data-theme="light"] .lrBenchCard.capSubTeam{
+  background:linear-gradient(165deg,#c4b5fd 0%,#8b5cf6 46%,#7c3aed 100%);
+  border-color:#ddd6fe;color:#fff
+}
+
+/* Text trên thẻ đỏ */
+html[data-theme="light"] .cardPlayer.redTeam .pname,
+html[data-theme="light"] .lrCard.redTeam .lrName,
+html[data-theme="light"] .lrBenchCard.redTeam .lrName{
+  color:#fff;text-shadow:0 1px 2px rgba(127,29,29,.45)
+}
+html[data-theme="light"] .cardPlayer.redTeam .ppos{color:rgba(255,255,255,.88)}
+html[data-theme="light"] .cardPlayer.redTeam .fit{color:rgba(255,255,255,.92)}
+html[data-theme="light"] .cardPlayer.redTeam .fit.fitOk{color:#dcfce7}
+html[data-theme="light"] .cardPlayer.redTeam .fit.fitAlt{color:#fef08a}
+html[data-theme="light"] .cardPlayer.redTeam .fit.fitBad{color:#fff;font-weight:900}
+html[data-theme="light"] .lrCard.redTeam .lrScore,
+html[data-theme="light"] .lrBenchCard.redTeam .lrScore{color:#fff}
+html[data-theme="light"] .lrCard.redTeam .lrDelta.up{background:rgba(255,255,255,.22);color:#dcfce7}
+html[data-theme="light"] .lrCard.redTeam .lrDelta.down{background:rgba(0,0,0,.18);color:#fecaca}
+html[data-theme="light"] .lrCard.redTeam .lrDelta.zero{background:rgba(255,255,255,.18);color:#fee2e2}
+html[data-theme="light"] .lrCard.redTeam .lrStatRow .goals{color:#bbf7d0}
+html[data-theme="light"] .lrCard.redTeam .lrStatRow .assists{color:#e9d5ff}
+html[data-theme="light"] .cardPlayer.redTeam img,
+html[data-theme="light"] .lrCard.redTeam img{
+  background:rgba(0,0,0,.12);border-color:rgba(255,255,255,.55)
+}
+html[data-theme="light"] .cardPlayer.redTeam.captainCard .pname,
+html[data-theme="light"] .lrCard.redTeam.captainCard .lrName,
+html[data-theme="light"] .lrBenchCard.redTeam.captainCard .lrName{color:#fef08a;text-shadow:0 1px 2px rgba(127,29,29,.5)}
+
+/* Text trên thẻ vàng */
+html[data-theme="light"] .cardPlayer.yellowTeam .pname,
+html[data-theme="light"] .lrCard.yellowTeam .lrName,
+html[data-theme="light"] .lrBenchCard.yellowTeam .lrName{
+  color:#1c1408;text-shadow:0 1px 0 rgba(255,255,255,.35)
+}
+html[data-theme="light"] .cardPlayer.yellowTeam .ppos{color:#57534e}
+html[data-theme="light"] .cardPlayer.yellowTeam .fit{color:#44403c}
+html[data-theme="light"] .cardPlayer.yellowTeam .fit.fitOk{color:#166534;font-weight:800}
+html[data-theme="light"] .cardPlayer.yellowTeam .fit.fitAlt{color:#c2410c;font-weight:800}
+html[data-theme="light"] .cardPlayer.yellowTeam .fit.fitBad{color:#991b1b;font-weight:900}
+html[data-theme="light"] .lrCard.yellowTeam .lrScore,
+html[data-theme="light"] .lrBenchCard.yellowTeam .lrScore{color:#713f12}
+html[data-theme="light"] .lrCard.yellowTeam .lrDelta.up{background:rgba(22,101,52,.14);color:#166534}
+html[data-theme="light"] .lrCard.yellowTeam .lrDelta.down{background:rgba(153,27,27,.12);color:#991b1b}
+html[data-theme="light"] .lrCard.yellowTeam .lrDelta.zero{background:rgba(28,20,8,.08);color:#57534e}
+html[data-theme="light"] .lrCard.yellowTeam .lrStatRow .goals{color:#166534}
+html[data-theme="light"] .lrCard.yellowTeam .lrStatRow .assists{color:#6d28d9}
+html[data-theme="light"] .cardPlayer.yellowTeam img,
+html[data-theme="light"] .lrCard.yellowTeam img{
+  background:rgba(255,255,255,.45);border-color:rgba(66,32,6,.28)
+}
+html[data-theme="light"] .cardPlayer.yellowTeam.captainCard .pname,
+html[data-theme="light"] .lrCard.yellowTeam.captainCard .lrName,
+html[data-theme="light"] .lrBenchCard.yellowTeam.captainCard .lrName{color:#92400e}
+
+/* Text trên thẻ Cáp */
+html[data-theme="light"] .cardPlayer.capTeam .pname,
+html[data-theme="light"] .lrCard.capTeam .lrName,
+html[data-theme="light"] .lrBenchCard.capTeam .lrName{
+  color:#fff;text-shadow:0 1px 2px rgba(3,105,161,.4)
+}
+html[data-theme="light"] .cardPlayer.capTeam .ppos{color:rgba(255,255,255,.88)}
+html[data-theme="light"] .cardPlayer.capTeam .fit{color:rgba(255,255,255,.9)}
+html[data-theme="light"] .cardPlayer.capTeam .fit.fitOk{color:#dcfce7}
+html[data-theme="light"] .cardPlayer.capTeam .fit.fitAlt{color:#fef08a}
+html[data-theme="light"] .cardPlayer.capTeam .fit.fitBad{color:#fff;font-weight:900}
+html[data-theme="light"] .cardPlayer.capSubTeam .pname,
+html[data-theme="light"] .lrCard.capSubTeam .lrName,
+html[data-theme="light"] .lrBenchCard.capSubTeam .lrName{
+  color:#fff;text-shadow:0 1px 2px rgba(91,33,182,.4)
+}
+html[data-theme="light"] .cardPlayer.capSubTeam .ppos{color:rgba(255,255,255,.88)}
+html[data-theme="light"] .cardPlayer.capSubTeam .fit{color:rgba(255,255,255,.9)}
+html[data-theme="light"] .cardPlayer.capSubTeam .fit.fitOk{color:#dcfce7}
+html[data-theme="light"] .cardPlayer.capSubTeam .fit.fitAlt{color:#fef08a}
+html[data-theme="light"] .cardPlayer.capSubTeam .fit.fitBad{color:#fff;font-weight:900}
+html[data-theme="light"] .lrCard.capTeam .lrScore,
+html[data-theme="light"] .lrBenchCard.capTeam .lrScore,
+html[data-theme="light"] .lrCard.capSubTeam .lrScore,
+html[data-theme="light"] .lrBenchCard.capSubTeam .lrScore{color:#fff}
+html[data-theme="light"] .lrCard.capTeam .lrDelta.up,
+html[data-theme="light"] .lrCard.capSubTeam .lrDelta.up{background:rgba(255,255,255,.2);color:#dcfce7}
+html[data-theme="light"] .lrCard.capTeam .lrDelta.down,
+html[data-theme="light"] .lrCard.capSubTeam .lrDelta.down{background:rgba(0,0,0,.16);color:#fecaca}
+html[data-theme="light"] .lrCard.capTeam .lrStatRow .goals,
+html[data-theme="light"] .lrCard.capSubTeam .lrStatRow .goals{color:#bbf7d0}
+html[data-theme="light"] .lrCard.capTeam .lrStatRow .assists,
+html[data-theme="light"] .lrCard.capSubTeam .lrStatRow .assists{color:#f5d0fe}
+
+/* Text mặc định — thẻ trung tính (không thuộc đội) */
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .pname,
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName,
+html[data-theme="light"] .lrBenchCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName{color:var(--player-name)}
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .ppos{color:var(--player-pos)}
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .fit{color:var(--player-fit)}
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .fit.fitOk{color:#15803d}
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .fit.fitAlt{color:#b45309}
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .fit.fitBad{color:#dc2626}
+
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrScore,
+html[data-theme="light"] .lrBenchCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrScore{color:var(--player-score)}
+
+html[data-theme="light"] .cardPlayer:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) img,
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) img{
+  background:#f1f5f9;border-color:#e2e8f0
+}
+html[data-theme="light"] .cardPlayer.capTeam img,
+html[data-theme="light"] .lrCard.capTeam img{border-color:rgba(255,255,255,.55)}
+html[data-theme="light"] .cardPlayer.capSubTeam img,
+html[data-theme="light"] .lrCard.capSubTeam img{border-color:rgba(255,255,255,.55)}
+
+html[data-theme="light"] .cardPlayer.captainCard,
+html[data-theme="light"] .lrCard.captainCard,
+html[data-theme="light"] .lrBenchCard.captainCard{
+  box-shadow:0 0 0 2px #fef08a,0 0 14px rgba(254,240,138,.45),0 6px 16px rgba(15,41,75,.12)!important
+}
+html[data-theme="light"] .cardPlayer.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .pname,
+html[data-theme="light"] .lrCard.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName,
+html[data-theme="light"] .lrBenchCard.captainCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrName{
+  color:#0369a1;text-shadow:none
+}
+html[data-theme="light"] .cardPlayer.capTeam.captainCard .pname,
+html[data-theme="light"] .cardPlayer.capSubTeam.captainCard .pname,
+html[data-theme="light"] .lrCard.capTeam.captainCard .lrName,
+html[data-theme="light"] .lrCard.capSubTeam.captainCard .lrName,
+html[data-theme="light"] .lrBenchCard.capTeam.captainCard .lrName,
+html[data-theme="light"] .lrBenchCard.capSubTeam.captainCard .lrName{color:#fef08a;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+
+html[data-theme="light"] .lrTeamScore.red .lrScoreNum{color:#dc2626}
+html[data-theme="light"] .lrTeamScore.yellow .lrScoreNum{color:#ca8a04}
+html[data-theme="light"] .lrTeamScore.blue .lrScoreNum{color:#0284c7}
+
+html[data-theme="light"] .lineupDragFlyout.cardPlayer,
+html[data-theme="light"] .lineupDragFlyout.lrCard{
+  opacity:.97
+}
+html[data-theme="light"] .lrMvpBadge{
+  background:linear-gradient(180deg,#fef9c3,#fde68a);
+  border-color:#facc15;color:#854d0e;
+  box-shadow:0 2px 6px rgba(161,98,7,.2)
+}
+html[data-theme="light"] .lrMvpBadgeText{color:#92400e}
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrDelta.up{background:#dcfce7;color:#166534}
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrDelta.down{background:#fee2e2;color:#b91c1c}
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrDelta.zero{background:var(--chip-neutral-bg);color:var(--chip-neutral-text)}
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrStatRow .goals{color:#15803d}
+html[data-theme="light"] .lrCard:not(.redTeam):not(.yellowTeam):not(.capTeam):not(.capSubTeam) .lrStatRow .assists{color:#7c3aed}
+
+/* Lineup panel */
+html[data-theme="light"] .hlvPanel .lineupBody{
+  background:var(--surface);border-color:var(--line)
+}
+html[data-theme="light"] .hlvEditHint,
+html[data-theme="light"] .hlvPanel .benchSide .benchEmpty,
+html[data-theme="light"] .fileUploadBtn{
+  background:var(--surface);border-color:var(--line);color:var(--muted)
+}
+html[data-theme="light"] .fileUploadBtn:hover{
+  border-color:#7dd3fc;background:var(--accent-soft);color:var(--accent-brand)
+}
+html[data-theme="light"] .lmTeamSeg{
+  background:var(--surface);border-color:var(--line)
+}
+html[data-theme="light"] .lmSegBtn{color:var(--muted)}
+html[data-theme="light"] .lmSegBtn:hover:not(.active){background:var(--surface-2)}
+
+/* Modals */
+html[data-theme="light"] .modalBox,
+html[data-theme="light"] .lineupExportPreviewCard{
+  background:var(--card);box-shadow:0 16px 48px rgba(15,41,75,.14)
+}
+html[data-theme="light"] .overlay{background:var(--overlay)}
+html[data-theme="light"] .confirmModal{background:var(--overlay)}
+html[data-theme="light"] .lineupExportPreview{background:var(--overlay-heavy)}
+html[data-theme="light"] .lineupExportPreviewHint{color:var(--muted)}
+html[data-theme="light"] .lineupExportPreviewClose{background:var(--surface-3);color:var(--text)}
+
+/* Stats badges */
+html[data-theme="light"] .statRank{color:var(--muted)}
+html[data-theme="light"] .statRating{background:var(--accent-soft);color:var(--accent-brand)}
+html[data-theme="light"] .statMvp{background:#fef9c3;color:#a16207}
+html[data-theme="light"] .statGoals{background:#dcfce7;color:#166534}
+html[data-theme="light"] .statAssists{background:#ede9fe;color:#6d28d9}
+html[data-theme="light"] .deltaBadge.up{background:#dcfce7;color:#166534}
+html[data-theme="light"] .deltaBadge.down{background:#fee2e2;color:#b91c1c}
+html[data-theme="light"] .deltaBadge.zero{background:var(--chip-neutral-bg);color:var(--chip-neutral-text)}
+
+/* Analytics & admin */
+html[data-theme="light"] .analyticsMetric,
+html[data-theme="light"] .analyticsTable{
+  background:var(--surface);border-color:var(--line)
+}
+html[data-theme="light"] .analyticsMetricLabel,
+html[data-theme="light"] .analyticsFilters label{color:var(--muted)}
+html[data-theme="light"] .analyticsMetricValue{color:var(--text)}
+html[data-theme="light"] .analyticsTable th{
+  background:var(--surface-2);color:var(--muted)
+}
+html[data-theme="light"] .analyticsTable td{
+  color:var(--text-soft);border-bottom-color:var(--row-line)
+}
+html[data-theme="light"] .analyticsPresets button{
+  background:var(--surface);border:1px solid var(--line);color:var(--text-soft)
+}
+html[data-theme="light"] .analyticsPresets button:hover{
+  background:var(--accent-soft);color:var(--accent-brand)
+}
+html[data-theme="light"] .rosterFieldLabel{color:var(--text-soft)}
+html[data-theme="light"] .rosterExpandIcon{color:var(--muted)}
+
+/* Admin nhà tài trợ — tông nhạt trên nền sáng */
+html[data-theme="light"] .sponsorAdminCard{
+  background:var(--surface);border-color:var(--line);box-shadow:none
+}
+html[data-theme="light"] .sponsorAdminCard.expanded{
+  background:#fff;border-color:rgba(2,132,199,.32);
+  box-shadow:0 0 0 1px rgba(2,132,199,.06)
+}
+html[data-theme="light"] .sponsorAdminCardHead:hover{background:rgba(15,41,75,.04)}
+html[data-theme="light"] .sponsorAdminCardHead b{color:var(--text);font-weight:800}
+html[data-theme="light"] .sponsorAdminCardHead .meta{color:var(--muted);font-weight:600}
+html[data-theme="light"] .sponsorStatsInline{
+  color:var(--muted);font-weight:700;font-size:11px;margin-top:3px
+}
+html[data-theme="light"] .sponsorStatChip{
+  background:var(--accent-soft);border-color:#bae6fd;color:var(--text-soft);font-weight:700
+}
+html[data-theme="light"] .sponsorPreviewSide,
+html[data-theme="light"] .sponsorPreviewMobile{
+  background:var(--surface-2);border-color:var(--line)
+}
+
+/* Ads */
+html[data-theme="light"] .adRailItem,
+html[data-theme="light"] .adMobileTop,
+html[data-theme="light"] .adMobileItem{
+  background:var(--surface);border-color:rgba(2,132,199,.2)
+}
+
+/* SEO pages */
+.seoPage{position:relative}
+html[data-theme="light"] .seoPageHeader p{color:var(--muted)}
+html[data-theme="light"] .seoHero,
+html[data-theme="light"] .seoSection{
+  background:var(--card);border-color:var(--line);box-shadow:var(--shadow)
+}
+html[data-theme="light"] .seoSection h2{color:var(--text)}
+html[data-theme="light"] .seoSection h3{color:var(--text-soft)}
+html[data-theme="light"] .seoSection p,
+html[data-theme="light"] .seoSection li,
+html[data-theme="light"] .seoHero p{color:var(--muted)}
+html[data-theme="light"] .seoBreadcrumb a{color:var(--accent-brand)}
+html[data-theme="light"] .seoKeywordList span{
+  background:var(--accent-soft);border-color:#bae6fd;color:var(--accent-brand)
+}
+html[data-theme="light"] .seoCtaSecondary{
+  background:var(--surface);color:var(--text);border-color:var(--line)
+}
+html[data-theme="light"] .siteFooterBottom,
+html[data-theme="light"] .siteFooterSeo a{color:var(--muted)}
+html[data-theme="light"] .siteFooterSeo a:hover{color:var(--accent-brand)}
+
+/* World Cup 2026 */
+html[data-theme="light"] .wcLiveBanner{background:#fff;border-color:var(--line)}
+html[data-theme="light"] .wcLiveBanner:not(:has(.wcBannerGrid)){
+  background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#991b1b
+}
+html[data-theme="light"] .wcBannerCol--live{
+  background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:rgba(185,28,28,.15);color:#991b1b
+}
+html[data-theme="light"] .wcBannerCol--upcoming{
+  background:linear-gradient(135deg,#dbeafe,#eff6ff);color:#1e3a8a
+}
+html[data-theme="light"] .wcLiveHead{color:#b91c1c}
+html[data-theme="light"] .wcUpcomingHead{color:#1d4ed8}
+html[data-theme="light"] .wcLiveItem{border-top-color:rgba(185,28,28,.15)}
+html[data-theme="light"] .wcUpcomingItem{border-top-color:rgba(29,78,216,.12)}
+html[data-theme="light"] .wcLiveBanner .wcMatchStatus,
+html[data-theme="light"] .wcLiveBanner .wcMatchTime{color:#0284c7}
+html[data-theme="light"] .wcError{color:#b91c1c;background:#fef2f2;border-color:#fecaca}
+html[data-theme="light"] .wcPlayerCardPhoto{background:linear-gradient(180deg,#dbeafe,#f8fafc)}
+html[data-theme="light"] .confirmModal{background:var(--overlay-heavy)}
+html[data-theme="light"] .modalBox{background:var(--card);border-color:var(--line)}
+html[data-theme="light"] .modalHead h2{color:var(--text)}
+
+html[data-theme="light"] .siteLogo{filter:drop-shadow(0 3px 8px rgba(15,41,75,.1))}
+html[data-theme="light"] .scoreWrap input:disabled{background:var(--surface-2);opacity:.7}
+html[data-theme="light"] .highlightVideoWrap label{color:var(--muted)}
+
+.seoPage{position:relative}
+.seoThemeToggle{position:absolute;top:16px;right:16px;z-index:5}
+@media(max-width:760px){
+  .authBarMain{gap:6px}
+  .seoThemeToggle{top:10px;right:10px}
+}

@@ -1,7 +1,7 @@
 /* SEO landing pages + site footer */
 
 .siteTagline{
-  margin:0 0 6px;font-size:14px;font-weight:800;line-height:1.35;color:#7dd3fc
+  margin:0 0 6px;font-size:14px;font-weight:800;line-height:1.35;color:var(--accent-brand)
 }
 
 .siteFooter{
