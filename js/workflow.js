@@ -304,6 +304,7 @@ function applyServerPendingMatchLight(summary){
   const status = String(summary.status || "").toLowerCase();
   currentMatchId = summary.match_id;
   currentMatchLabel = summary.match_label || formatMatchLabel(summary.created_at || Date.now());
+  setMatchStartTimeSelect(summary.match_start_time || DEFAULT_MATCH_START_TIME);
   currentImageFilename = summary.image_filename || currentImageFilename || "";
   lineupPublishedToHlv = status === "lineup_published" || status === "lineup_exported";
   loadTeamWorkflowState(summary);
@@ -370,6 +371,7 @@ function applyServerPendingMatch(data){
 
   currentMatchId = summary.match_id;
   currentMatchLabel = summary.match_label || formatMatchLabel(summary.created_at || Date.now());
+  setMatchStartTimeSelect(summary.match_start_time || DEFAULT_MATCH_START_TIME);
   currentImageFilename = summary.image_filename || currentImageFilename || "";
   formationA = normalizeFormationValue(summary.formation_a, formationA);
   formationB = normalizeFormationValue(summary.formation_b, formationB);

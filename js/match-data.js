@@ -198,6 +198,8 @@ function unlockMatchState(){
   localStorage.removeItem("dufc_team_workflow");
   currentMatchId = null;
   currentMatchLabel = null;
+  currentMatchStartTime = DEFAULT_MATCH_START_TIME;
+  setMatchStartTimeSelect(DEFAULT_MATCH_START_TIME);
   currentImageFilename = null;
   opponentTeamName = "";
   playerMatchScores = {};
@@ -402,6 +404,7 @@ function finishPendingMatchRestore(sourceNote, options = {}){
   localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify({
     matchId: currentMatchId,
     matchLabel: currentMatchLabel,
+    matchStartTime: getSelectedMatchStartTime(),
     imageFilename: currentImageFilename,
     lineupMode: getMatchMode(),
     lineupPublishedToHlv,
@@ -477,6 +480,7 @@ function restorePendingMatchFromLocalStorage(){
 
     currentMatchId = saved.matchId;
     currentMatchLabel = saved.matchLabel || formatMatchLabel(saved.lockedAt || Date.now());
+    setMatchStartTimeSelect(saved.matchStartTime || DEFAULT_MATCH_START_TIME);
     currentImageFilename = saved.imageFilename || "";
     formationA = normalizeFormationValue(saved.formationA, formationA);
     formationB = normalizeFormationValue(saved.formationB, formationB);

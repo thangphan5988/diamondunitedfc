@@ -122,6 +122,11 @@ html[data-theme="light"] .teamConfirmBadge.pending,
 html[data-theme="light"] .hlvResultBadge.pending{
   background:var(--chip-wait-bg);border-color:var(--chip-wait-border);color:var(--chip-wait-text)
 }
+html[data-theme="light"] .lrVenueLink{color:var(--accent-brand)}
+html[data-theme="light"] .matchVenueNote .lrVenueLink{color:var(--accent-brand)}
+html[data-theme="light"] .lrStatusChip.live{
+  background:rgba(239,68,68,.14);border-color:rgba(220,38,38,.35);color:#b91c1c
+}
 html[data-theme="light"] .lrMvpBar,
 html[data-theme="light"] .lrMvpChip{
   background:var(--chip-mvp-bg);border-color:var(--chip-mvp-border);color:var(--chip-mvp-text)

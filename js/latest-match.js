@@ -247,14 +247,51 @@ function renderPreviewBench(benchId, bench){
   ).join("");
 }
 
-function getOngoingMatchPhase(summary){
+function isHostMatchConfirmed(summary){
   const status = String(summary?.status || "").toLowerCase();
-  if(status === "completed") return "completed";
-  const exported = status === "lineup_exported" || !!summary?.image_filename;
-  if(exported) return "awaiting_result";
-  if(summary?.team_a_lineup_confirmed && summary?.team_b_lineup_confirmed) return "awaiting_export";
-  if(status === "lineup_published" || status === "lineup_exported") return "hlv_arranging";
-  return "preparing";
+  return status === "lineup_exported" || !!summary?.image_filename;
+}
+
+function normalizeMatchDateNormClient(value){
+  if(value == null || value === "") return "";
+  const s = String(value).trim();
+  if(!s) return "";
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(iso){
+    return `${iso[1]}-${String(iso[2]).padStart(2, "0")}-${String(iso[3]).padStart(2, "0")}`;
+  }
+  const vn = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(vn){
+    return `${vn[3]}-${String(vn[2]).padStart(2, "0")}-${String(vn[1]).padStart(2, "0")}`;
+  }
+  const d = new Date(s);
+  if(!isNaN(d.getTime())){
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  return "";
+}
+
+function parseMatchKickoffMs(summary){
+  const time = normalizeMatchStartTime(summary?.match_start_time);
+  let norm = summary?.match_date_norm || normalizeMatchDateNormClient(summary?.match_date);
+  if(!norm && summary?.created_at){
+    norm = normalizeMatchDateNormClient(summary.created_at);
+  }
+  if(!norm) return null;
+  const kickoff = new Date(`${norm}T${time}:00+07:00`);
+  return isNaN(kickoff.getTime()) ? null : kickoff.getTime();
+}
+
+function ongoingMatchStatusTitle(summary){
+  const hostConfirmed = isHostMatchConfirmed(summary);
+  const kickoffMs = parseMatchKickoffMs(summary);
+  const atKickoff = kickoffMs != null && Date.now() >= kickoffMs;
+  if(hostConfirmed && atKickoff) return "⚽ Trận đấu diễn ra";
+  const timeLabel = formatMatchStartTimeLabel(summary?.match_start_time);
+  return `⚽ Trận đấu sắp diễn ra · ${timeLabel}`;
 }
 
 function isCapMatchSummary(summary){
@@ -262,32 +299,11 @@ function isCapMatchSummary(summary){
 }
 
 function ongoingMatchPhaseHtml(summary){
-  const phase = getOngoingMatchPhase(summary);
-  const isCap = isCapMatchSummary(summary);
-  const confA = !!summary?.team_a_lineup_confirmed;
-  const confB = !!summary?.team_b_lineup_confirmed;
-  let chipClass = "wait";
-  let title = isCap ? "⚽ Trận Cáp đang diễn ra" : "🔴 Trận đang diễn ra";
-  let detail = isCap ? "Điều phối đang chuẩn bị đội hình Cáp" : "Điều phối đang chuẩn bị đội hình";
-
-  if(phase === "hlv_arranging"){
-    detail = isCap
-      ? `HLV sắp xếp · ⚽ Ra sân ${confA ? "✓" : "…"} · 🔄 Phụ ${confB ? "✓" : "…"}`
-      : `HLV sắp xếp · 🔴 ${confA ? "✓" : "…"} · 🟡 ${confB ? "✓" : "…"}`;
-  }else if(phase === "awaiting_export"){
-    detail = isCap ? "Ra sân + Phụ đã chốt — chờ xuất hình" : "2 HLV đã chốt — chờ xuất hình";
-  }else if(phase === "awaiting_result"){
-    chipClass = "done";
-    title = isCap ? "✓ Đội hình Cáp đã chốt" : "✓ Đội hình đã chốt";
-    detail = "Chờ cập nhật kết quả sau trận";
-  }else if(phase === "preparing"){
-    detail = isCap ? "Điều phối đang chuẩn bị gửi HLV Cáp" : "Điều phối đang chuẩn bị gửi HLV";
-  }
-
-  return lrSummaryStripHtml(
-    `<span class="lrStatusChip ${chipClass}">${title}</span>`,
-    `<span class="lrSummaryDetail">${escapeHtml(detail)}</span>`
-  );
+  const title = ongoingMatchStatusTitle(summary);
+  const kickoffMs = parseMatchKickoffMs(summary);
+  const atKickoff = kickoffMs != null && Date.now() >= kickoffMs;
+  const chipClass = isHostMatchConfirmed(summary) && atKickoff ? "live" : "wait";
+  return lrSummaryStripHtml(`<span class="lrStatusChip ${chipClass}">${escapeHtml(title)}</span>`);
 }
 
 function ongoingTeamConfirmBadge(confirmed){
@@ -400,12 +416,14 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
   const headerHtml = embed
     ? `<div class="meta">${isCap
         ? capResultMeta
-        : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>`
+        : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>
+        ${matchVenueLineHtml()}`
     : `<div class="lrHeader">
         <h3>${escapeHtml(displayMatchLabel(summary))}</h3>
         <div class="meta">${isCap
           ? capResultMeta
           : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>
+        ${matchVenueLineHtml()}
       </div>`;
 
   const pMain = idPrefix + "PitchMain";
@@ -485,6 +503,7 @@ function renderOngoingMatchView(containerEl, summary, historyPlayers, idPrefix){
     <div class="meta">${isCap
       ? `⚽ Trận Cáp · ${escapeHtml(fMain)} / ${escapeHtml(fSub)}`
       : `Nội bộ · ${escapeHtml(fMain)} vs ${escapeHtml(fSub)}`}</div>
+    ${matchVenueLineHtml()}
   </div>`;
 
   const pMain = idPrefix + "PitchMain";

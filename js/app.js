@@ -13,6 +13,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   applyLineupRoleUI();
   initFormationSegControls();
   initLineupTeamSwitchers();
+  initMatchStartTimeSelect();
+  initMatchVenueLine();
   initFriendlyMatchButton();
   initSiteAnalytics();
   loadSponsors();

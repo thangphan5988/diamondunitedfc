@@ -9,6 +9,21 @@ export function normalizeName(name) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+const MATCH_START_SLOTS = new Set([
+  "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
+]);
+
+export function normalizeMatchStartTime(value) {
+  const s = String(value || "19:30").trim();
+  if (MATCH_START_SLOTS.has(s)) return s;
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if (!m) return "19:30";
+  const h = Math.min(23, Math.max(0, parseInt(m[1], 10)));
+  const min = Number(m[2]) >= 30 ? "30" : "00";
+  const normalized = `${String(h).padStart(2, "0")}:${min}`;
+  return MATCH_START_SLOTS.has(normalized) ? normalized : "19:30";
+}
+
 export function normalizeMatchDate(value) {
   if (value == null || value === "") return "";
   const s = String(value).trim();
@@ -337,7 +352,8 @@ export function mapSummary(row) {
     team_b_result_saved: !!row.team_b_result_saved,
     team_a_lineup_confirmed: !!row.team_a_lineup_confirmed,
     team_b_lineup_confirmed: !!row.team_b_lineup_confirmed,
-    highlight_video_url: row.highlight_video_url || ""
+    highlight_video_url: row.highlight_video_url || "",
+    match_start_time: normalizeMatchStartTime(row.match_start_time)
   };
 }
 

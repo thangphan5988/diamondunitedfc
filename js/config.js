@@ -55,6 +55,7 @@ let pendingDetectedNames = new Set();
 let matchLocked = false;
 let currentMatchId = null;
 let currentMatchLabel = null;
+let currentMatchStartTime = "19:30";
 let currentImageFilename = null;
 let playerMatchScores = {};
 let playerMatchGoals = {};
@@ -64,6 +65,11 @@ let playerGoalVideoUrls = {};
 let cachedHistoryMatches = [];
 const PENDING_MATCH_KEY = "dufc_pending_match";
 const AUTH_SESSION_KEY = "dufc_admin_session";
+const MATCH_VENUE = {
+  name: "Sân Bóng Đồng Tâm",
+  address: "275 Lê Tấn Bê, Bình Tân",
+  mapsUrl: "https://www.google.com/maps?rlz=1C5CHFA_enVN1021VN1023&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQABgWGB4yCAgCEAAYFhgeMggIAxAAGBYYHjIICAQQABgWGB4yCAgFEAAYFhgeMggIBhAAGBYYHjIICAcQABgWGB4yCAgIEAAYFhgeMggICRAAGBYYHtIBCDI2MTFqMGo3qAIAsAIA&um=1&ie=UTF-8&fb=1&gl=vn&sa=X&geocode=KX1V7ic8LXUxMfow_pPijLn3&daddr=275+L%C3%AA+T%E1%BA%A5n+B%C3%AA,+B%C3%ACnh+T%C3%A2n,+H%E1%BB%93+Ch%C3%AD+Minh+70000"
+};
 const PERMS = {
   ALL: "all",
   LINEUP_INTERNAL: "lineup_internal",

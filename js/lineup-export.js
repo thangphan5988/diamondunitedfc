@@ -529,6 +529,7 @@ async function saveMatchHistoryToServer(options = {}){
     formation_b: cap ? formationCapSub : formationB,
     status,
     image_filename: imageFilename,
+    match_start_time: options.match_start_time || getSelectedMatchStartTime(),
     team_a_lineup_confirmed: options.team_a_lineup_confirmed != null
       ? options.team_a_lineup_confirmed
       : (cap ? teamConfirmState.Main : teamConfirmState.A),

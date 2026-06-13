@@ -2,6 +2,7 @@ import {
   APP_VERSION,
   normalizeName,
   normalizeMatchDate,
+  normalizeMatchStartTime,
   calcRatingDelta,
   clampRating,
   clampBaseRating,
@@ -759,8 +760,11 @@ async function saveMatchHistory(db, payload) {
   const matchDate = String(rows[0].match_date || "").trim();
   const matchDateNorm = normalizeMatchDate(matchDate);
   const prevSummary = await db.prepare(
-    "SELECT team_a_lineup_confirmed, team_b_lineup_confirmed FROM match_summary WHERE match_id = ?"
+    "SELECT team_a_lineup_confirmed, team_b_lineup_confirmed, match_start_time FROM match_summary WHERE match_id = ?"
   ).bind(matchId).first();
+  const matchStartTime = normalizeMatchStartTime(
+    payload.match_start_time ?? prevSummary?.match_start_time ?? "19:30"
+  );
   const deleted = await deletePendingByDate(db, matchDate);
 
   const matchType = String(payload.match_type || "internal").trim().toLowerCase();
@@ -821,8 +825,8 @@ async function saveMatchHistory(db, payload) {
     INSERT INTO match_summary (
       match_id, match_label, match_date, match_date_norm, created_at, match_type,
       opponent_name, formation_a, formation_b, player_count, status, image_filename,
-      team_a_lineup_confirmed, team_b_lineup_confirmed
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      team_a_lineup_confirmed, team_b_lineup_confirmed, match_start_time
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     matchId,
     payload.match_label || "",
@@ -837,7 +841,8 @@ async function saveMatchHistory(db, payload) {
     summaryStatus,
     rows[0]?.image_filename || payload.image_filename || "",
     teamAConfirmed,
-    teamBConfirmed
+    teamBConfirmed,
+    matchStartTime
   ).run();
 
   return {
@@ -851,7 +856,8 @@ async function saveMatchHistory(db, payload) {
     inserted_rows: rows.length,
     status: summaryStatus,
     team_a_lineup_confirmed: !!teamAConfirmed,
-    team_b_lineup_confirmed: !!teamBConfirmed
+    team_b_lineup_confirmed: !!teamBConfirmed,
+    match_start_time: matchStartTime
   };
 }
 

@@ -18,6 +18,79 @@ function formatCapMatchLabel(date = new Date()){
   return `DUFC Cáp - ${weekday} Ngày ${day}/${month}/${year}`;
 }
 
+const MATCH_START_TIME_OPTIONS = [
+  { value: "17:00", label: "17h" },
+  { value: "17:30", label: "17h30" },
+  { value: "18:00", label: "18h" },
+  { value: "18:30", label: "18h30" },
+  { value: "19:00", label: "19h" },
+  { value: "19:30", label: "19h30" },
+  { value: "20:00", label: "20h" },
+  { value: "20:30", label: "20h30" }
+];
+const DEFAULT_MATCH_START_TIME = "19:30";
+
+function normalizeMatchStartTime(value){
+  const s = String(value || DEFAULT_MATCH_START_TIME).trim();
+  if(MATCH_START_TIME_OPTIONS.some(o => o.value === s)) return s;
+  return DEFAULT_MATCH_START_TIME;
+}
+
+function formatMatchStartTimeLabel(value){
+  const normalized = normalizeMatchStartTime(value);
+  const found = MATCH_START_TIME_OPTIONS.find(o => o.value === normalized);
+  return found?.label || normalized.replace(":", "h");
+}
+
+function matchVenueLineHtml(className = "lrVenue"){
+  const title = `${MATCH_VENUE.name} (${MATCH_VENUE.address})`;
+  return `<div class="${className} meta">Sân Bóng: <a class="lrVenueLink" href="${escapeAttr(MATCH_VENUE.mapsUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a></div>`;
+}
+
+function initMatchVenueLine(){
+  const el = document.getElementById("matchVenueLine");
+  if(el) el.innerHTML = matchVenueLineHtml("matchVenueNote");
+}
+
+function initMatchStartTimeSelect(){
+  const sel = document.getElementById("matchStartTimeSelect");
+  if(!sel || sel.options.length) return;
+  MATCH_START_TIME_OPTIONS.forEach(opt => {
+    const o = document.createElement("option");
+    o.value = opt.value;
+    o.textContent = opt.label;
+    sel.appendChild(o);
+  });
+  setMatchStartTimeSelect(currentMatchStartTime);
+}
+
+function getSelectedMatchStartTime(){
+  const sel = document.getElementById("matchStartTimeSelect");
+  const value = normalizeMatchStartTime(sel?.value || currentMatchStartTime);
+  currentMatchStartTime = value;
+  return value;
+}
+
+function setMatchStartTimeSelect(value){
+  const normalized = normalizeMatchStartTime(value);
+  currentMatchStartTime = normalized;
+  const sel = document.getElementById("matchStartTimeSelect");
+  if(sel) sel.value = normalized;
+}
+
+function onMatchStartTimeChange(){
+  getSelectedMatchStartTime();
+  if(!lastResult) return;
+  const raw = localStorage.getItem(PENDING_MATCH_KEY);
+  if(!raw) return;
+  try{
+    const saved = JSON.parse(raw);
+    if(!saved?.matchId) return;
+    saved.matchStartTime = currentMatchStartTime;
+    localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify(saved));
+  }catch(_e){}
+}
+
 function getMatchMode(){
   return lastResult?.matchMode || lineupMode || "internal";
 }
