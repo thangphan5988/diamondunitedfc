@@ -73,7 +73,6 @@
   .wcBannerCol{padding:8px 10px}
   .wcLiveHead,.wcUpcomingHead{font-size:10px;margin-bottom:5px}
   .wcLiveItem,.wcUpcomingItem{gap:4px;font-size:10px}
-  .wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols3 .wcBannerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .wcLiveBanner--mixed .wcBannerGrid{grid-template-columns:1fr}
   .wcLiveBanner--mixed .wcBannerCol + .wcBannerCol{border-left:0;border-top:1px solid rgba(255,255,255,.1)}
   .wcLiveBanner--mixed .wcBannerCol--live{border-right:0}

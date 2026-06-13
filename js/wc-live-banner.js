@@ -3,7 +3,14 @@
 (function initHomeWcLiveBanner() {
   const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "P", "LIVE"];
   const POLL_MS = 60000;
+  const MOBILE_MQ = window.matchMedia("(max-width:760px)");
   let pollTimer = null;
+  let lastLiveData = null;
+  let lastUpcomingData = null;
+
+  function upcomingLimit() {
+    return MOBILE_MQ.matches ? 2 : 3;
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -113,7 +120,7 @@
     const liveIds = new Set(live.map((fx) => String(fx.id)));
     const upcoming = (upcomingData?.items || [])
       .filter((fx) => !liveIds.has(String(fx.id)) && fx.status !== "FT" && !LIVE_STATUSES.includes(fx.status))
-      .slice(0, 3);
+      .slice(0, upcomingLimit());
 
     if (!live.length && !upcoming.length) {
       el.innerHTML = "";
@@ -146,6 +153,8 @@
         fetchFixtures("live"),
         fetchFixtures("upcoming")
       ]);
+      lastLiveData = liveData;
+      lastUpcomingData = upcomingData;
       renderBanner(liveData, upcomingData);
     } catch (_) {
       const el = document.getElementById("homeWcLiveBanner");
@@ -161,6 +170,9 @@
     refreshBanner();
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(refreshBanner, POLL_MS);
+    MOBILE_MQ.addEventListener("change", () => {
+      if (lastLiveData || lastUpcomingData) renderBanner(lastLiveData, lastUpcomingData);
+    });
   }
 
   if (document.readyState === "loading") {
