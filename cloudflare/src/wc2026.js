@@ -453,6 +453,70 @@ function parseUsLocalDate(value) {
   };
 }
 
+function stadiumTimezone(stadium) {
+  const country = String(stadium?.country_en || "").trim().toLowerCase();
+  const city = String(stadium?.city_en || "").trim().toLowerCase();
+  const region = String(stadium?.region || "").trim().toLowerCase();
+  if (country.includes("mexico")) {
+    if (city.includes("monterrey")) return "America/Monterrey";
+    return "America/Mexico_City";
+  }
+  if (country.includes("canada")) {
+    if (city.includes("vancouver")) return "America/Vancouver";
+    return "America/Toronto";
+  }
+  if (country.includes("united states")) {
+    if (region === "western") return "America/Los_Angeles";
+    if (region === "central") return "America/Chicago";
+    if (region === "eastern") return "America/New_York";
+    return "America/New_York";
+  }
+  return "UTC";
+}
+
+function zonedLocalToTimestamp(localDateStr, timeZone) {
+  const m = String(localDateStr || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+  const year = Number(m[3]);
+  const hour = Number(m[4]);
+  const minute = Number(m[5]);
+  if (!timeZone || timeZone === "UTC") {
+    return Math.floor(Date.UTC(year, month - 1, day, hour, minute) / 1000);
+  }
+  let ms = Date.UTC(year, month - 1, day, hour, minute);
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  for (let i = 0; i < 6; i++) {
+    const parts = fmt.formatToParts(new Date(ms));
+    const pick = (type) => Number(parts.find((p) => p.type === type)?.value || 0);
+    const got = Date.UTC(pick("year"), pick("month") - 1, pick("day"), pick("hour"), pick("minute"));
+    const want = Date.UTC(year, month - 1, day, hour, minute);
+    const diff = want - got;
+    if (diff === 0) break;
+    ms += diff;
+  }
+  return Math.floor(ms / 1000);
+}
+
+function parseMatchDate(localDateStr, stadium) {
+  const timeZone = stadiumTimezone(stadium);
+  const timestamp = zonedLocalToTimestamp(localDateStr, timeZone);
+  if (!timestamp) return parseUsLocalDate(localDateStr);
+  return {
+    date: new Date(timestamp * 1000).toISOString(),
+    timestamp
+  };
+}
+
 function mapGameStatus(game) {
   const finished = String(game.finished).toUpperCase() === "TRUE";
   const elapsedRaw = String(game.time_elapsed || "").toLowerCase();
@@ -486,7 +550,7 @@ function normalizeGame(game, teamById, stadiumById) {
   const homeTeam = teamById.get(homeId) || {};
   const awayTeam = teamById.get(awayId) || {};
   const stadium = stadiumById.get(String(game.stadium_id)) || {};
-  const { date, timestamp } = parseUsLocalDate(game.local_date);
+  const { date, timestamp } = parseMatchDate(game.local_date, stadium);
   const st = mapGameStatus(game);
 
   return {
@@ -532,7 +596,7 @@ function normalizeGame(game, teamById, stadiumById) {
 }
 
 async function loadWc26Dataset(env) {
-  return getCached(env.AVATARS, "wc26:dataset", TTL.fixtures, async () => {
+  return getCached(env.AVATARS, "wc26:dataset:v2", TTL.fixtures, async () => {
     const [gamesRes, teamsRes, groupsRes, stadiumsRes] = await Promise.all([
       fetchWc26("/games"),
       fetchWc26("/teams"),

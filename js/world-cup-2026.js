@@ -158,15 +158,28 @@ function wcEscapeHtml(value) {
 
 function wcFormatDate(value) {
   if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
     month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function wcFormatMatchTime(fx) {
+  if (!fx) return "";
+  if (fx.timestamp) {
+    const d = new Date(fx.timestamp * 1000);
+    if (!Number.isNaN(d.getTime())) return wcFormatDate(d);
+  }
+  if (fx.date) {
+    const d = new Date(fx.date);
+    if (!Number.isNaN(d.getTime())) return wcFormatDate(d);
+  }
+  return String(fx.localLabel || "").trim();
 }
 
 function wcStatusLabel(status, elapsed) {
@@ -300,7 +313,7 @@ function wcMatchCardHtml(fx, compact) {
   const hint = compact ? "" : `<div class="wcMatchCardHint">Xem chi tiết →</div>`;
   return `<article class="wcMatchCard" role="button" tabindex="0" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')" onkeydown="wcCardKey(event,'match','${wcEscapeHtml(String(fx.id))}')">
     <div class="wcMatchMeta">
-      <span>${wcEscapeHtml(fx.localLabel || wcFormatDate(fx.date))}</span>
+      <span>${wcEscapeHtml(wcFormatMatchTime(fx))}</span>
       <span class="wcMatchStatus">${wcEscapeHtml(wcStatusLabel(fx.status, fx.elapsed))}</span>
     </div>
     <div class="wcMatchTeams">
@@ -436,7 +449,7 @@ function wcRenderMatchDetail(match) {
     <div class="wcDetailSection">
       <div class="wcDetailMetaGrid">
         ${wcMetaItem("Trạng thái", wcStatusLabel(match.status, match.elapsed))}
-        ${wcMetaItem("Thời gian", match.localLabel || wcFormatDate(match.date))}
+        ${wcMetaItem("Thời gian", wcFormatMatchTime(match))}
         ${wcMetaItem("Vòng đấu", match.round)}
         ${wcMetaItem("Bảng", match.group ? `Bảng ${match.group}` : "")}
         ${wcMetaItem("Sân", match.venue)}
@@ -470,7 +483,7 @@ function wcTeamOverviewHtml(team) {
   const upcoming = (team.upcoming || []).map((fx) => `
     <div class="wcDetailMiniMatch" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')">
       <span>${wcEscapeHtml(fx.home?.name)} ${wcEscapeHtml(wcScoreLine(fx))} ${wcEscapeHtml(fx.away?.name)}</span>
-      <span class="wcMatchStatus">${wcEscapeHtml(fx.localLabel || wcFormatDate(fx.date))}</span>
+      <span class="wcMatchStatus">${wcEscapeHtml(wcFormatMatchTime(fx))}</span>
     </div>`).join("");
   const results = (team.results || []).map((fx) => `
     <div class="wcDetailMiniMatch" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')">
@@ -625,7 +638,7 @@ async function wcOpenMatchDetail(id) {
     const data = await wcApiGet("wc2026_match", { id });
     const match = data.item;
     wcEl("wcDetailTitle").textContent = `${match.home?.name || ""} vs ${match.away?.name || ""}`;
-    wcEl("wcDetailSubtitle").textContent = [match.localLabel, match.venue].filter(Boolean).join(" · ");
+    wcEl("wcDetailSubtitle").textContent = [wcFormatMatchTime(match), match.venue].filter(Boolean).join(" · ");
     wcRenderMatchDetail(match);
   } catch (err) {
     wcEl("wcDetailBody").innerHTML = `<div class="wcError">${wcEscapeHtml(String(err.message || err))}</div>`;

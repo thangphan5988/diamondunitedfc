@@ -48,24 +48,31 @@
   }
 
   function formatMatchTime(fx) {
-    const label = String(fx.localLabel || "").trim();
-    if (label) {
-      const m = label.match(/(\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2})/);
-      if (m) return `${m[2]} · ${m[1]}`;
-    }
-    if (fx.date) {
-      const d = new Date(fx.date);
+    if (fx?.timestamp) {
+      const d = new Date(fx.timestamp * 1000);
       if (!Number.isNaN(d.getTime())) {
         return d.toLocaleString("vi-VN", {
-          timeZone: "Asia/Ho_Chi_Minh",
           day: "2-digit",
           month: "2-digit",
+          year: "numeric",
           hour: "2-digit",
           minute: "2-digit"
         });
       }
     }
-    return "Sắp đá";
+    if (fx?.date) {
+      const d = new Date(fx.date);
+      if (!Number.isNaN(d.getTime())) {
+        return d.toLocaleString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+    }
+    return String(fx?.localLabel || "").trim() || "Sắp đá";
   }
 
   async function fetchFixtures(scope) {
