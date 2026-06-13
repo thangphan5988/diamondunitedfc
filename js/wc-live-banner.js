@@ -98,6 +98,13 @@
     </a>`;
   }
 
+  function upcomingColHtml(fx) {
+    return `<section class="wcBannerCol wcBannerCol--upcoming" aria-label="Trận sắp đá">
+      <div class="wcUpcomingHead">⏰ Sắp đá</div>
+      ${upcomingItemHtml(fx)}
+    </section>`;
+  }
+
   function renderBanner(liveData, upcomingData) {
     const el = document.getElementById("homeWcLiveBanner");
     if (!el) return;
@@ -118,6 +125,8 @@
     el.classList.toggle("wcLiveBanner--liveOnly", live.length > 0 && !upcoming.length);
     el.classList.toggle("wcLiveBanner--upcomingOnly", !live.length && upcoming.length > 0);
     el.classList.toggle("wcLiveBanner--mixed", live.length > 0 && upcoming.length > 0);
+    el.classList.toggle("wcLiveBanner--upcomingCols2", upcoming.length === 2);
+    el.classList.toggle("wcLiveBanner--upcomingCols3", upcoming.length >= 3);
 
     const liveCol = live.length
       ? `<section class="wcBannerCol wcBannerCol--live" aria-label="Trận đang diễn ra">
@@ -126,14 +135,9 @@
         </section>`
       : "";
 
-    const upcomingCol = upcoming.length
-      ? `<section class="wcBannerCol wcBannerCol--upcoming" aria-label="Trận sắp đá">
-          <div class="wcUpcomingHead">⏰ Sắp đá</div>
-          <div class="wcUpcomingList">${upcoming.map(upcomingItemHtml).join("")}</div>
-        </section>`
-      : "";
+    const upcomingCols = upcoming.map(upcomingColHtml).join("");
 
-    el.innerHTML = `<div class="wcBannerGrid">${liveCol}${upcomingCol}</div>`;
+    el.innerHTML = `<div class="wcBannerGrid">${liveCol}${upcomingCols}</div>`;
   }
 
   async function refreshBanner() {

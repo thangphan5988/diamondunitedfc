@@ -15,44 +15,40 @@
 .wcBannerGrid{
   display:grid;grid-template-columns:1fr;gap:0
 }
-.wcBannerGrid:has(.wcBannerCol--live):has(.wcBannerCol--upcoming){
-  grid-template-columns:repeat(2,minmax(0,1fr))
-}
+
+.wcLiveBanner--upcomingOnly .wcBannerGrid{grid-template-columns:1fr}
+.wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols2 .wcBannerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols3 .wcBannerGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.wcLiveBanner--mixed .wcBannerGrid{grid-template-columns:minmax(0,1.1fr) repeat(var(--wc-upcoming-cols,1),minmax(0,1fr))}
+.wcLiveBanner--mixed.wcLiveBanner--upcomingCols2 .wcBannerGrid{--wc-upcoming-cols:2}
+.wcLiveBanner--mixed.wcLiveBanner--upcomingCols3 .wcBannerGrid{--wc-upcoming-cols:3}
 
 .wcBannerCol{padding:12px 14px;min-width:0}
+.wcBannerCol + .wcBannerCol{border-left:1px solid rgba(255,255,255,.1)}
 .wcBannerCol--live{
   background:linear-gradient(135deg,#450a0a,#7f1d1d);color:#fecaca
 }
 .wcBannerCol--upcoming{
   background:linear-gradient(135deg,#0c2340,#1e3a5f);color:#bfdbfe
 }
-.wcBannerGrid:has(.wcBannerCol--live):has(.wcBannerCol--upcoming) .wcBannerCol--live{
-  border-right:1px solid rgba(248,113,113,.25)
-}
+.wcLiveBanner--mixed .wcBannerCol--live{border-right:1px solid rgba(248,113,113,.25)}
 
 .wcLiveHead,.wcUpcomingHead{font-size:12px;font-weight:900;margin-bottom:8px;line-height:1.2}
 .wcLiveHead{color:#fca5a5}
 .wcUpcomingHead{color:#93c5fd}
 
-.wcUpcomingList{display:grid;gap:8px;grid-template-columns:1fr}
-
-.wcLiveBanner--upcomingOnly .wcUpcomingList{
-  grid-template-columns:repeat(auto-fit, minmax(min(100%, 168px), 1fr))
-}
-.wcLiveBanner--upcomingOnly .wcUpcomingItem{
-  flex-direction:column;align-items:stretch;gap:6px;
-  border-top:0;border:1px solid rgba(147,197,253,.22);border-radius:10px;
-  padding:10px 8px;background:rgba(0,0,0,.12)
-}
-.wcLiveBanner--upcomingOnly .wcUpcomingItem .wcMatchTime{text-align:center}
-
 .wcLiveItem,.wcUpcomingItem{
-  display:flex;flex-direction:column;align-items:stretch;gap:4px;
-  font-size:12px;font-weight:700;padding:6px 0;border-top:1px solid rgba(255,255,255,.12)
+  display:flex;flex-direction:column;align-items:stretch;gap:6px;
+  font-size:12px;font-weight:700;padding:0;border-top:0
 }
-.wcLiveItem:first-of-type,.wcUpcomingItem:first-of-type{border-top:0;padding-top:0}
+.wcBannerCol--live .wcLiveItem + .wcLiveItem{
+  margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)
+}
 .wcLiveItem--click{cursor:pointer;color:inherit;text-decoration:none}
 .wcLiveItem--click:hover{opacity:.92;text-decoration:none;color:inherit}
+
+.wcBannerCol--upcoming .wcUpcomingItem .wcMatchTime{text-align:center}
 
 .wcBannerMatchTeams{
   display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -76,21 +72,23 @@
 @media(max-width:760px){
   .wcBannerCol{padding:8px 10px}
   .wcLiveHead,.wcUpcomingHead{font-size:10px;margin-bottom:5px}
-  .wcLiveItem,.wcUpcomingItem{gap:3px;padding:4px 0;font-size:10px}
+  .wcLiveItem,.wcUpcomingItem{gap:4px;font-size:10px}
+  .wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols3 .wcBannerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wcLiveBanner--mixed .wcBannerGrid{grid-template-columns:1fr}
+  .wcLiveBanner--mixed .wcBannerCol + .wcBannerCol{border-left:0;border-top:1px solid rgba(255,255,255,.1)}
+  .wcLiveBanner--mixed .wcBannerCol--live{border-right:0}
   .wcBannerMatchTeams{
     grid-template-columns:1fr;gap:1px;text-align:center
   }
   .wcBannerTeam{font-size:9px;line-height:1.2}
   .wcBannerTeam--home,.wcBannerTeam--away{text-align:center}
   .wcBannerScore{font-size:10px}
-  .wcMatchStatus,.wcMatchTime{font-size:9px}
+  .wcMatchStatus,.wcMatchTime{font-size:9px;white-space:normal}
 }
 
 @media(min-width:761px){
-  .wcLiveItem,
-  .wcLiveBanner--mixed .wcUpcomingItem{
+  .wcLiveBanner--mixed .wcLiveItem{
     flex-direction:row;justify-content:space-between;align-items:center;gap:10px
   }
-  .wcLiveBanner--mixed .wcMatchStatus,
-  .wcLiveBanner--mixed .wcMatchTime{text-align:right;flex:0 0 auto}
+  .wcLiveBanner--mixed .wcMatchStatus{text-align:right;flex:0 0 auto}
 }
