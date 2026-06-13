@@ -32,8 +32,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.6.4">
-  <link rel="stylesheet" href="css/theme.css?v=2.6.7">
+  <link rel="stylesheet" href="css/base.css?v=2.6.5">
+  <link rel="stylesheet" href="css/theme.css?v=2.6.8">
   <link rel="stylesheet" href="css/lineup.css?v=2.6.7">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.5.2">
@@ -98,6 +98,10 @@
     <div class="adMobileTop" id="adMobileTop" aria-label="Quảng cáo"></div>
     <div class="wrap">
   <header class="siteHeader">
+    <button type="button" class="themeToggle siteHeaderThemeToggle" id="themeToggle" onclick="toggleTheme()" aria-label="Đổi giao diện sáng/tối">
+      <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
+      <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
+    </button>
     <img class="siteLogo" src="assets/logo.png" width="72" height="72" alt="Logo đội bóng sân 7 Diamond United FC - Diamond Riverside" />
     <div class="siteBrand">
       <h1>DIAMOND UNITED FC</h1>
@@ -121,10 +125,6 @@
 
   <div class="authBar">
     <div class="authBarMain">
-      <button type="button" class="themeToggle" id="themeToggle" onclick="toggleTheme()">
-        <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
-        <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
-      </button>
       <div class="mainNavMobile" id="mainNavMobile">
         <button type="button" class="mainNavHamburger" id="mainNavMobileBtn" aria-expanded="false" aria-haspopup="listbox" aria-label="Menu điều hướng" onclick="toggleMobileTabMenu(event)">
           <span class="mainNavHamburgerIcon" aria-hidden="true"><span></span><span></span><span></span></span>

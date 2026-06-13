@@ -535,9 +535,4 @@ html[data-theme="light"] .siteLogo{filter:drop-shadow(0 3px 8px rgba(15,41,75,.1
 html[data-theme="light"] .scoreWrap input:disabled{background:var(--surface-2);opacity:.7}
 html[data-theme="light"] .highlightVideoWrap label{color:var(--muted)}
 
-.seoPage{position:relative}
-.seoThemeToggle{position:absolute;top:16px;right:16px;z-index:5}
-@media(max-width:760px){
-  .authBarMain{gap:6px}
-  .seoThemeToggle{top:10px;right:10px}
-}
+.seoPageHeaderThemeToggle{flex:0 0 42px;margin:0}

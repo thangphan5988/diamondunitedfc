@@ -24,8 +24,8 @@
   (function(){try{var k=localStorage.getItem("dufc_theme");var t;if(k==="light")t="light";else if(k==="dark")t="dark";else{var h=(new Date().getUTCHours()+7+24)%24;t=(h>=6&&h<18)?"light":"dark";}if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();
   </script>
   <link rel="icon" href="assets/logo.png" type="image/png" />
-  <link rel="stylesheet" href="css/base.css?v=2.5.1">
-  <link rel="stylesheet" href="css/theme.css?v=2.6.2">
+  <link rel="stylesheet" href="css/base.css?v=2.6.5">
+  <link rel="stylesheet" href="css/theme.css?v=2.6.8">
   <link rel="stylesheet" href="css/seo.css?v=2.4.93">
   <link rel="stylesheet" href="css/ads.css?v=2.4.87">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
@@ -69,15 +69,15 @@
   <div class="adMain">
     <div class="adMobileTop" id="adMobileTop" aria-label="Quảng cáo"></div>
   <div class="seoPage wcPage">
-    <button type="button" class="themeToggle seoThemeToggle" id="themeToggle" onclick="toggleTheme()">
-      <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
-      <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
-    </button>
     <nav class="seoBreadcrumb" aria-label="Breadcrumb">
       <a href="/">Trang chủ</a> / <span>World Cup 2026</span>
     </nav>
 
     <header class="seoPageHeader">
+      <button type="button" class="themeToggle seoPageHeaderThemeToggle" id="themeToggle" onclick="toggleTheme()" aria-label="Đổi giao diện sáng/tối">
+        <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
+        <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
+      </button>
       <img src="assets/logo.png" width="64" height="64" alt="Logo Diamond United FC" />
       <div>
         <h1>World Cup 2026</h1>
