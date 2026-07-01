@@ -73,14 +73,13 @@
 
 .teamCardPortrait{
   position:relative;flex:1 1 auto;min-height:0;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,#0f2744 0%,#07111f 100%)
 }
 .teamCardPortraitBtn{cursor:pointer}
 .teamCardPortraitBtn:hover img{transform:scale(1.02);filter:brightness(1.06)}
 .teamCardPortraitBtn:focus-visible{outline:2px solid #38bdf8;outline-offset:-2px}
 .teamCardPortrait img{
-  width:100%;height:100%;object-fit:contain;object-position:center top;
+  width:100%;height:100%;object-fit:cover;object-position:center top;
   display:block;transition:transform .18s ease,filter .18s ease
 }
 

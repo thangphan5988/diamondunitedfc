@@ -24,14 +24,8 @@ const ROLE_USERS = [
 
 export async function ensureDefaultAdmin(db, pepper) {
   for (const user of ROLE_USERS) {
-    const row = await db.prepare("SELECT username, permissions FROM admin_users WHERE username = ?").bind(user.username).first();
-    if (row) {
-      if (String(row.permissions || "") !== user.permissions) {
-        await db.prepare("UPDATE admin_users SET permissions = ? WHERE username = ?")
-          .bind(user.permissions, user.username).run();
-      }
-      continue;
-    }
+    const row = await db.prepare("SELECT username FROM admin_users WHERE username = ?").bind(user.username).first();
+    if (row) continue;
     const hash = await hashPassword(user.password, pepper);
     await db.prepare(
       "INSERT INTO admin_users (username, password_hash, display_name, permissions, active) VALUES (?, ?, ?, ?, 1)"
