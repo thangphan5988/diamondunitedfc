@@ -5,6 +5,10 @@ function bothTeamsConfirmed(){
   return teamConfirmState.A && teamConfirmState.B;
 }
 
+function isMatchReadyForResults(){
+  return matchLocked && bothTeamsConfirmed();
+}
+
 function bothTeamsResultSaved(){
   if(isCapMode()) return capHlvResultConfirmed();
   return teamResultSaved.A && teamResultSaved.B;
@@ -31,9 +35,9 @@ function hlvResultStatusHtml(opts = {}){
       ];
   if(opts.hostNote){
     if(isCapMode() && canFinalizeMatch()){
-      parts.push(`<span class="hlvResultBadge hostNote">Host chỉnh tỉ số/tên đội khi cần → Xác nhận trận sau HLV Cáp</span>`);
+      parts.push(`<span class="hlvResultBadge hostNote">Host có thể chỉnh tỉ số/tên đội khi cần</span>`);
     }else if(isMatchHost()){
-      parts.push(`<span class="hlvResultBadge hostNote">Host có thể nhập & kết thúc trận bất cứ lúc nào</span>`);
+      parts.push(`<span class="hlvResultBadge hostNote">Trận tự kết thúc khi đủ HLV xác nhận KQ</span>`);
     }
   }
   return parts.join("");
@@ -42,7 +46,7 @@ function hlvResultStatusHtml(opts = {}){
 function updateHlvResultStatusUI(){
   const bar = document.getElementById("hlvResultStatus");
   const modalBar = document.getElementById("resultHlvStatus");
-  const show = matchLocked && currentImageFilename;
+  const show = isMatchReadyForResults();
   const html = show ? hlvResultStatusHtml({ hostNote: true }) : "";
   if(bar){
     bar.innerHTML = html;
@@ -196,7 +200,7 @@ function shouldPollPendingMatch(){
   if(canSplitTeams()) return true;
   if(canCoordinateCap()) return true;
   if(canCapHlvEdit()) return true;
-  if(isHlvEditor() && matchLocked && currentImageFilename) return true;
+  if(isHlvEditor() && isMatchReadyForResults()) return true;
   return false;
 }
 
@@ -264,9 +268,7 @@ function updateCoordinatorConfirmStatus(){
     const sub = teamConfirmState.Sub ? "✓" : "⏳";
     let msg = `HLV Cáp chốt: ⚽ Chính ${main} · 🔄 Phụ ${sub}`;
     if(teamConfirmState.Main && teamConfirmState.Sub){
-      msg += matchLocked
-        ? (currentImageFilename ? " — Đã khóa, chờ nhập kết quả." : " — Đã khóa, bấm Xuất hình đội hình.")
-        : " — Đang khóa trận...";
+      msg += matchLocked ? " — Có thể nhập kết quả sau trận." : " — Đang khóa trận...";
     }
     el.innerHTML = msg;
     return;
@@ -277,9 +279,7 @@ function updateCoordinatorConfirmStatus(){
   const b = teamConfirmState.B ? "✓" : "⏳";
   let msg = `HLV chốt: 🔴 Đội A ${a} · 🟡 Đội B ${b}`;
   if(teamConfirmState.A && teamConfirmState.B){
-    msg += matchLocked
-      ? (currentImageFilename ? " — Đã khóa, chờ nhập kết quả." : " — Đã khóa, bấm Xuất hình đội hình.")
-      : " — Đang khóa trận...";
+    msg += matchLocked ? " — Có thể nhập kết quả sau trận." : " — Đang khóa trận...";
   }
   el.innerHTML = msg;
 }
@@ -293,7 +293,7 @@ function shouldFullApplyServerPendingMatch(){
   if(isCapHlvView() && lineupPublishedToHlv && !matchLocked && !(teamConfirmState.Main && teamConfirmState.Sub)){
     return !lastResult;
   }
-  if(isCapHlvView() && matchLocked && currentImageFilename && canResultCap()){
+  if(isCapHlvView() && isMatchReadyForResults() && canResultCap()){
     return false;
   }
   return true;
@@ -304,16 +304,15 @@ function applyServerPendingMatchLight(summary){
   const status = String(summary.status || "").toLowerCase();
   currentMatchId = summary.match_id;
   currentMatchLabel = summary.match_label || formatMatchLabel(summary.created_at || Date.now());
+  setCurrentMatchDate(summary.match_date || summary.match_date_norm || "");
   setMatchStartTimeSelect(summary.match_start_time || DEFAULT_MATCH_START_TIME);
   currentImageFilename = summary.image_filename || currentImageFilename || "";
   lineupPublishedToHlv = status === "lineup_published" || status === "lineup_exported";
   loadTeamWorkflowState(summary);
   loadPendingScoresFromStore(summary);
   updateTeamConfirmBadges();
-  if(status === "lineup_exported"){
+  if(status === "lineup_exported" || bothTeamsConfirmed()){
     applyLockUI(true);
-  }else if(bothTeamsConfirmed()){
-    maybeAutoLockFromConfirm();
   }else if(matchLocked){
     applyLockUI(false);
   }
@@ -351,11 +350,12 @@ function maybeAutoLockFromConfirm(){
 
   applyLockUI(true);
   if(canSplitTeams() && !isCapMode()){
-    showToast(`🔒 Cả 2 HLV đã chốt — bấm ${lineupExportButtonLabel()}`, "warn", 5000);
+    showToast("✓ Cả 2 HLV đã chốt — có thể nhập kết quả sau trận", "success", 4800);
   }else if(canCoordinateCap() && isCapMode()){
-    showToast(`🔒 HLV Cáp đã chốt — bấm ${lineupExportButtonLabel()}`, "warn", 5000);
+    showToast("✓ HLV Cáp đã chốt — có thể nhập kết quả sau trận", "success", 4800);
   }
   updateCoordinatorConfirmStatus();
+  updateLockBannerContent();
 }
 
 function applyServerPendingMatch(data){
@@ -371,6 +371,7 @@ function applyServerPendingMatch(data){
 
   currentMatchId = summary.match_id;
   currentMatchLabel = summary.match_label || formatMatchLabel(summary.created_at || Date.now());
+  setCurrentMatchDate(summary.match_date || summary.match_date_norm || "");
   setMatchStartTimeSelect(summary.match_start_time || DEFAULT_MATCH_START_TIME);
   currentImageFilename = summary.image_filename || currentImageFilename || "";
   formationA = normalizeFormationValue(summary.formation_a, formationA);
@@ -414,10 +415,8 @@ function applyServerPendingMatch(data){
 
   updateTeamConfirmBadges();
 
-  if(status === "lineup_exported"){
+  if(status === "lineup_exported" || bothTeamsConfirmed()){
     applyLockUI(true);
-  }else if(bothTeamsConfirmed()){
-    maybeAutoLockFromConfirm();
   }else if(matchLocked){
     applyLockUI(false);
   }
@@ -457,13 +456,13 @@ async function refreshTeamConfirmFromServer(){
       if(canSplitTeams() && !isCapPending){
         if(!prevA && teamConfirmState.A) showToast("🔴 HLV Đội A đã chốt", "info");
         if(!prevB && teamConfirmState.B) showToast("🟡 HLV Đội B đã chốt", "info");
-        if(teamConfirmState.A && teamConfirmState.B && matchLocked && !currentImageFilename){
+        if(teamConfirmState.A && teamConfirmState.B && matchLocked){
           updateCoordinatorConfirmStatus();
         }
       }else if(canCoordinateCap() && isCapPending){
         if(!prevMain && teamConfirmState.Main) showToast("⚽ HLV Cáp đã chốt Chính", "info");
         if(!prevSub && teamConfirmState.Sub) showToast("🔄 HLV Cáp đã chốt Phụ", "info");
-        if(teamConfirmState.Main && teamConfirmState.Sub && matchLocked && !currentImageFilename){
+        if(teamConfirmState.Main && teamConfirmState.Sub && matchLocked){
           updateCoordinatorConfirmStatus();
         }else if(lineupPublishedToHlv){
           updateCoordinatorConfirmStatus();
@@ -606,26 +605,22 @@ function applyLineupRoleUI(){
   const exportOk = hasPerm(PERMS.EXPORT) && (splitOk || canCoordinateCap());
   const btnExport = document.getElementById("btnExport");
   const btnForceExport = document.getElementById("btnForceExport");
-  const showExport = exportOk && !!lastResult && bothTeamsConfirmed();
+  const showExport = exportOk && !!lastResult && (bothTeamsConfirmed() || isMatchReadyForResults());
   const showForceExport = exportOk && splitOk && !!lastResult && lineupPublishedToHlv && !matchLocked &&
-    !bothTeamsConfirmed() && !currentImageFilename;
+    !bothTeamsConfirmed();
   if(btnExport){
     btnExport.style.display = (showExport && !capHlv) ? "" : "none";
     if(showExport){
-      if(currentImageFilename){
-        btnExport.textContent = "Đã xuất ảnh — chờ kết quả";
-        btnExport.disabled = true;
-      }else{
-        btnExport.textContent = lineupExportButtonLabel();
-        btnExport.disabled = false;
-      }
+      btnExport.textContent = lineupExportButtonLabel();
+      btnExport.disabled = false;
+      btnExport.classList.remove("btnDone");
     }
   }
   if(btnForceExport){
     btnForceExport.style.display = showForceExport ? "" : "none";
     if(showForceExport){
       btnForceExport.disabled = false;
-      btnForceExport.textContent = "Chốt & xuất hình";
+      btnForceExport.textContent = "Chốt cả 2 đội";
       btnForceExport.classList.remove("btnDone");
     }
   }
@@ -687,7 +682,7 @@ function applyLineupRoleUI(){
     if(showCapConfirm) setWorkflowBtn(btnConfirmCap, false, "✓ Đã chốt", "✓ Chốt đội hình");
   }
   if(btnResultCap){
-    const showCapResult = capHlv && matchLocked && !!currentImageFilename && canResultCap();
+    const showCapResult = capHlv && isMatchReadyForResults() && canResultCap();
     btnResultCap.style.display = showCapResult ? "" : "none";
     if(showCapResult){
       btnResultCap.disabled = false;

@@ -82,7 +82,7 @@ export default {
           version: APP_VERSION,
           storage: "cloudflare-d1",
           actions: [
-            "save_match_history", "save_match_result", "edit_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
+            "save_match_history", "update_match_image", "save_match_result", "edit_match_result", "confirm_team_lineup", "cancel_match", "delete_match",
             "admin_login", "admin_logout", "admin_save_user", "admin_delete_user",
             "get_roster", "get_match_list", "get_match_detail", "get_pending_match",
             "get_latest_lineup", "get_latest_result", "get_player_stats", "get_sponsors",
@@ -166,6 +166,9 @@ export default {
         case "save_match_history":
           await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
+        case "update_match_image":
+          await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
+          return json(await updateMatchImage(db, payload));
         case "confirm_team_lineup": {
           const confirmSession = await requireAuth(db, token, [
             "lineup_team_a", "lineup_team_b", "lineup_internal", "lineup_cap", "lineup_cap_hlv", "all"
@@ -732,6 +735,23 @@ async function getPlayerStats(db) {
   };
 }
 
+async function deletePendingByMatchId(db, matchId) {
+  if (!matchId) return { deletedRows: 0, deletedSummary: 0 };
+
+  const delHist = await db.prepare(
+    `DELETE FROM match_history WHERE match_id = ? AND (status IS NULL OR status = '' OR status != 'completed')`
+  ).bind(matchId).run();
+
+  const delSum = await db.prepare(
+    `DELETE FROM match_summary WHERE match_id = ? AND status != 'completed'`
+  ).bind(matchId).run();
+
+  return {
+    deletedRows: delHist.meta?.changes || 0,
+    deletedSummary: delSum.meta?.changes || 0
+  };
+}
+
 async function deletePendingByDate(db, matchDate) {
   const norm = normalizeMatchDate(matchDate);
   if (!norm) return { deletedRows: 0, deletedSummary: 0 };
@@ -765,6 +785,7 @@ async function saveMatchHistory(db, payload) {
   const matchStartTime = normalizeMatchStartTime(
     payload.match_start_time ?? prevSummary?.match_start_time ?? "19:30"
   );
+  const deletedByMatchId = await deletePendingByMatchId(db, matchId);
   const deleted = await deletePendingByDate(db, matchDate);
 
   const matchType = String(payload.match_type || "internal").trim().toLowerCase();
@@ -827,6 +848,24 @@ async function saveMatchHistory(db, payload) {
       opponent_name, formation_a, formation_b, player_count, status, image_filename,
       team_a_lineup_confirmed, team_b_lineup_confirmed, match_start_time
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(match_id) DO UPDATE SET
+      match_label = excluded.match_label,
+      match_date = excluded.match_date,
+      match_date_norm = excluded.match_date_norm,
+      created_at = excluded.created_at,
+      match_type = excluded.match_type,
+      opponent_name = excluded.opponent_name,
+      formation_a = excluded.formation_a,
+      formation_b = excluded.formation_b,
+      player_count = excluded.player_count,
+      status = excluded.status,
+      image_filename = CASE
+        WHEN excluded.image_filename != '' THEN excluded.image_filename
+        ELSE match_summary.image_filename
+      END,
+      team_a_lineup_confirmed = excluded.team_a_lineup_confirmed,
+      team_b_lineup_confirmed = excluded.team_b_lineup_confirmed,
+      match_start_time = excluded.match_start_time
   `).bind(
     matchId,
     payload.match_label || "",
@@ -851,14 +890,32 @@ async function saveMatchHistory(db, payload) {
     match_id: matchId,
     match_date: matchDate,
     normalized_match_date: matchDateNorm,
-    deleted_old_rows: deleted.deletedRows,
-    deleted_pending_summary: deleted.deletedSummary,
+    deleted_old_rows: deleted.deletedRows + deletedByMatchId.deletedRows,
+    deleted_pending_summary: deleted.deletedSummary + deletedByMatchId.deletedSummary,
     inserted_rows: rows.length,
     status: summaryStatus,
     team_a_lineup_confirmed: !!teamAConfirmed,
     team_b_lineup_confirmed: !!teamBConfirmed,
     match_start_time: matchStartTime
   };
+}
+
+async function updateMatchImage(db, payload) {
+  const matchId = String(payload.match_id || "").trim();
+  const filename = String(payload.image_filename || "").trim();
+  if (!matchId) throw new Error("match_id is required");
+  if (!filename) throw new Error("image_filename is required");
+
+  const summary = await db.prepare("SELECT status FROM match_summary WHERE match_id = ?").bind(matchId).first();
+  if (!summary) throw new Error("Không tìm thấy trận: " + matchId);
+  if (summary.status === "completed") throw new Error("Trận đã hoàn tất.");
+
+  await db.prepare("UPDATE match_summary SET image_filename = ? WHERE match_id = ?")
+    .bind(filename, matchId).run();
+  await db.prepare("UPDATE match_history SET image_filename = ? WHERE match_id = ?")
+    .bind(filename, matchId).run();
+
+  return { ok: true, version: APP_VERSION, match_id: matchId, image_filename: filename };
 }
 
 async function confirmTeamLineup(db, payload, session) {
@@ -1103,7 +1160,9 @@ async function saveMatchResult(db, payload, session) {
 
   const nextAFlag = teamAFlag;
   const nextBFlag = teamBFlag;
-  const finalize = finalizeMatch;
+  let finalize = finalizeMatch;
+  const allHlvSaved = isCapMatch ? !!nextAFlag : (!!nextAFlag && !!nextBFlag);
+  if (!finalize && allHlvSaved) finalize = true;
 
   const highlightVideo = payload.highlight_video_url != null
     ? normalizeVideoUrl(payload.highlight_video_url)
@@ -1144,13 +1203,12 @@ async function saveMatchResult(db, payload, session) {
     };
   }
 
-  const capHlvConfirmed = isCapMatch && !!summary.team_a_result_saved;
+  const capHlvConfirmed = isCapMatch && !!nextAFlag;
   const mergedPlayers = [];
   for (const row of historyRows.results || []) {
     const incoming = playerMap[normalizeName(row.player_name)];
     const teamKey = String(row.team || "").toUpperCase();
-    const teamHlvLocked = (teamKey === "A" && summary.team_a_result_saved) ||
-      (teamKey === "B" && summary.team_b_result_saved);
+    const teamHlvLocked = (teamKey === "A" && nextAFlag) || (teamKey === "B" && nextBFlag);
     const ratingLocked = capHlvConfirmed || teamHlvLocked;
     const statsLocked = !finalize && (capHlvConfirmed || teamHlvLocked);
     const matchScore = ratingLocked

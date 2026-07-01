@@ -12,7 +12,7 @@ async function publishLineupDraft(){
     return;
   }
   if(matchLocked){
-    showError("Trận đã xuất ảnh — không gửi lại được.");
+    showError("Trận đã chốt — không gửi lại được.");
     return;
   }
   if(lineupPublishedToHlv){
@@ -33,6 +33,7 @@ async function publishLineupDraft(){
     });
     currentMatchId = saved.matchId;
     currentMatchLabel = saved.matchLabel;
+    setCurrentMatchDate(saved.matchDate || getMatchDateForSave());
     lineupPublishedToHlv = true;
     persistTeamWorkflowState();
     finishPendingMatchRestore(capFlow ? "đã gửi HLV Cáp" : "đã gửi cho HLV", { lock: false, status: "lineup_published" });
@@ -65,12 +66,12 @@ async function syncLineupToServer(){
 async function forceConfirmAndExport(){
   clearError();
   if(!isLoggedIn() || !canSplitTeams() || !hasPerm(PERMS.EXPORT)){
-    showError("Chỉ Anh Phương (điều phối) mới dùng được Chốt & xuất hình.");
+    showError("Chỉ Anh Phương (điều phối) mới dùng được Chốt cả 2 đội.");
     return;
   }
   if(matchLocked){
-    if(currentImageFilename) openResultModal();
-    else showError("Trận đã khóa.");
+    if(canEnterAnyResult()) openResultModal();
+    else showError("Trận đã chốt.");
     return;
   }
   if(!lastResult || !currentMatchId){
@@ -78,7 +79,7 @@ async function forceConfirmAndExport(){
     return;
   }
   if(!lineupPublishedToHlv){
-    showError("Cần bấm Gửi HLV trước khi chốt & xuất hình.");
+    showError("Cần bấm Gửi HLV trước khi chốt.");
     return;
   }
   const btn = document.getElementById("btnForceExport");
@@ -94,27 +95,21 @@ async function forceConfirmAndExport(){
     updateTeamConfirmBadges();
     persistTeamWorkflowState();
     maybeAutoLockFromConfirm();
-    showToast("✓ Đã chốt cả 2 đội — đang xuất hình...", "info", 2800);
-    await exportImage({ skipConfirmCheck: true });
+    showToast("✓ Đã chốt cả 2 đội — có thể nhập kết quả", "success", 3200);
   }catch(e){
     console.error(e);
-    showError(e.message || "Không chốt & xuất hình được.");
+    showError(e.message || "Không chốt được đội hình.");
     applyLineupRoleUI();
   }
 }
 
 async function exportImage(options = {}){
   if(!isLoggedIn() || !hasPerm(PERMS.EXPORT)){
-    showError("Bạn cần quyền xuất ảnh & lưu đội hình.");
-    return;
-  }
-  if(currentImageFilename){
-    if(canEnterAnyResult()) openResultModal();
-    else showToast("Đã xuất hình — chờ người có quyền nhập kết quả.", "info", 3200);
+    showError("Bạn cần quyền xuất ảnh đội hình.");
     return;
   }
   if(!lastResult){
-    alert("Chưa có kết quả để xuất hình.");
+    alert("Chưa có đội hình để xuất hình.");
     return;
   }
   if(!options.skipConfirmCheck && !bothTeamsConfirmed()){
@@ -189,17 +184,10 @@ async function exportImage(options = {}){
     }
 
     try{
-      const savedMatch = await saveMatchHistoryToServer({
-        imageFilename: filename,
-        status: "lineup_exported",
-        matchId: currentMatchId,
-        matchLabel: currentMatchLabel
-      });
-      lockMatchState(savedMatch.matchId, savedMatch.matchLabel, filename);
+      await updateLineupExportImage(filename);
     }catch(saveErr){
       console.error(saveErr);
-      showError(`Ảnh đã tạo nhưng lưu server lỗi: ${saveErr.message || saveErr}. Thử bấm lại hoặc chụp màn hình.`);
-      return;
+      showToast(`Ảnh đã tạo — chưa lưu tên file lên server: ${saveErr.message || saveErr}`, "warn", 5200);
     }
 
     const msg = lineupExportSuccessMessage(deliveryMode);
@@ -282,8 +270,8 @@ function canUseLineupWebShare(){
 }
 
 function lineupExportButtonLabel(){
-  if(!isMobileLineupExportContext()) return "Xuất hình đội hình";
-  return "Lưu / chia sẻ ảnh";
+  if(!isMobileLineupExportContext()) return "Lưu ảnh đội hình (Zalo)";
+  return "Lưu / chia sẻ ảnh Zalo";
 }
 
 function prepareLineupExportClone(clone){
@@ -298,18 +286,39 @@ function prepareLineupExportClone(clone){
 function lineupExportSuccessMessage(mode){
   if(mode === "preview"){
     return {
-      ocr: `Đã tạo ảnh trận <b>${displayMatchLabel()}</b>. Bấm <b>Chia sẻ Zalo</b> hoặc giữ ảnh → <b>Lưu vào Ảnh</b>. Có thể nhập kết quả sau trận.`,
+      ocr: `Ảnh đội hình <b>${displayMatchLabel()}</b> sẵn sàng. Gửi vào nhóm Zalo — nhập kết quả không phụ thuộc bước này.`,
       toast: "✓ Ảnh sẵn sàng — chia sẻ Zalo hoặc giữ để lưu",
       toastType: "success",
       toastMs: 5200
     };
   }
   return {
-    ocr: `Đã xuất hình trận <b>${displayMatchLabel()}</b>. File PNG đã tải về. Có thể nhập kết quả sau trận.`,
-    toast: "✓ Đã tải file PNG & khóa trận",
+    ocr: `Đã lưu ảnh đội hình <b>${displayMatchLabel()}</b>. File PNG đã tải về — có thể gửi Zalo.`,
+    toast: "✓ Đã tải ảnh đội hình",
     toastType: "success",
     toastMs: 4200
   };
+}
+
+async function updateLineupExportImage(filename){
+  if(!currentMatchId) return;
+  await apiPost("update_match_image", {
+    match_id: currentMatchId,
+    image_filename: filename
+  });
+  currentImageFilename = filename;
+  const raw = localStorage.getItem(PENDING_MATCH_KEY);
+  if(raw){
+    try{
+      const saved = JSON.parse(raw);
+      if(saved?.matchId === currentMatchId){
+        saved.imageFilename = filename;
+        localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify(saved));
+      }
+    }catch(e){
+      console.error(e);
+    }
+  }
 }
 
 async function downloadPngBlob(blob, filename){
@@ -432,6 +441,7 @@ async function saveMatchHistoryToServer(options = {}){
   const matchId = options.matchId || currentMatchId || generateMatchId(now);
   const cap = isCapMode();
   const matchLabel = options.matchLabel || currentMatchLabel || (cap ? formatCapMatchLabel(now) : formatMatchLabel(now));
+  const matchDate = options.match_date || getMatchDateForSave();
 
   const rows = [];
 
@@ -439,7 +449,7 @@ async function saveMatchHistoryToServer(options = {}){
     lineup.starters.forEach((p, index) => {
       rows.push({
         match_id: matchId,
-        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        match_date: matchDate,
         created_at: now.toISOString(),
         team: teamName,
         shirt,
@@ -465,7 +475,7 @@ async function saveMatchHistoryToServer(options = {}){
     lineup.bench.forEach((p, index) => {
       rows.push({
         match_id: matchId,
-        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        match_date: matchDate,
         created_at: now.toISOString(),
         team: teamName,
         shirt,
@@ -496,7 +506,7 @@ async function saveMatchHistoryToServer(options = {}){
     lineupSub.starters.forEach((p, index) => {
       rows.push({
         match_id: matchId,
-        match_date: `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`,
+        match_date: matchDate,
         created_at: now.toISOString(),
         team: "SUB",
         shirt: "Phụ",
@@ -544,5 +554,5 @@ async function saveMatchHistoryToServer(options = {}){
       `Đã xuất ảnh và lưu lịch sử trận <b>${matchLabel}</b>. Nhập kết quả bên dưới.`;
   }
 
-  return { matchId, matchLabel, status };
+  return { matchId, matchLabel, status, matchDate };
 }

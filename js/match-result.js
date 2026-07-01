@@ -187,7 +187,7 @@ function isResultModalOpen(){
 function shouldPreserveLocalMatchResult(){
   if(isEditingCompletedResult()) return true;
   if(isResultModalOpen()) return true;
-  if(isCapHlvView() && matchLocked && currentImageFilename && canResultCap()) return true;
+  if(isCapHlvView() && isMatchReadyForResults() && canResultCap()) return true;
   return false;
 }
 
@@ -266,8 +266,8 @@ async function openResultModal(){
     showError("Chưa có trận nào đang chờ kết quả.");
     return;
   }
-  if(!currentImageFilename){
-    showError("Cần xuất hình đội hình trước khi nhập kết quả.");
+  if(!bothTeamsConfirmed()){
+    showError("Chờ 2 HLV chốt đội hình trước khi nhập kết quả.");
     return;
   }
   stopConfirmPolling();
@@ -738,11 +738,11 @@ async function saveMatchResult(){
   persistPendingScores();
 
   if(hostFinalizeInternal && !bothTeamsResultSaved()){
-    showError("Chờ cả 2 HLV xác nhận điểm trước khi Host kết thúc trận.");
+    showError("Chờ cả 2 HLV xác nhận điểm — trận sẽ tự kết thúc khi đủ.");
     return;
   }
   if(capHostFinalize && !capHlvResultConfirmed()){
-    showError("Chờ HLV Cáp xác nhận KQ trước khi Host kết thúc trận.");
+    showError("Chờ HLV Cáp xác nhận KQ — trận sẽ tự kết thúc.");
     return;
   }
   if(capHlvPartial && capHlvResultConfirmed()){
@@ -865,6 +865,7 @@ async function saveMatchResult(){
 
     document.getElementById("ocrStatus").innerHTML =
       `Đã kết thúc trận <b>${data.match_label || displayMatchLabel()}</b>. MVP: <b>${(data.mvp_players || []).join(", ") || "—"}</b>. Rating đã cập nhật.`;
+    showToast("✓ Trận đã kết thúc — rating đã cập nhật", "success", 4200);
   }catch(e){
     console.error(e);
     const msg = e.message || "Không lưu được kết quả trận.";

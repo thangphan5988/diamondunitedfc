@@ -62,85 +62,36 @@ function getAllMatchPlayers(){
 function updateLockBannerContent(){
   const textEl = document.getElementById("lockBannerText");
   const resultBtn = document.getElementById("btnLockBannerResult");
-  if(!textEl || !matchLocked) return;
+  if(!textEl || !matchLocked || !bothTeamsConfirmed()) return;
 
   const label = displayMatchLabel();
   const cap = isCapMode();
   const canResult = isLoggedIn() && canEnterAnyResult();
-  const canCapResult = isLoggedIn() && canResultCap();
-  const canExport = isLoggedIn() && hasPerm(PERMS.EXPORT) && (canSplitTeams() || (cap && canCoordinateCap()));
+  const exportHint = isLoggedIn() && hasPerm(PERMS.EXPORT) && (canSplitTeams() || (cap && canCoordinateCap()))
+    ? ` <span class="meta">(${escapeHtml(lineupExportButtonLabel())} để gửi ảnh vào nhóm Zalo — tùy chọn)</span>`
+    : "";
 
-  if(currentImageFilename){
-    if(cap){
-      const hostHint = canFinalizeMatch()
-        ? (capHlvResultConfirmed()
-          ? " Host bấm Xác nhận trận đấu để kết thúc."
-          : " Chờ HLV Cáp xác nhận — Host có thể chỉnh tỉ số/tên đội.")
-        : "";
-      textEl.innerHTML =
-        `🔒 Trận Cáp <b>${escapeHtml(label)}</b> đang chờ nhập kết quả.${hostHint}`;
-    }else{
-      const hostHint = isMatchHost()
-        ? (bothTeamsResultSaved()
-          ? " Host bấm Xác nhận trận đấu để kết thúc."
-          : " Chờ 2 HLV xác nhận — Host có thể chỉnh tỉ số.")
-        : "";
-      textEl.innerHTML =
-        `🔒 Trận <b>${escapeHtml(label)}</b> đang chờ nhập kết quả.${hostHint}`;
-    }
-    if(resultBtn){
-      resultBtn.style.display = canResult ? "" : "none";
-      resultBtn.disabled = false;
-      resultBtn.title = "";
-      if(cap && canFinalizeMatch()){
-        resultBtn.textContent = capHlvResultConfirmed() ? "Xác nhận trận đấu" : "Nhập kết quả trận";
-      }else if(cap && canCapResult && !canFinalizeMatch()){
-        resultBtn.textContent = "Nhập kết quả trận";
-      }else{
-        resultBtn.textContent = canFinalizeMatch()
-          ? (bothTeamsResultSaved() ? "Xác nhận trận đấu" : "Nhập kết quả trận")
-          : "Nhập kết quả trận";
-      }
-    }
-    updateHlvResultStatusUI();
-    return;
+  if(cap){
+    textEl.innerHTML =
+      `🔒 Trận Cáp <b>${escapeHtml(label)}</b> — nhập kết quả sau trận.${exportHint}`;
+  }else{
+    textEl.innerHTML =
+      `🔒 Trận <b>${escapeHtml(label)}</b> — nhập kết quả sau trận.${exportHint}`;
   }
 
-  if(!bothTeamsConfirmed()) return;
-
-  if(cap && canCapResult){
-    textEl.innerHTML =
-      `✓ Trận Cáp <b>${escapeHtml(label)}</b> đã chốt — chờ điều phối xuất hình, sau đó nhập kết quả trận.`;
-    if(resultBtn){
-      resultBtn.style.display = "";
-      resultBtn.disabled = true;
-      resultBtn.title = "Cần xuất hình đội hình trước";
-      resultBtn.textContent = "Nhập kết quả trận";
-    }
-    return;
+  if(resultBtn){
+    resultBtn.style.display = canResult ? "" : "none";
+    resultBtn.disabled = false;
+    resultBtn.title = "";
+    resultBtn.textContent = "Nhập kết quả trận";
   }
-
-  if(canResult){
-    textEl.innerHTML =
-      `✓ Trận <b>${escapeHtml(label)}</b> đã được 2 HLV chốt — xuất hình đội hình rồi nhập kết quả sau trận.`;
-    if(resultBtn){
-      resultBtn.style.display = "";
-      resultBtn.disabled = true;
-      resultBtn.title = "Cần xuất hình đội hình trước";
-    }
-  }else if(canExport){
-    textEl.innerHTML =
-      `✓ Trận <b>${escapeHtml(label)}</b> đã được 2 HLV chốt — bấm <b>${escapeHtml(lineupExportButtonLabel())}</b> để hoàn tất.`;
-    if(resultBtn) resultBtn.style.display = "none";
-  }
+  updateHlvResultStatusUI();
 }
 
 function shouldShowLockBanner(){
-  if(!matchLocked) return false;
-  if(currentImageFilename) return canEnterAnyResult() || isMatchHost();
-  if(!bothTeamsConfirmed()) return false;
-  if(isCapMode() && canResultCap()) return true;
-  return canEnterAnyResult() || (canSplitTeams() && hasPerm(PERMS.EXPORT)) ||
+  if(!matchLocked || !bothTeamsConfirmed()) return false;
+  return canEnterAnyResult() || isMatchHost() ||
+    (canSplitTeams() && hasPerm(PERMS.EXPORT)) ||
     (isCapMode() && canCoordinateCap() && hasPerm(PERMS.EXPORT));
 }
 
@@ -198,6 +149,7 @@ function unlockMatchState(){
   localStorage.removeItem("dufc_team_workflow");
   currentMatchId = null;
   currentMatchLabel = null;
+  setCurrentMatchDate(null);
   currentMatchStartTime = DEFAULT_MATCH_START_TIME;
   setMatchStartTimeSelect(DEFAULT_MATCH_START_TIME);
   currentImageFilename = null;
@@ -263,8 +215,15 @@ function rebuildLastResultFromDetail(historyPlayers, summary){
   const lineupCap = { starters: [], bench: [], score: 0 };
   const teamsInMatch = new Set((historyPlayers || []).map(hp => String(hp.team || "").toUpperCase()));
   const hasMainSub = teamsInMatch.has("MAIN") || teamsInMatch.has("SUB");
+  const seenLineupRows = new Set();
+  const seenTeamPlayers = new Set();
 
   historyPlayers.forEach(hp => {
+    const teamKey = String(hp.team || "").toUpperCase();
+    const isStarter = hp.starter === true || hp.starter === "TRUE";
+    const lineupKey = `${teamKey}|${normalizeName(hp.player_name)}|${isStarter ? "S" : "B"}`;
+    if(seenLineupRows.has(lineupKey)) return;
+    seenLineupRows.add(lineupKey);
     let base = rosterPlayerByName(hp.player_name);
     if(!base){
       base = {
@@ -299,21 +258,33 @@ function rebuildLastResultFromDetail(historyPlayers, summary){
       p.hasCustomPosition = true;
     }
 
-    const teamKey = String(hp.team || "").toUpperCase();
     const isTeamA = teamKey === "A";
     const isMain = capMatch && (teamKey === "MAIN" || (!hasMainSub && teamKey === "CAP"));
     const isSub = capMatch && teamKey === "SUB";
+    const teamPlayerKey = `${teamKey}|${normalizeName(hp.player_name)}`;
 
     if(isMain){
-      teamMain.push(p);
-      teamCap.push(p);
+      if(!seenTeamPlayers.has(teamPlayerKey)){
+        seenTeamPlayers.add(teamPlayerKey);
+        teamMain.push(p);
+        teamCap.push(p);
+      }
     }else if(isSub){
-      teamSub.push(p);
-      teamCap.push(p);
-    }else if(isTeamA) teamA.push(p);
-    else teamB.push(p);
+      if(!seenTeamPlayers.has(teamPlayerKey)){
+        seenTeamPlayers.add(teamPlayerKey);
+        teamSub.push(p);
+        teamCap.push(p);
+      }
+    }else if(isTeamA){
+      if(!seenTeamPlayers.has(teamPlayerKey)){
+        teamA.push(p);
+        seenTeamPlayers.add(teamPlayerKey);
+      }
+    }else if(!seenTeamPlayers.has(teamPlayerKey)){
+      teamB.push(p);
+      seenTeamPlayers.add(teamPlayerKey);
+    }
 
-    const isStarter = hp.starter === true || hp.starter === "TRUE";
     if(isMain){
       if(isStarter) lineupMain.starters.push(p);
       else lineupMain.bench.push(p);
@@ -404,6 +375,7 @@ function finishPendingMatchRestore(sourceNote, options = {}){
   localStorage.setItem(PENDING_MATCH_KEY, JSON.stringify({
     matchId: currentMatchId,
     matchLabel: currentMatchLabel,
+    matchDate: getMatchDateForSave(),
     matchStartTime: getSelectedMatchStartTime(),
     imageFilename: currentImageFilename,
     lineupMode: getMatchMode(),
@@ -426,11 +398,14 @@ function finishPendingMatchRestore(sourceNote, options = {}){
   persistTeamWorkflowState();
 
   const status = String(options.status || "").toLowerCase();
-  const shouldLock = options.lock === true || status === "lineup_exported" || !!currentImageFilename || bothTeamsConfirmed();
+  const shouldLock = options.lock === true || bothTeamsConfirmed() || status === "lineup_exported";
   applyLockUI(shouldLock);
   const note = sourceNote ? ` <span class="meta">(${sourceNote})</span>` : "";
   if(shouldLock){
-    if(currentImageFilename){
+    if(bothTeamsConfirmed()){
+      document.getElementById("ocrStatus").innerHTML =
+        `Trận <b>${displayMatchLabel()}</b> đã chốt — nhập kết quả sau trận.${note}`;
+    }else if(currentImageFilename){
       document.getElementById("ocrStatus").innerHTML =
         `Đang chờ kết quả trận <b>${displayMatchLabel()}</b>.${note}`;
     }else if(canSplitTeams()){
@@ -480,6 +455,7 @@ function restorePendingMatchFromLocalStorage(){
 
     currentMatchId = saved.matchId;
     currentMatchLabel = saved.matchLabel || formatMatchLabel(saved.lockedAt || Date.now());
+    setCurrentMatchDate(saved.matchDate || parseMatchDateFromLabel(currentMatchLabel) || parseMatchDateFromMatchId(currentMatchId));
     setMatchStartTimeSelect(saved.matchStartTime || DEFAULT_MATCH_START_TIME);
     currentImageFilename = saved.imageFilename || "";
     formationA = normalizeFormationValue(saved.formationA, formationA);

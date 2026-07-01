@@ -4,7 +4,7 @@
 async function confirmTeamLineup(team){
   clearError();
   if(matchLocked){
-    showError("Trận đã xuất ảnh — không chốt đội hình nữa.");
+    showError("Trận đã chốt — không chốt đội hình nữa.");
     return;
   }
   if(!lastResult){
@@ -58,8 +58,7 @@ function buildTeamLineupRows(team, options = {}){
   const shirt = team === "A" ? "Áo Đỏ" : "Áo Vàng";
   const status = options.status || "lineup_published";
   const now = new Date();
-  const saved = JSON.parse(localStorage.getItem(PENDING_MATCH_KEY) || "{}");
-  const matchDate = saved.matchDate || `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+  const matchDate = getMatchDateForSave();
   const rows = [];
 
   lineup.starters.forEach((p, index) => {
@@ -125,8 +124,7 @@ function buildCapTeamLineupRows(teamKey, options = {}){
   ensureStarterPositions(lineup, formation);
   const status = options.status || "lineup_published";
   const now = new Date();
-  const saved = JSON.parse(localStorage.getItem(PENDING_MATCH_KEY) || "{}");
-  const matchDate = saved.matchDate || `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+  const matchDate = getMatchDateForSave();
   const rows = [];
   const team = isMain ? "MAIN" : "SUB";
   const shirt = isMain ? "Chính" : "Phụ";
@@ -198,7 +196,7 @@ async function confirmCapTeamLineup(team){
     return;
   }
   if(matchLocked){
-    showError("Trận đã xuất ảnh — không chốt đội hình nữa.");
+    showError("Trận đã chốt — không chốt đội hình nữa.");
     return;
   }
   if(!lastResult){
@@ -252,7 +250,7 @@ async function confirmCapLineup(){
     return;
   }
   if(matchLocked){
-    showError("Trận đã xuất ảnh — không chốt đội hình nữa.");
+    showError("Trận đã chốt — không chốt đội hình nữa.");
     return;
   }
   if(!lastResult){

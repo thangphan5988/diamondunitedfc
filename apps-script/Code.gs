@@ -202,11 +202,11 @@ function saveMatchHistory_(payload) {
     return { ok: false, error: "match_id is required" };
   }
 
-  // DUFC rule (cập nhật v1.12):
-  // Cùng ngày export lại => xóa dòng pending (lineup_exported / chưa có status).
-  // KHÔNG xóa trận đã completed.
+  // Cùng ngày export lại => xóa dòng pending theo ngày; luôn xóa theo match_id để tránh trùng khi ngày lệch.
   const matchDate = String(rows[0].match_date || "").trim();
+  const deletedByMatchId = deleteRowsByMatchId_(sheet, matchId);
   const deletedRows = matchDate ? deleteRowsByMatchDate_(sheet, matchDate) : 0;
+  const deletedSummaryByMatchId = deleteSummaryByMatchId_(ss, matchId);
   const deletedSummary = matchDate ? deletePendingSummaryByMatchDate_(ss, matchDate) : 0;
 
   const allHeaders = getMatchHistoryHeaderRow_(sheet);
@@ -228,8 +228,8 @@ function saveMatchHistory_(payload) {
     match_id: matchId,
     match_date: matchDate,
     normalized_match_date: normalizeMatchDate_(matchDate),
-    deleted_old_rows: deletedRows,
-    deleted_pending_summary: deletedSummary,
+    deleted_old_rows: deletedRows + deletedByMatchId,
+    deleted_pending_summary: deletedSummary + deletedSummaryByMatchId,
     inserted_rows: values.length,
     status: "lineup_exported"
   };

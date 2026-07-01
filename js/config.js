@@ -55,6 +55,7 @@ let pendingDetectedNames = new Set();
 let matchLocked = false;
 let currentMatchId = null;
 let currentMatchLabel = null;
+let currentMatchDate = null;
 let currentMatchStartTime = "19:30";
 let currentImageFilename = null;
 let playerMatchScores = {};

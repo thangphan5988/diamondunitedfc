@@ -349,3 +349,511 @@
   .hlvPanel .benchSide .benchList{flex-direction:row;flex-wrap:wrap;max-height:none}
   .hlvPanel .benchSide .benchItem{width:auto}
 }
+
+
+/* v2.8.0 - Latest match layout refresh */
+#latestResultView .card{
+  max-width:1480px;
+  margin:0 auto;
+  overflow:visible;
+}
+#latestResultView .lmMatchWrap{
+  width:100%;
+  max-width:100%;
+}
+#latestResultView .lmTeams{
+  max-width:min(1220px,100%);
+  width:100%;
+  margin:0 auto;
+}
+#latestResultView .lmTeamsCapDone{
+  max-width:min(980px,100%);
+}
+#latestResultView .lmMatchWrap--capResult .lmTeamPanel{
+  width:100%;
+}
+#latestResultView .lmMatchWrap--capResult .teamHead{
+  justify-content:center;
+  margin:6px 0 8px;
+}
+#latestResultView .lmMatchWrap--capResult .teamHead h2{
+  font-size:22px;
+  text-align:center;
+}
+#latestResultView .lmMatchWrap--capResult .lmFormDesktop{
+  max-width:360px;
+  margin:0 auto 12px;
+}
+#latestResultView .lmMatchWrap--capResult .lineupBody{
+  display:grid;
+  grid-template-columns:minmax(420px,560px) minmax(220px,1fr);
+  gap:18px;
+  align-items:start;
+  justify-content:center;
+  margin-top:12px;
+}
+#latestResultView .lmMatchWrap--capResult .pitchCol{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  overflow:visible;
+}
+#latestResultView .lmMatchWrap--capResult .pitch.lrPitch{
+  width:min(560px,100%);
+  max-width:100%;
+  overflow:visible;
+}
+#latestResultView .lmMatchWrap--capResult .benchSide{
+  margin:0;
+  padding:0;
+  border:0;
+  min-width:0;
+}
+#latestResultView .lmMatchWrap--capResult .benchSide h3{
+  margin:0 0 10px;
+  font-size:16px;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:0;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchCard{
+  max-width:none;
+  width:100%;
+  flex:0 0 auto;
+  border-radius:14px;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard{
+  width:82px;
+  min-height:92px;
+  padding:5px 4px 7px;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard img{
+  width:34px;
+  height:34px;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrName{
+  font-size:9.5px;
+  margin-top:4px;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrScore{
+  font-size:10px;
+}
+#latestResultView .lmMatchWrap--internalResult .lmTeamsWrap{
+  max-width:min(1220px,100%);
+  margin:0 auto;
+}
+#latestResultView .lmMatchWrap--internalResult .lmTeams{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+#latestResultView .lmMatchWrap--internalResult .lineupBody{
+  display:flex;
+  flex-direction:column;
+}
+#latestResultView .lmMatchWrap--internalResult .pitch.lrPitch{
+  width:min(520px,100%);
+}
+#latestResultView .lmMatchWrap--internalResult .lrBenchList{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:wrap;
+}
+#latestResultView .lmMatchWrap--internalResult .lrBenchCard{
+  flex:1 1 180px;
+  max-width:calc(50% - 4px);
+}
+
+@media(max-width:1100px){
+  #latestResultView .lmMatchWrap--capResult .lineupBody{
+    grid-template-columns:1fr;
+    max-width:640px;
+    margin:12px auto 0;
+  }
+  #latestResultView .lmMatchWrap--capResult .benchSide{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+  #latestResultView .lmMatchWrap--capResult .lrBenchList{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrBenchCard{
+    width:auto;
+    flex:1 1 180px;
+    max-width:calc(50% - 4px);
+  }
+}
+
+@media(max-width:760px){
+  #latestResultView .card{
+    overflow:hidden;
+  }
+  #latestResultView .lmMatchWrap--capResult .teamHead h2{
+    font-size:17px;
+  }
+  #latestResultView .lmMatchWrap--capResult .lineupBody{
+    max-width:100%;
+    gap:10px;
+  }
+  #latestResultView .lmMatchWrap--capResult .pitch.lrPitch{
+    width:100%;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrCard{
+    width:min(66px,19vw);
+    min-height:74px;
+    padding:4px 2px 5px;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrCard img{
+    width:28px;
+    height:28px;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrName{
+    font-size:8px;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrScore{
+    font-size:9px;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrBenchCard{
+    max-width:100%;
+    flex:1 1 100%;
+    border-radius:999px;
+  }
+  #latestResultView .lmMatchWrap--internalResult .lmTeams{
+    grid-template-columns:1fr;
+    gap:0;
+  }
+  #latestResultView .lmMatchWrap--internalResult .lrBenchCard{
+    max-width:100%;
+    flex:1 1 100%;
+  }
+}
+
+/* v2.8.1 - Compact fixed vertical cards + smart stats */
+#latestResultView .lrCard,
+#latestResultView .lrPitch .lrCard,
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard,
+#latestResultView .lmMatchWrap--internalResult .lrPitch .lrCard{
+  width:92px !important;
+  height:128px !important;
+  min-height:128px !important;
+  max-height:128px !important;
+  padding:7px 6px 6px !important;
+  border-radius:14px !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  overflow:visible !important;
+}
+#latestResultView .lrPitch .lrCard img,
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard img,
+#latestResultView .lmMatchWrap--internalResult .lrPitch .lrCard img{
+  width:34px !important;
+  height:34px !important;
+  flex:0 0 auto !important;
+}
+#latestResultView .lrCard .lrName,
+#latestResultView .lrPitch .lrName,
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrName,
+#latestResultView .lmMatchWrap--internalResult .lrPitch .lrName{
+  width:100% !important;
+  height:28px !important;
+  margin-top:5px !important;
+  font-size:10px !important;
+  line-height:14px !important;
+  font-weight:900 !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  display:-webkit-box !important;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical !important;
+  text-align:center !important;
+}
+#latestResultView .lrCard .lrScore,
+#latestResultView .lrPitch .lrScore,
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrScore,
+#latestResultView .lmMatchWrap--internalResult .lrPitch .lrScore{
+  margin-top:2px !important;
+  font-size:22px !important;
+  line-height:24px !important;
+  font-weight:1000 !important;
+  letter-spacing:-.02em !important;
+}
+#latestResultView .lrScore.scoreHigh{color:#facc15 !important;text-shadow:0 1px 2px rgba(0,0,0,.24)}
+#latestResultView .lrScore.scoreNormal{color:#fff !important;text-shadow:0 1px 2px rgba(0,0,0,.22)}
+#latestResultView .lrScore.scoreLow{color:#94a3b8 !important;text-shadow:none !important}
+#latestResultView .lrStatRow,
+#latestResultView .lrPitch .lrStatRow,
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrStatRow,
+#latestResultView .lmMatchWrap--internalResult .lrPitch .lrStatRow{
+  width:100% !important;
+  min-height:16px !important;
+  height:16px !important;
+  margin-top:auto !important;
+  padding-top:2px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  flex-wrap:nowrap !important;
+  font-size:10px !important;
+  line-height:14px !important;
+  font-weight:1000 !important;
+  white-space:nowrap !important;
+}
+#latestResultView .lrStatRow--empty{visibility:hidden !important}
+#latestResultView .lrStatRow span{display:inline-flex;align-items:center;justify-content:center;gap:1px;white-space:nowrap}
+#latestResultView .lrStatRow .ratingDelta.up{color:#bbf7d0 !important}
+#latestResultView .lrStatRow .ratingDelta.down{color:#fecaca !important}
+#latestResultView .lrDelta{display:none !important}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrMvpBadge,
+#latestResultView .lrPitch .lrMvpBadge{
+  top:-1px !important;
+  padding:2px 6px !important;
+}
+
+#latestResultView .lrBenchCard{
+  min-height:70px !important;
+  height:70px !important;
+  padding:8px 12px !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  align-items:center !important;
+}
+#latestResultView .lrBenchCard img{
+  width:40px !important;
+  height:40px !important;
+}
+#latestResultView .lrBenchMeta{
+  display:grid !important;
+  grid-template-columns:1fr auto !important;
+  grid-template-rows:auto auto !important;
+  column-gap:8px !important;
+  row-gap:1px !important;
+  align-items:center !important;
+}
+#latestResultView .lrBenchMeta .lrName{
+  grid-column:1/3 !important;
+  margin:0 !important;
+  font-size:12px !important;
+  line-height:15px !important;
+  font-weight:900 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+#latestResultView .lrBenchMeta .lrScore{
+  grid-column:1/2 !important;
+  margin:0 !important;
+  font-size:21px !important;
+  line-height:22px !important;
+  text-align:left !important;
+}
+#latestResultView .lrBenchMeta .lrStatRow{
+  grid-column:2/3 !important;
+  justify-content:flex-end !important;
+  margin:0 !important;
+  min-width:72px !important;
+}
+
+@media(max-width:760px){
+  #latestResultView .lrCard,
+  #latestResultView .lrPitch .lrCard,
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrCard,
+  #latestResultView .lmMatchWrap--internalResult .lrPitch .lrCard{
+    width:74px !important;
+    height:104px !important;
+    min-height:104px !important;
+    max-height:104px !important;
+    padding:5px 4px 5px !important;
+  }
+  #latestResultView .lrPitch .lrCard img,
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrCard img,
+  #latestResultView .lmMatchWrap--internalResult .lrPitch .lrCard img{
+    width:28px !important;
+    height:28px !important;
+  }
+  #latestResultView .lrCard .lrName,
+  #latestResultView .lrPitch .lrName,
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrName,
+  #latestResultView .lmMatchWrap--internalResult .lrPitch .lrName{
+    height:22px !important;
+    font-size:8px !important;
+    line-height:11px !important;
+    margin-top:3px !important;
+  }
+  #latestResultView .lrCard .lrScore,
+  #latestResultView .lrPitch .lrScore,
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrScore,
+  #latestResultView .lmMatchWrap--internalResult .lrPitch .lrScore{
+    font-size:17px !important;
+    line-height:18px !important;
+  }
+  #latestResultView .lrStatRow,
+  #latestResultView .lrPitch .lrStatRow,
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrStatRow,
+  #latestResultView .lmMatchWrap--internalResult .lrPitch .lrStatRow{
+    min-height:14px !important;
+    height:14px !important;
+    gap:3px !important;
+    font-size:8px !important;
+  }
+  #latestResultView .lrBenchCard{
+    height:58px !important;
+    min-height:58px !important;
+    border-radius:14px !important;
+  }
+  #latestResultView .lrBenchCard img{width:32px !important;height:32px !important}
+  #latestResultView .lrBenchMeta .lrScore{font-size:17px !important;line-height:18px !important}
+  #latestResultView .lrBenchMeta .lrStatRow{min-width:54px !important;font-size:8px !important}
+}
+
+/* v2.8.2 - Match Cap latest view: align pitch/card sizing with Match Cap History */
+#latestResultView .lmMatchWrap--capResult{
+  --lr-cap-pitch-w:560px;
+  --lr-cap-card-w:82px;
+  --lr-cap-card-h:116px;
+  --lr-cap-avatar:32px;
+}
+#latestResultView .lmMatchWrap--capResult .lmTeamsCapDone{
+  max-width:min(900px,100%) !important;
+}
+#latestResultView .lmMatchWrap--capResult .lineupBody{
+  display:grid !important;
+  grid-template-columns:minmax(420px,var(--lr-cap-pitch-w)) minmax(220px,300px) !important;
+  gap:18px !important;
+  align-items:start !important;
+  justify-content:center !important;
+  width:fit-content !important;
+  max-width:100% !important;
+  margin:12px auto 0 !important;
+}
+#latestResultView .lmMatchWrap--capResult .pitchCol{
+  width:var(--lr-cap-pitch-w) !important;
+  max-width:100% !important;
+  display:flex !important;
+  justify-content:center !important;
+  overflow:visible !important;
+}
+#latestResultView .lmMatchWrap--capResult .pitch.lrPitch{
+  width:var(--lr-cap-pitch-w) !important;
+  max-width:100% !important;
+  overflow:visible !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard{
+  width:var(--lr-cap-card-w) !important;
+  height:var(--lr-cap-card-h) !important;
+  min-height:var(--lr-cap-card-h) !important;
+  max-height:var(--lr-cap-card-h) !important;
+  padding:6px 5px 5px !important;
+  border-radius:13px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrCard img{
+  width:var(--lr-cap-avatar) !important;
+  height:var(--lr-cap-avatar) !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrName{
+  height:26px !important;
+  margin-top:4px !important;
+  font-size:9px !important;
+  line-height:13px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrScore{
+  font-size:20px !important;
+  line-height:22px !important;
+  margin-top:1px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrPitch .lrStatRow{
+  height:15px !important;
+  min-height:15px !important;
+  font-size:9px !important;
+  gap:5px !important;
+  margin-top:auto !important;
+}
+#latestResultView .lmMatchWrap--capResult .benchSide{
+  width:300px !important;
+  max-width:100% !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchCard{
+  width:100% !important;
+  min-height:62px !important;
+  height:62px !important;
+  padding:7px 10px !important;
+  border-radius:13px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchCard img{
+  width:36px !important;
+  height:36px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchMeta .lrName{
+  font-size:11px !important;
+  line-height:14px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchMeta .lrScore{
+  font-size:19px !important;
+  line-height:20px !important;
+}
+#latestResultView .lmMatchWrap--capResult .lrBenchMeta .lrStatRow{
+  min-width:58px !important;
+  font-size:9px !important;
+}
+
+@media(max-width:900px){
+  #latestResultView .lmMatchWrap--capResult{
+    --lr-cap-pitch-w:min(520px,100%);
+  }
+  #latestResultView .lmMatchWrap--capResult .lineupBody{
+    width:100% !important;
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .pitchCol,
+  #latestResultView .lmMatchWrap--capResult .pitch.lrPitch{
+    width:100% !important;
+    max-width:520px !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .benchSide{
+    width:100% !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrBenchList{
+    flex-direction:row !important;
+    flex-wrap:wrap !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrBenchCard{
+    flex:1 1 220px !important;
+    max-width:100% !important;
+  }
+}
+
+@media(max-width:760px){
+  #latestResultView .lmMatchWrap--capResult{
+    --lr-cap-card-w:72px;
+    --lr-cap-card-h:100px;
+    --lr-cap-avatar:27px;
+  }
+  #latestResultView .lmMatchWrap--capResult .pitch.lrPitch{
+    width:100% !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrName{
+    height:22px !important;
+    font-size:8px !important;
+    line-height:11px !important;
+    margin-top:3px !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrScore{
+    font-size:17px !important;
+    line-height:18px !important;
+  }
+  #latestResultView .lmMatchWrap--capResult .lrPitch .lrStatRow{
+    height:13px !important;
+    min-height:13px !important;
+    font-size:8px !important;
+    gap:3px !important;
+  }
+}

@@ -194,16 +194,12 @@ function updateResultModalPerms(){
   if(cancelBtn) cancelBtn.style.display = canCancel ? "" : "none";
   if(saveBtn){
     saveBtn.style.display = canResult ? "" : "none";
-    if(canFinalizeMatch() && isCapMode()){
-      saveBtn.textContent = "Xác nhận trận đấu";
-      saveBtn.classList.remove("btnDone");
-      saveBtn.disabled = !capHlvResultConfirmed();
-      saveBtn.title = capHlvResultConfirmed() ? "" : "Chờ HLV Cáp xác nhận KQ";
-    }else if(canFinalizeMatch()){
-      saveBtn.textContent = "Xác nhận trận đấu";
-      saveBtn.classList.remove("btnDone");
-      saveBtn.disabled = !bothTeamsResultSaved();
-      saveBtn.title = bothTeamsResultSaved() ? "" : "Chờ 2 HLV xác nhận KQ";
+    if(canFinalizeMatch() && isCapMode() && isCapHlvResultOnly()){
+      saveBtn.textContent = capHlvResultConfirmed() ? "✓ Đã xác nhận HLV Cáp" : "✓ Xác nhận HLV Cáp";
+      saveBtn.disabled = capHlvResultConfirmed();
+      saveBtn.classList.toggle("btnDone", capHlvResultConfirmed());
+    }else if(canFinalizeMatch() && !canResultTeamA() && !canResultTeamB()){
+      saveBtn.style.display = "none";
     }else if(canResultTeamA() && !canResultTeamB()){
       saveBtn.textContent = teamResultSaved.A ? "✓ Đã xác nhận Đội A" : "✓ Xác nhận Đội A";
       if(teamResultSaved.A){

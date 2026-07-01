@@ -29,9 +29,30 @@ function buildLatestStatMap(historyPlayers){
   return map;
 }
 
-function latestResultDeltaHtml(delta){
+function latestResultRatingToneClass(score){
+  const value = Number(String(score ?? "").replace(",", "."));
+  if(!Number.isFinite(value)) return "scoreUnknown";
+  if(value >= 8) return "scoreHigh";
+  if(value >= 6) return "scoreNormal";
+  return "scoreLow";
+}
+
+function latestResultFormatScore(score){
+  if(score == null || String(score).trim() === "") return "—";
+  const value = Number(String(score).replace(",", "."));
+  if(Number.isFinite(value)) return value.toFixed(1);
+  return String(score);
+}
+
+function latestResultRatingDeltaCompactHtml(delta){
   if(!Number.isFinite(delta) || delta === 0) return "";
-  return `<div class="lrDelta ${deltaClass(delta)}">${deltaLabel(delta)} rating</div>`;
+  const sign = delta > 0 ? `+${delta}` : `${delta}`;
+  return `<span class="ratingDelta ${deltaClass(delta)}">⭐${sign}</span>`;
+}
+
+function latestResultDeltaHtml(delta){
+  // Đã gom vào 1 dòng stats trong latestResultPlayerStatsHtml().
+  return "";
 }
 
 function collectTeamGoalVideoUrls(historyPlayers, side, isCap){
@@ -66,14 +87,21 @@ function lrTeamGoalVideosColumnHtml(urls, variant){
 function latestResultCompactStatsHtml(stat){
   const goals = Number(stat.goals) || 0;
   const assists = Number(stat.assists) || 0;
-  if(!goals && !assists) return "";
-  const g = goals ? `<span class="goals">⚽${goals}</span>` : "";
-  const a = assists ? `<span class="assists">🅰️${assists}</span>` : "";
-  return `<div class="lrStatRow">${g}${a}</div>`;
+  const delta = Number(stat.rating_delta);
+
+  // Cái nào = 0 thì ẩn, chỉ hiện các chỉ số thực sự có.
+  const items = [];
+  if(goals > 0) items.push(`<span class="goals">⚽${goals}</span>`);
+  if(assists > 0) items.push(`<span class="assists">🅰️${assists}</span>`);
+  const deltaHtml = latestResultRatingDeltaCompactHtml(delta);
+  if(deltaHtml) items.push(deltaHtml);
+
+  if(!items.length) return `<div class="lrStatRow lrStatRow--empty"></div>`;
+  return `<div class="lrStatRow">${items.join("")}</div>`;
 }
 
 function latestResultPlayerStatsHtml(stat){
-  return latestResultCompactStatsHtml(stat);
+  return latestResultCompactStatsHtml(stat || {});
 }
 
 function latestResultMvpBadgeHtml(){
@@ -88,16 +116,16 @@ function latestResultPitchCardHtml(p, teamClass, stat, isCap){
   const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
   const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
-  const score = stat.match_score ?? "—";
+  const score = latestResultFormatScore(stat.match_score ?? "—");
+  const scoreClass = latestResultRatingToneClass(score);
   const avatar = avatarSrc(p.avatar, p.name);
   return `<div class="lrCard ${teamClass}${captainClass}">
     ${captain}
     ${mvp}
     <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
-    <div class="lrScore">${escapeHtml(String(score))} điểm</div>
+    <div class="lrScore ${scoreClass}">${escapeHtml(score)}</div>
     ${latestResultPlayerStatsHtml(stat)}
-    ${latestResultDeltaHtml(stat.rating_delta)}
   </div>`;
 }
 
@@ -105,19 +133,18 @@ function latestResultBenchCardHtml(p, teamClass, stat, isCap){
   const mvp = stat.is_mvp ? latestResultMvpBadgeHtml() : "";
   const captain = p.captain ? latestResultCaptainBadgeHtml() : "";
   const captainClass = p.captain ? " captainCard" : "";
-  const score = stat.match_score ?? "—";
+  const score = latestResultFormatScore(stat.match_score ?? "—");
+  const scoreClass = latestResultRatingToneClass(score);
   const avatar = avatarSrc(p.avatar, p.name);
   const capStats = latestResultPlayerStatsHtml(stat);
-  const delta = latestResultDeltaHtml(stat.rating_delta);
   return `<div class="lrBenchCard ${teamClass}${captainClass}">
     ${captain}
     ${mvp}
     <img src="${escapeAttr(avatar)}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div class="lrBenchMeta">
       <div class="lrName">${escapeHtml(playerDisplayName(p))}</div>
-      <div class="lrScore">${escapeHtml(String(score))} điểm · dự bị</div>
+      <div class="lrScore ${scoreClass}">${escapeHtml(score)}</div>
       ${capStats}
-      ${delta}
     </div>
   </div>`;
 }
@@ -438,7 +465,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
   if(isCap){
     const lineupMain = result.lineupMain || result.lineupA;
     containerEl.innerHTML = `
-      <div class="lmMatchWrap">
+      <div class="lmMatchWrap lmMatchWrap--capResult">
       ${headerHtml}
       ${completedBar}
       ${latestResultScoreBoardHtml(summary, true, historyPlayers)}
@@ -472,7 +499,7 @@ function renderMatchResultView(containerEl, summary, historyPlayers, idPrefix, o
       })}
   `;
   containerEl.innerHTML = `
-    <div class="lmMatchWrap">
+    <div class="lmMatchWrap lmMatchWrap--internalResult">
     ${headerHtml}
     ${completedBar}
     ${latestResultScoreBoardHtml(summary, false, historyPlayers)}

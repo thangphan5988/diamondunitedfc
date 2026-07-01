@@ -18,6 +18,44 @@ function formatCapMatchLabel(date = new Date()){
   return `DUFC Cáp - ${weekday} Ngày ${day}/${month}/${year}`;
 }
 
+function formatMatchDateFromDate(date = new Date()){
+  const d = date instanceof Date ? date : new Date(date);
+  if(Number.isNaN(d.getTime())) return "";
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+
+function parseMatchDateFromLabel(label){
+  const m = String(label || "").match(/Ngày\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/i);
+  if(!m) return "";
+  return `${Number(m[1])}/${Number(m[2])}/${m[3]}`;
+}
+
+function parseMatchDateFromMatchId(matchId){
+  const m = String(matchId || "").match(/^dufc-(\d{4})(\d{2})(\d{2})-/i);
+  if(!m) return "";
+  return `${Number(m[3])}/${Number(m[2])}/${m[1]}`;
+}
+
+function setCurrentMatchDate(value){
+  const norm = String(value || "").trim();
+  currentMatchDate = norm || null;
+}
+
+function getMatchDateForSave(){
+  if(currentMatchDate) return currentMatchDate;
+  const fromLabel = parseMatchDateFromLabel(currentMatchLabel);
+  if(fromLabel){
+    currentMatchDate = fromLabel;
+    return fromLabel;
+  }
+  const fromId = parseMatchDateFromMatchId(currentMatchId);
+  if(fromId){
+    currentMatchDate = fromId;
+    return fromId;
+  }
+  return formatMatchDateFromDate(new Date());
+}
+
 const MATCH_START_TIME_OPTIONS = [
   { value: "17:00", label: "17h" },
   { value: "17:30", label: "17h30" },
@@ -311,21 +349,21 @@ function getLineupTabLabel(){
 function getRoleTaskLabel(){
   if(!isLoggedIn()) return "";
   if(hasPerm(PERMS.ALL)) return "⚙️ Toàn quyền quản lý trận";
-  if(isMatchHost() && isCapMode()) return "📋 Host Cáp: Import → Sắp Cáp → Gửi HLV → Xuất hình → Chờ HLV xác nhận KQ → Xác nhận trận";
-  if(isMatchHost()) return "📋 Host: Random → Gửi HLV → Xuất hình → Chờ 2 HLV xác nhận KQ → Xác nhận trận đấu";
-  if(canSplitTeams() && canImportRoster()) return "📋 Random → Gửi HLV → Chờ 2 HLV chốt → Xuất hình (hoặc Chốt & xuất hình)";
+  if(isMatchHost() && isCapMode()) return "📋 Host Cáp: Import → Sắp Cáp → Gửi HLV → Chờ HLV chốt & nhập KQ";
+  if(isMatchHost()) return "📋 Host: Random → Gửi HLV → Chờ 2 HLV chốt & nhập KQ (ảnh Zalo tùy chọn)";
+  if(canSplitTeams() && canImportRoster()) return "📋 Random → Gửi HLV → Chờ 2 HLV chốt (ảnh Zalo tùy chọn)";
   if(canManageTeamA() && canResultTeamA() && !canManageTeamB()) return "🔴 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội A → Xác nhận";
   if(canManageTeamB() && canResultTeamB() && !canManageTeamA()) return "🟡 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội B → Xác nhận";
   if(canManageTeamA() && !canManageTeamB()) return "🔴 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
   if(canManageTeamB() && !canManageTeamA()) return "🟡 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
-  if(canCoordinateCap() && isCapMode() && matchLocked && currentImageFilename && canFinalizeMatch()){
+  if(canCoordinateCap() && isCapMode() && isMatchReadyForResults() && canFinalizeMatch()){
     return capHlvResultConfirmed()
-      ? "📋 Host Cáp: chỉnh tỉ số/tên đội nếu cần → Xác nhận trận đấu"
-      : "📋 Host Cáp: chờ HLV Cáp xác nhận KQ → Xác nhận trận đấu";
+      ? "📋 Host Cáp: có thể chỉnh tỉ số/tên đội nếu cần"
+      : "📋 Host Cáp: chờ HLV Cáp nhập KQ";
   }
   if(isCapHlvEditor() && isCapMode()){
-    if(matchLocked && currentImageFilename) return "⚽ Nhập KQ → Xác nhận HLV Cáp (chờ Host chốt trận)";
-    if(matchLocked && bothTeamsConfirmed()) return "⚽ Đã chốt đội hình — chờ xuất hình rồi nhập kết quả";
+    if(isMatchReadyForResults()) return "⚽ Nhập kết quả trận Cáp";
+    if(matchLocked && bothTeamsConfirmed()) return "⚽ Đã chốt đội hình — nhập kết quả sau trận";
     if(!isCapLineupPublished()) return "⏳ Chờ Host gửi đội hình Cáp (bấm Gửi HLV)";
     return "⚽ Kéo thả Chính/Phụ → Chốt đội hình Cáp";
   }
