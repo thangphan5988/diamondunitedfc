@@ -90,6 +90,124 @@ function assignmentScore(player, slot){
   return score;
 }
 
+function starsAssignmentScore(player, slot){
+  const rating = Number(player.rating) || 5;
+  if(slot.pos === "GK" && !canCoverPosition(player, "GK")) return -1e15;
+
+  let fitTier = 0;
+  if(player.main === slot.pos) fitTier = 5000;
+  else if(player.secondary.includes(slot.pos)) fitTier = 2500;
+
+  return rating * 1000 + fitTier + sidePriorityScore(player.side, slot.side) * 0.05;
+}
+
+function solveLineupSlots(team, slots, scoreFn){
+  const n = team.length;
+  const capPoolLimit = window.MAX_LINEUP_DP_POOL || 18;
+
+  function greedyAssign(){
+    const picks = [];
+    const used = new Set();
+    for(const slot of slots){
+      let bestIndex = -1;
+      let bestValue = -1e15;
+      for(let i = 0; i < n; i++){
+        if(used.has(i)) continue;
+        const value = scoreFn(team[i], slot);
+        if(value > bestValue){
+          bestValue = value;
+          bestIndex = i;
+        }
+      }
+      if(bestIndex >= 0){
+        used.add(bestIndex);
+        picks.push({ playerIndex: bestIndex, slot });
+      }
+    }
+    return picks;
+  }
+
+  if(n > capPoolLimit) return greedyAssign();
+
+  const memo = new Map();
+  function solve(slotIdx, usedMask){
+    if(slotIdx >= slots.length) return { score: 0, picks: [] };
+
+    const key = slotIdx + "|" + usedMask;
+    if(memo.has(key)) return memo.get(key);
+
+    const slot = slots[slotIdx];
+    let best = { score: -1e15, picks: [] };
+
+    for(let i = 0; i < n; i++){
+      if(usedMask & (1 << i)) continue;
+      const next = solve(slotIdx + 1, usedMask | (1 << i));
+      const total = scoreFn(team[i], slot) + next.score;
+      if(total > best.score){
+        best = { score: total, picks: [{ playerIndex: i, slot }, ...next.picks] };
+      }
+    }
+
+    memo.set(key, best);
+    return best;
+  }
+
+  const solved = solve(0, 0);
+  if(solved.picks.length >= slots.length) return solved.picks;
+  return greedyAssign();
+}
+
+function lineupFromSlotPicks(team, picks, captainName){
+  const usedIndexes = new Set(picks.map(x => x.playerIndex));
+  const starters = picks.map(({ playerIndex, slot }) => {
+    const p = team[playerIndex];
+    const isCaptain = captainName && normalizeName(p.name) === captainName;
+    return {
+      ...p,
+      assigned: slot.pos,
+      assignedSide: slot.side,
+      fit: fitLabelValue(p, slot.pos),
+      forcedStarter: isCaptain,
+      captain: isCaptain
+    };
+  });
+
+  const bench = team
+    .filter((_, idx) => !usedIndexes.has(idx))
+    .sort((a, b) => (Number(b.rating) || 5) - (Number(a.rating) || 5));
+
+  const order = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+  const sideOrder = { LEFT: 0, CENTER: 1, RIGHT: 2 };
+  starters.sort((a, b) => {
+    if(order[a.assigned] !== order[b.assigned]) return order[a.assigned] - order[b.assigned];
+    return (sideOrder[a.assignedSide] ?? 1) - (sideOrder[b.assignedSide] ?? 1);
+  });
+
+  return { starters, bench };
+}
+
+function buildStars(team, formation){
+  const slots = slotOrderForFormation(resolveFormation(formation, "3-1-2"));
+  const picks = solveLineupSlots(team, slots, starsAssignmentScore);
+  const lineup = lineupFromSlotPicks(team, picks, null);
+
+  let captain = lineup.starters[0];
+  lineup.starters.forEach(p => {
+    if((Number(p.rating) || 5) > (Number(captain.rating) || 5)) captain = p;
+  });
+  const captainKey = captain ? normalizeName(captain.name) : "";
+  lineup.starters.forEach(p => {
+    p.captain = captainKey && normalizeName(p.name) === captainKey;
+  });
+
+  let score = 0;
+  lineup.starters.forEach(p => {
+    score += starsAssignmentScore(p, { pos: p.assigned, side: p.assignedSide }) / 100;
+  });
+  lineup.score = Math.round(score * 10) / 10;
+  return lineup;
+}
+
 function slotOrderForFormation(formation){
   return FORMATIONS[formation].map((slot, index) => ({...slot, index}));
 }

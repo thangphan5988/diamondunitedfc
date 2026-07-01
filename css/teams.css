@@ -16,6 +16,37 @@
   background:#020617;border:1px solid var(--line);color:#94a3b8;cursor:pointer
 }
 .teamsPosBtn.active{background:#0284c7;border-color:#0284c7;color:#fff}
+.teamsPosBtn--stars.active{
+  background:linear-gradient(135deg,#f59e0b,#d97706);border-color:#fbbf24;color:#fffbeb
+}
+.teamsStarsPanel{margin-top:2px}
+.teamsStarsHead{
+  display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between;
+  margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)
+}
+.teamsStarsFormation{margin:0}
+.teamsStarsFormation label{font-size:11px}
+.teamsStarsFormation select{min-width:120px;margin:0}
+.teamsStarsNote{margin:0;flex:1 1 220px;line-height:1.45}
+.teamsStarsLineup{
+  max-width:min(540px,100%);margin:0 auto;padding-top:4px
+}
+.teamsStarsPitch{min-height:min(62vw,430px)}
+.teamsStarsPanel .benchSide h3{font-size:12px}
+.cardPlayer.starsTeam{
+  background:linear-gradient(180deg,rgba(245,158,11,.22),rgba(7,17,31,.92));
+  border-color:rgba(251,191,36,.55);
+  box-shadow:0 8px 20px rgba(0,0,0,.35),0 0 16px rgba(245,158,11,.12)
+}
+.cardPlayer.starsTeam .pname{color:#fffbeb;text-shadow:0 1px 2px rgba(120,53,15,.45)}
+.cardPlayer.starsTeam .ppos{color:rgba(255,251,235,.88)}
+.cardPlayer.starsTeam .fit{color:rgba(255,251,235,.9)}
+.cardPlayer.starsTeam .fit.fitOk{color:#dcfce7}
+.cardPlayer.starsTeam .fit.fitAlt{color:#fef08a}
+.cardPlayer.starsTeam .fit.fitBad{color:#fff;font-weight:900}
+.cardPlayer.starsTeam img{background:rgba(0,0,0,.12);border-color:rgba(251,191,36,.45)}
+.cardPlayer.starsTeam.captainCard .pname{color:#fde047;text-shadow:0 1px 2px rgba(120,53,15,.5)}
+.cardPlayer.starsTeam .ratingBadge{background:#f59e0b;color:#1c1408}
 .teamsGrid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px;margin-top:4px
 }

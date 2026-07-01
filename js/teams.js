@@ -1,6 +1,8 @@
-/* Teams — full player cards */
+/* Teams — full player cards + All-Star lineup */
 
+const TEAMS_FILTER_STARS = "__stars__";
 let teamsFilterPos = "";
+let teamsStarsFormation = "3-1-2";
 let teamsStatsMap = new Map();
 let teamsStatsLoaded = false;
 
@@ -94,11 +96,128 @@ function teamCardHtml(p){
   </article>`;
 }
 
+function playerExcellenceScore(p){
+  const rating = Number(p.rating) || 5;
+  const mvp = Number(p.mvp_count) || 0;
+  const goals = Number(p.total_goals) || 0;
+  const assists = Number(p.total_assists) || 0;
+  return rating * 1000 + mvp * 80 + goals * 12 + assists * 6;
+}
+
+function comparePlayersByExcellence(a, b){
+  const diff = playerExcellenceScore(b) - playerExcellenceScore(a);
+  if(diff) return diff;
+  return playerDisplayName(a).localeCompare(playerDisplayName(b), "vi");
+}
+
+function canPlayGoalkeeper(p){
+  return p.main === "GK" || (p.secondary || []).includes("GK");
+}
+
+function pickAllStarSquad(enrichedPlayers){
+  const list = [...enrichedPlayers];
+  const byMain = { GK: [], DEF: [], MID: [], FWD: [] };
+  list.forEach(p => {
+    const main = POS.includes(p.main) ? p.main : "MID";
+    byMain[main].push(p);
+  });
+  for(const k of Object.keys(byMain)) byMain[k].sort(comparePlayersByExcellence);
+
+  const gks = [];
+  const gkPool = [
+    ...byMain.GK,
+    ...list.filter(p => p.main !== "GK" && canPlayGoalkeeper(p)).sort(comparePlayersByExcellence)
+  ];
+  for(const p of gkPool){
+    if(gks.length >= 2) break;
+    if(!gks.some(x => normalizeName(x.name) === normalizeName(p.name))) gks.push(p);
+  }
+
+  const used = new Set(gks.map(p => normalizeName(p.name)));
+  const squad = [...gks];
+  for(const pos of ["DEF", "MID", "FWD"]){
+    let added = 0;
+    for(const p of byMain[pos]){
+      if(added >= 4) break;
+      const key = normalizeName(p.name);
+      if(used.has(key)) continue;
+      squad.push(p);
+      used.add(key);
+      added++;
+    }
+  }
+
+  if(squad.length < 14){
+    for(const p of list.sort(comparePlayersByExcellence)){
+      if(squad.length >= 14) break;
+      const key = normalizeName(p.name);
+      if(used.has(key)) continue;
+      squad.push(p);
+      used.add(key);
+    }
+  }
+  return squad.slice(0, 14);
+}
+
+function buildAllStarLineup(squad, formation){
+  const safeFormation = resolveFormation(formation, "3-1-2");
+  return buildStars(squad, safeFormation);
+}
+
+function onTeamsStarsFormationChange(){
+  const sel = document.getElementById("teamsStarsFormation");
+  teamsStarsFormation = resolveFormation(sel?.value || teamsStarsFormation, "3-1-2");
+  if(sel) sel.value = teamsStarsFormation;
+  renderTeamsStars();
+}
+
+async function renderTeamsStars(){
+  const panel = document.getElementById("teamsStarsPanel");
+  const benchEl = document.getElementById("teamsStarsBench");
+  const countEl = document.getElementById("teamsCount");
+  if(!panel || !benchEl) return;
+
+  if(!players.length){
+    benchEl.innerHTML = `<div class="teamsEmpty">Đang tải danh sách cầu thủ...</div>`;
+    clearPitch("pitchTeamsStars");
+    if(countEl) countEl.textContent = "";
+    return;
+  }
+
+  benchEl.innerHTML = `<div class="teamsEmpty">Đang tải thống kê...</div>`;
+  clearPitch("pitchTeamsStars");
+  await ensureTeamsStats();
+
+  const enriched = players.map(enrichPlayerForTeams);
+  const squad = pickAllStarSquad(enriched);
+  const formation = resolveFormation(teamsStarsFormation, "3-1-2");
+  const lineup = buildAllStarLineup(squad, formation);
+  const starters = lineup.starters.length;
+  const bench = lineup.bench.length;
+
+  if(countEl){
+    countEl.textContent = `All-Star · ${squad.length} cầu thủ · ${formation} · ${starters} ra sân · ${bench} dự bị`;
+  }
+
+  if(!lineup.starters.length){
+    benchEl.innerHTML = `<div class="teamsEmpty">Chưa đủ cầu thủ để xếp đội hình.</div>`;
+    return;
+  }
+
+  renderLineupInstant("pitchTeamsStars", lineup, formation, "starsTeam");
+  setBench("teamsStarsBench", lineup.bench);
+}
+
 function setTeamsPosFilter(pos){
   teamsFilterPos = pos || "";
   document.querySelectorAll(".teamsPosBtn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.pos === teamsFilterPos);
   });
+  const starsPanel = document.getElementById("teamsStarsPanel");
+  const grid = document.getElementById("teamsGrid");
+  const isStars = teamsFilterPos === TEAMS_FILTER_STARS;
+  if(starsPanel) starsPanel.style.display = isStars ? "" : "none";
+  if(grid) grid.style.display = isStars ? "none" : "";
   renderTeams();
 }
 
@@ -106,6 +225,12 @@ async function renderTeams(){
   const grid = document.getElementById("teamsGrid");
   const countEl = document.getElementById("teamsCount");
   if(!grid) return;
+
+  if(teamsFilterPos === TEAMS_FILTER_STARS){
+    grid.innerHTML = "";
+    await renderTeamsStars();
+    return;
+  }
 
   if(!players.length){
     grid.innerHTML = `<div class="teamsEmpty">Đang tải danh sách cầu thủ...</div>`;

@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
   <link rel="stylesheet" href="css/tabs-workflow.css?v=2.5.2">
   <link rel="stylesheet" href="css/latest-match.css?v=2.8.0">
-  <link rel="stylesheet" href="css/teams.css?v=2.6.1">
+  <link rel="stylesheet" href="css/teams.css?v=2.6.2">
   <link rel="stylesheet" href="css/teams-cards.css?v=2.6.0">
   <link rel="stylesheet" href="css/ads.css?v=2.4.87">
   <link rel="stylesheet" href="css/wc-live-banner.css?v=2.7.4">
@@ -414,11 +414,38 @@
         </div>
         <div class="teamsToolbar">
           <div class="teamsPosFilters">
+            <button type="button" class="teamsPosBtn teamsPosBtn--stars" data-pos="__stars__" onclick="setTeamsPosFilter('__stars__')">⭐ Stars</button>
             <button type="button" class="teamsPosBtn active" data-pos="" onclick="setTeamsPosFilter('')">Tất cả</button>
             <button type="button" class="teamsPosBtn" data-pos="GK" onclick="setTeamsPosFilter('GK')">GK</button>
             <button type="button" class="teamsPosBtn" data-pos="DEF" onclick="setTeamsPosFilter('DEF')">DEF</button>
             <button type="button" class="teamsPosBtn" data-pos="MID" onclick="setTeamsPosFilter('MID')">MID</button>
             <button type="button" class="teamsPosBtn" data-pos="FWD" onclick="setTeamsPosFilter('FWD')">FWD</button>
+          </div>
+        </div>
+      </div>
+      <div id="teamsStarsPanel" class="teamsStarsPanel" style="display:none">
+        <div class="teamsStarsHead">
+          <div class="formationControl teamsStarsFormation">
+            <label>Sơ đồ All-Star</label>
+            <select id="teamsStarsFormation" onchange="onTeamsStarsFormationChange()">
+              <option value="3-2-1">3-2-1</option>
+              <option value="3-1-2" selected>3-1-2</option>
+              <option value="2-3-1">2-3-1</option>
+              <option value="2-2-2">2-2-2</option>
+            </select>
+          </div>
+          <p class="meta teamsStarsNote">14 cầu thủ xuất sắc nhất · 2 thủ môn + 12 cầu thủ khác · sắp xếp tối ưu theo sơ đồ</p>
+        </div>
+        <div class="teamsStarsLineup lineupBody">
+          <div class="bench benchSide">
+            <h3>Dự bị</h3>
+            <div id="teamsStarsBench" class="benchList"></div>
+          </div>
+          <div class="pitchCol">
+            <div class="pitch teamsStarsPitch" id="pitchTeamsStars">
+              <div class="halfLine"></div><div class="centerCircle"></div><div class="centerDot"></div>
+              <div class="boxTop"></div><div class="boxBottom"></div><div class="goalTop"></div><div class="goalBottom"></div><div class="spotTop"></div><div class="spotBottom"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -649,8 +676,8 @@
   <script src="js/player-helpers.js?v=2.4.67"></script>
   <script src="js/lineup-confirm.js?v=2.8.0"></script>
   <script src="js/roster.js?v=2.4.65"></script>
-  <script src="js/teams.js?v=2.4.68"></script>
-  <script src="js/lineup-algorithm.js?v=2.4.0"></script>
+  <script src="js/teams.js?v=2.5.1"></script>
+  <script src="js/lineup-algorithm.js?v=2.5.1"></script>
   <script src="js/lineup-random.js?v=2.4.34"></script>
   <script src="js/lineup-hlv.js?v=2.4.34"></script>
   <script src="js/workflow.js?v=2.8.1"></script>
