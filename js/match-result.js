@@ -258,7 +258,7 @@ function refreshResultMvpTags(){
 
 async function openResultModal(){
   clearEditResultState();
-  if(!isLoggedIn() || !canEnterAnyResult()){
+  if(!isLoggedIn() || (!canEnterAnyResult() && !canFinalizeMatch())){
     showError("Bạn cần đăng nhập với quyền nhập kết quả.");
     return;
   }
@@ -266,8 +266,14 @@ async function openResultModal(){
     showError("Chưa có trận nào đang chờ kết quả.");
     return;
   }
-  if(!bothTeamsConfirmed()){
-    showError("Chờ 2 HLV chốt đội hình trước khi nhập kết quả.");
+  if(!isMatchReadyForResults()){
+    if(canFinalizeMatch()){
+      showError("Bấm Chốt trận đấu trước khi nhập kết quả.");
+    }else{
+      showError(isCapMode()
+        ? "Chờ HLV Cáp chốt đội hình trước khi nhập kết quả."
+        : "Chờ 2 HLV chốt đội hình trước khi nhập kết quả.");
+    }
     return;
   }
   stopConfirmPolling();
@@ -444,9 +450,9 @@ function renderResultForm(){
       (canFinalizeMatch()
         ? (capHlvResultConfirmed()
           ? `<br><b>Host</b>: chỉnh tỉ số/tên đội/BT/KT · <b>không sửa điểm cầu thủ</b> đã chốt HLV Cáp → <b>Xác nhận trận đấu</b>.`
-          : `<br><b>Host</b>: chỉnh tỉ số/tên đội khi cần · chờ HLV Cáp xác nhận → <b>Xác nhận trận đấu</b>.`)
+          : `<br><b>Host</b>: nhập tỉ số, tên đội & chấm điểm → <b>Xác nhận trận đấu</b> (không cần chờ HLV Cáp).`)
         : (isCapHlvResultOnly()
-          ? `<br><b>HLV Cáp</b>: nhập tỉ số & chấm điểm → <b>Xác nhận HLV Cáp</b>. Host chốt trận sau.`
+          ? `<br><b>HLV Cáp</b>: nhập tỉ số & chấm điểm → <b>Xác nhận HLV Cáp</b>.`
           : ""));
   }else{
     document.getElementById("resultHint").innerHTML =
@@ -455,7 +461,7 @@ function renderResultForm(){
        <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · <span class="meta">BT/KT không tính bảng Top (chỉ trận Cáp)</span>.<br>
        <b>📹 Video</b>: link từng bàn thắng + video trận (tùy chọn).` +
       (canFinalizeMatch()
-        ? `<br><b>Host</b>: chỉnh tỉ số khi cần · chờ 2 HLV xác nhận → <b>Xác nhận trận đấu</b>. Điểm cầu thủ đội đã xác nhận không sửa được.`
+        ? `<br><b>Host</b>: nhập tỉ số & chấm điểm toàn trận → <b>Xác nhận trận đấu</b> (không cần chờ HLV). Điểm đội đã xác nhận HLV không sửa được.`
         : (canResultTeamA() && !canResultTeamB()
           ? `<br><b>HLV Đội A</b>: nhập bàn thắng Đội A + chấm điểm cầu thủ → <b>Xác nhận Đội A</b>.`
           : (canResultTeamB() && !canResultTeamA()
@@ -737,14 +743,6 @@ async function saveMatchResult(){
   const internalHlvPartial = !cap && !hostFinalize && (canResultTeamA() || canResultTeamB());
   persistPendingScores();
 
-  if(hostFinalizeInternal && !bothTeamsResultSaved()){
-    showError("Chờ cả 2 HLV xác nhận điểm — trận sẽ tự kết thúc khi đủ.");
-    return;
-  }
-  if(capHostFinalize && !capHlvResultConfirmed()){
-    showError("Chờ HLV Cáp xác nhận KQ — trận sẽ tự kết thúc.");
-    return;
-  }
   if(capHlvPartial && capHlvResultConfirmed()){
     showError("Bạn đã xác nhận HLV Cáp — không thể chỉnh sửa.");
     return;
@@ -782,7 +780,7 @@ async function saveMatchResult(){
 
   if(cap){
     opponentTeamName = String(document.getElementById("opponentTeamName").value || "").trim();
-    if(capHostFinalize && !opponentTeamName){
+    if(hostFinalize && !opponentTeamName){
       showError("Vui lòng nhập tên đội bạn.");
       return;
     }
@@ -797,13 +795,13 @@ async function saveMatchResult(){
   const allPlayers = getAllMatchPlayers();
   const mvpNames = getMvpNamesFromScores();
   const seenNames = new Set();
-  const payloadPlayers = (hostFinalizeInternal ? [] : (capHostFinalize || capHlvPartial ? allPlayers : allPlayers.filter(p => {
+  const payloadPlayers = (hostFinalize || capHostFinalize || capHlvPartial ? allPlayers : allPlayers.filter(p => {
     if(seenNames.has(p.name)) return false;
     seenNames.add(p.name);
     if(canResultTeamA() && !canResultTeamB() && p.team !== "A") return false;
     if(canResultTeamB() && !canResultTeamA() && p.team !== "B") return false;
     return true;
-  }))).map(p => ({
+  })).map(p => ({
     player_name: p.name,
     team: p.team,
     starter: !!p.starter,

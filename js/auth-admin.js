@@ -173,7 +173,7 @@ async function adminLogout(){
 }
 
 function updateResultModalPerms(){
-  const canResult = isLoggedIn() && canEnterAnyResult();
+  const canResult = isLoggedIn() && (canEnterAnyResult() || canFinalizeMatch());
   const canCancel = isLoggedIn() && hasPerm(PERMS.CANCEL_MATCH);
   if(matchLocked && !isEditingCompletedResult()) updateLockBannerContent();
   const cancelBtn = document.getElementById("btnCancelMatch");
@@ -199,7 +199,11 @@ function updateResultModalPerms(){
       saveBtn.disabled = capHlvResultConfirmed();
       saveBtn.classList.toggle("btnDone", capHlvResultConfirmed());
     }else if(canFinalizeMatch() && !canResultTeamA() && !canResultTeamB()){
-      saveBtn.style.display = "none";
+      saveBtn.style.display = "";
+      saveBtn.textContent = "✓ Xác nhận trận đấu";
+      saveBtn.classList.remove("btnDone");
+      saveBtn.disabled = false;
+      saveBtn.title = "Host kết thúc trận — không cần chờ HLV nhập KQ";
     }else if(canResultTeamA() && !canResultTeamB()){
       saveBtn.textContent = teamResultSaved.A ? "✓ Đã xác nhận Đội A" : "✓ Xác nhận Đội A";
       if(teamResultSaved.A){

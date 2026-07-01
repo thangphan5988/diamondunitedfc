@@ -327,6 +327,16 @@ function isMatchHost(){
   return isLoggedIn() && canSplitTeams() && canFinalizeMatch();
 }
 
+function canHostControlMatch(){
+  return isLoggedIn() && canFinalizeMatch() && (canSplitTeams() || canCoordinateCap());
+}
+
+function canOpenResultEntry(){
+  if(!matchLocked || !lastResult) return false;
+  if(!isMatchReadyForResults()) return false;
+  return canEnterAnyResult() || canFinalizeMatch();
+}
+
 function isSplitWorkflow(){
   return isLoggedIn() && !isFullLineupRole() &&
     (canSplitTeams() || canManageTeamA() || canManageTeamB());
@@ -349,17 +359,15 @@ function getLineupTabLabel(){
 function getRoleTaskLabel(){
   if(!isLoggedIn()) return "";
   if(hasPerm(PERMS.ALL)) return "⚙️ Toàn quyền quản lý trận";
-  if(isMatchHost() && isCapMode()) return "📋 Host Cáp: Import → Sắp Cáp → Gửi HLV → Chờ HLV chốt & nhập KQ";
-  if(isMatchHost()) return "📋 Host: Random → Gửi HLV → Chờ 2 HLV chốt & nhập KQ (ảnh Zalo tùy chọn)";
-  if(canSplitTeams() && canImportRoster()) return "📋 Random → Gửi HLV → Chờ 2 HLV chốt (ảnh Zalo tùy chọn)";
+  if(isMatchHost() && isCapMode()) return "📋 Host Cáp: Gửi HLV → HLV chốt hoặc bạn Chốt trận → Nhập KQ";
+  if(isMatchHost()) return "📋 Host: Gửi HLV → HLV chốt hoặc bạn Chốt trận → Nhập KQ";
+  if(canSplitTeams() && canImportRoster()) return "📋 Random → Gửi HLV → Chốt trận / Lưu ảnh Zalo";
   if(canManageTeamA() && canResultTeamA() && !canManageTeamB()) return "🔴 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội A → Xác nhận";
   if(canManageTeamB() && canResultTeamB() && !canManageTeamA()) return "🟡 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội B → Xác nhận";
   if(canManageTeamA() && !canManageTeamB()) return "🔴 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
   if(canManageTeamB() && !canManageTeamA()) return "🟡 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
   if(canCoordinateCap() && isCapMode() && isMatchReadyForResults() && canFinalizeMatch()){
-    return capHlvResultConfirmed()
-      ? "📋 Host Cáp: có thể chỉnh tỉ số/tên đội nếu cần"
-      : "📋 Host Cáp: chờ HLV Cáp nhập KQ";
+    return "📋 Host Cáp: nhập & Xác nhận trận đấu (không cần HLV nhập KQ)";
   }
   if(isCapHlvEditor() && isCapMode()){
     if(isMatchReadyForResults()) return "⚽ Nhập kết quả trận Cáp";
@@ -367,6 +375,6 @@ function getRoleTaskLabel(){
     if(!isCapLineupPublished()) return "⏳ Chờ Host gửi đội hình Cáp (bấm Gửi HLV)";
     return "⚽ Kéo thả Chính/Phụ → Chốt đội hình Cáp";
   }
-  if(canCoordinateCap() && isCapMode()) return "📋 Import → Sắp Cáp → Gửi HLV → Chờ HLV chốt → Xuất hình";
+  if(canCoordinateCap() && isCapMode()) return "📋 Import → Sắp Cáp → Gửi HLV → Chốt trận / Lưu ảnh Zalo";
   return permLabelList(authSession.permissions);
 }

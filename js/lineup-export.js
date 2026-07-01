@@ -63,46 +63,6 @@ async function syncLineupToServer(){
   }
 }
 
-async function forceConfirmAndExport(){
-  clearError();
-  if(!isLoggedIn() || !canSplitTeams() || !hasPerm(PERMS.EXPORT)){
-    showError("Chỉ Anh Phương (điều phối) mới dùng được Chốt cả 2 đội.");
-    return;
-  }
-  if(matchLocked){
-    if(canEnterAnyResult()) openResultModal();
-    else showError("Trận đã chốt.");
-    return;
-  }
-  if(!lastResult || !currentMatchId){
-    showError("Chưa có đội hình trên server. Cần Gửi HLV trước.");
-    return;
-  }
-  if(!lineupPublishedToHlv){
-    showError("Cần bấm Gửi HLV trước khi chốt.");
-    return;
-  }
-  const btn = document.getElementById("btnForceExport");
-  if(btn){ btn.disabled = true; btn.textContent = "Đang chốt..."; }
-  try{
-    await refreshTeamConfirmFromServer();
-    for(const team of ["A", "B"]){
-      if(!teamConfirmState[team]){
-        await setTeamConfirmOnServer(team, true);
-        teamConfirmState[team] = true;
-      }
-    }
-    updateTeamConfirmBadges();
-    persistTeamWorkflowState();
-    maybeAutoLockFromConfirm();
-    showToast("✓ Đã chốt cả 2 đội — có thể nhập kết quả", "success", 3200);
-  }catch(e){
-    console.error(e);
-    showError(e.message || "Không chốt được đội hình.");
-    applyLineupRoleUI();
-  }
-}
-
 async function exportImage(options = {}){
   if(!isLoggedIn() || !hasPerm(PERMS.EXPORT)){
     showError("Bạn cần quyền xuất ảnh đội hình.");
@@ -110,12 +70,6 @@ async function exportImage(options = {}){
   }
   if(!lastResult){
     alert("Chưa có đội hình để xuất hình.");
-    return;
-  }
-  if(!options.skipConfirmCheck && !bothTeamsConfirmed()){
-    showError(isCapMode()
-      ? "Chờ HLV Cáp chốt đội hình trước khi xuất hình."
-      : "Chờ 2 HLV chốt đội hình trước khi xuất hình.");
     return;
   }
 

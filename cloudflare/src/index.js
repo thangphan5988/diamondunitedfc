@@ -1122,13 +1122,6 @@ async function saveMatchResult(db, payload, session) {
   if (canBOnly) teamBFlag = 1;
   if (canCapHlvOnly) teamAFlag = 1;
 
-  if (finalizeMatch && isCapMatch && !teamAFlag) {
-    throw new Error("Chờ HLV Cáp xác nhận trước khi kết thúc trận.");
-  }
-  if (finalizeMatch && !isCapMatch && (!teamAFlag || !teamBFlag)) {
-    throw new Error("Chờ cả 2 HLV xác nhận trước khi kết thúc trận.");
-  }
-
   const updatePartialHist = db.prepare(`
     UPDATE match_history SET
       team_a_score = ?, team_b_score = ?, match_score = ?,

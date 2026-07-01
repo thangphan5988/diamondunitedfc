@@ -66,7 +66,7 @@ function updateLockBannerContent(){
 
   const label = displayMatchLabel();
   const cap = isCapMode();
-  const canResult = isLoggedIn() && canEnterAnyResult();
+  const canResult = isLoggedIn() && (canEnterAnyResult() || canFinalizeMatch());
   const exportHint = isLoggedIn() && hasPerm(PERMS.EXPORT) && (canSplitTeams() || (cap && canCoordinateCap()))
     ? ` <span class="meta">(${escapeHtml(lineupExportButtonLabel())} để gửi ảnh vào nhóm Zalo — tùy chọn)</span>`
     : "";
@@ -90,9 +90,8 @@ function updateLockBannerContent(){
 
 function shouldShowLockBanner(){
   if(!matchLocked || !bothTeamsConfirmed()) return false;
-  return canEnterAnyResult() || isMatchHost() ||
-    (canSplitTeams() && hasPerm(PERMS.EXPORT)) ||
-    (isCapMode() && canCoordinateCap() && hasPerm(PERMS.EXPORT));
+  return canOpenResultEntry() ||
+    (canHostControlMatch() && hasPerm(PERMS.EXPORT));
 }
 
 function applyLockUI(locked){

@@ -34,8 +34,8 @@ function hlvResultStatusHtml(opts = {}){
         hlvResultBadgeHtml("B", "🟡 HLV B")
       ];
   if(opts.hostNote){
-    if(isCapMode() && canFinalizeMatch()){
-      parts.push(`<span class="hlvResultBadge hostNote">Host có thể chỉnh tỉ số/tên đội khi cần</span>`);
+    if(canFinalizeMatch()){
+      parts.push(`<span class="hlvResultBadge hostNote">Host có thể Xác nhận trận đấu trực tiếp (không cần chờ HLV)</span>`);
     }else if(isMatchHost()){
       parts.push(`<span class="hlvResultBadge hostNote">Trận tự kết thúc khi đủ HLV xác nhận KQ</span>`);
     }
@@ -322,6 +322,55 @@ function applyServerPendingMatchLight(summary){
   applyLineupRoleUI();
 }
 
+async function hostLockMatchForResults(){
+  clearError();
+  if(!canHostControlMatch()){
+    showError("Chỉ Host mới dùng được Chốt trận đấu.");
+    return;
+  }
+  if(isMatchReadyForResults()){
+    openResultModal();
+    return;
+  }
+  if(!lastResult || !currentMatchId){
+    showError("Chưa có đội hình trên server. Cần Gửi HLV trước.");
+    return;
+  }
+  if(!lineupPublishedToHlv){
+    showError("Cần bấm Gửi HLV trước khi chốt trận.");
+    return;
+  }
+
+  const btn = document.getElementById("btnHostLockMatch");
+  if(btn){ btn.disabled = true; btn.textContent = "Đang chốt..."; }
+  try{
+    if(isCapMode()){
+      for(const entry of [{ server: "MAIN", ui: "Main" }, { server: "SUB", ui: "Sub" }]){
+        if(!teamConfirmState[entry.ui]){
+          await setTeamConfirmOnServer(entry.server, true);
+          teamConfirmState[entry.ui] = true;
+        }
+      }
+    }else{
+      for(const team of ["A", "B"]){
+        if(!teamConfirmState[team]){
+          await setTeamConfirmOnServer(team, true);
+          teamConfirmState[team] = true;
+        }
+      }
+    }
+    updateTeamConfirmBadges();
+    persistTeamWorkflowState();
+    maybeAutoLockFromConfirm();
+    showToast("✓ Đã chốt trận — có thể nhập kết quả", "success", 3200);
+    applyLineupRoleUI();
+  }catch(e){
+    console.error(e);
+    showError(e.message || "Không chốt trận được.");
+    applyLineupRoleUI();
+  }
+}
+
 function maybeAutoLockFromConfirm(){
   if(matchLocked || !bothTeamsConfirmed() || !lastResult || !currentMatchId) return;
 
@@ -604,10 +653,9 @@ function applyLineupRoleUI(){
 
   const exportOk = hasPerm(PERMS.EXPORT) && (splitOk || canCoordinateCap());
   const btnExport = document.getElementById("btnExport");
-  const btnForceExport = document.getElementById("btnForceExport");
-  const showExport = exportOk && !!lastResult && (bothTeamsConfirmed() || isMatchReadyForResults());
-  const showForceExport = exportOk && splitOk && !!lastResult && lineupPublishedToHlv && !matchLocked &&
-    !bothTeamsConfirmed();
+  const btnHostLockMatch = document.getElementById("btnHostLockMatch");
+  const showExport = exportOk && !!lastResult && lineupPublishedToHlv;
+  const showHostLock = canHostControlMatch() && !!lastResult && lineupPublishedToHlv && !isMatchReadyForResults();
   if(btnExport){
     btnExport.style.display = (showExport && !capHlv) ? "" : "none";
     if(showExport){
@@ -616,12 +664,12 @@ function applyLineupRoleUI(){
       btnExport.classList.remove("btnDone");
     }
   }
-  if(btnForceExport){
-    btnForceExport.style.display = showForceExport ? "" : "none";
-    if(showForceExport){
-      btnForceExport.disabled = false;
-      btnForceExport.textContent = "Chốt cả 2 đội";
-      btnForceExport.classList.remove("btnDone");
+  if(btnHostLockMatch){
+    btnHostLockMatch.style.display = showHostLock ? "" : "none";
+    if(showHostLock){
+      btnHostLockMatch.disabled = false;
+      btnHostLockMatch.textContent = "Chốt trận đấu";
+      btnHostLockMatch.classList.remove("btnDone");
     }
   }
 
