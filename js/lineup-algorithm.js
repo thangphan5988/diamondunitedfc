@@ -213,17 +213,42 @@ function slotOrderForFormation(formation){
 }
 
 function defaultCaptainNameForTeam(teamSide){
+  if(teamSide === "A" && matchCaptains?.A) return matchCaptains.A;
+  if(teamSide === "B" && matchCaptains?.B) return matchCaptains.B;
   if(teamSide === "A") return DEFAULT_CAPTAIN_A;
   if(teamSide === "B") return DEFAULT_CAPTAIN_B;
   return null;
+}
+
+function enforceMatchCaptains(teamA, teamB){
+  const capA = defaultCaptainNameForTeam("A");
+  const capB = defaultCaptainNameForTeam("B");
+  if(capA) ensurePlayerOnTeam(capA, teamA, teamB);
+  if(capB) ensurePlayerOnTeam(capB, teamB, teamA);
+}
+
+function violatesCaptainSplitRule(teamA, teamB){
+  const capA = defaultCaptainNameForTeam("A");
+  const capB = defaultCaptainNameForTeam("B");
+  if(!capA || !capB || normalizeName(capA) === normalizeName(capB)) return false;
+
+  const pool = [...teamA, ...teamB];
+  if(!hasPlayer(pool, capA) || !hasPlayer(pool, capB)) return false;
+
+  const aHasCapA = hasPlayer(teamA, capA);
+  const aHasCapB = hasPlayer(teamA, capB);
+  const bHasCapA = hasPlayer(teamB, capA);
+  const bHasCapB = hasPlayer(teamB, capB);
+  return (aHasCapA && aHasCapB) || (bHasCapA && bHasCapB);
 }
 
 function build(team, formation, teamSide){
   const slots = slotOrderForFormation(formation);
   const n = team.length;
   const captainName = defaultCaptainNameForTeam(teamSide);
-  const forcedNames = captainName && team.some(p => normalizeName(p.name) === captainName)
-    ? [captainName]
+  const captainKey = captainName ? normalizeName(captainName) : "";
+  const forcedNames = captainKey && team.some(p => normalizeName(p.name) === captainKey)
+    ? [captainKey]
     : [];
   const forcedIndexes = [];
 
@@ -323,7 +348,7 @@ function build(team, formation, teamSide){
   const starters = solved.picks.map(({playerIndex, slot}) => {
     const p = team[playerIndex];
     const f = fitLabelValue(p, slot.pos);
-    const isCaptain = captainName && normalizeName(p.name) === captainName;
+    const isCaptain = captainKey && normalizeName(p.name) === captainKey;
     return {
       ...p,
       assigned: slot.pos,
@@ -571,8 +596,7 @@ function ensurePlayerOnTeam(playerName, targetTeam, otherTeam){
 }
 
 function enforceHlvCaptainTeams(teamA, teamB){
-  ensurePlayerOnTeam("Thang Phan", teamA, teamB);
-  ensurePlayerOnTeam("Minh Phat", teamB, teamA);
+  enforceMatchCaptains(teamA, teamB);
 }
 
 function evalSplit(a,b){
@@ -665,10 +689,12 @@ function splitCandidateScore(teamA, teamB){
   let s = fastSplitScore(teamA, teamB);
   if(!hasRequiredPositions(teamA)) s -= 8000;
   if(!hasRequiredPositions(teamB)) s -= 8000;
-  if(violatesHiddenRule(teamA, teamB)) s -= 9000;
+  if(violatesCaptainSplitRule(teamA, teamB)) s -= 9000;
   const pool = [...teamA, ...teamB];
-  if(hasPlayer(pool, "Thang Phan") && !hasPlayer(teamA, "Thang Phan")) s -= 9000;
-  if(hasPlayer(pool, "Minh Phat") && !hasPlayer(teamB, "Minh Phat")) s -= 9000;
+  const capA = defaultCaptainNameForTeam("A");
+  const capB = defaultCaptainNameForTeam("B");
+  if(capA && hasPlayer(pool, capA) && !hasPlayer(teamA, capA)) s -= 9000;
+  if(capB && hasPlayer(pool, capB) && !hasPlayer(teamB, capB)) s -= 9000;
   return s;
 }
 
@@ -683,19 +709,6 @@ function normalizeName(name){
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
-
-function violatesHiddenRule(teamA, teamB){
-  const aHasMinh = hasPlayer(teamA, "Minh Phat");
-  const aHasThang = hasPlayer(teamA, "Thang Phan");
-  const bHasMinh = hasPlayer(teamB, "Minh Phat");
-  const bHasThang = hasPlayer(teamB, "Thang Phan");
-
-  // Luật ẩn: nếu cả 2 người cùng tham gia, bắt buộc mỗi người 1 đội.
-  if((aHasMinh || bHasMinh) && (aHasThang || bHasThang)){
-    return (aHasMinh && aHasThang) || (bHasMinh && bHasThang);
-  }
-  return false;
 }
 
 function randomBest(list){

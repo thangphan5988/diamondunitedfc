@@ -110,6 +110,7 @@ const PERM_OPTIONS = [
   { id: PERMS.ALL, label: "Toàn quyền (all)" }
 ];
 let teamConfirmState = { A: false, B: false, Main: false, Sub: false };
+let matchCaptains = { A: null, B: null };
 let teamResultSaved = { A: false, B: false };
 let pendingTeamAScore = "";
 let pendingTeamBScore = "";

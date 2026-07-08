@@ -141,6 +141,7 @@ function unlockMatchState(){
   matchLocked = false;
   teamConfirmState = { A: false, B: false };
   teamResultSaved = { A: false, B: false };
+  matchCaptains = { A: null, B: null };
   pendingTeamAScore = "";
   pendingTeamBScore = "";
   lineupPublishedToHlv = false;
