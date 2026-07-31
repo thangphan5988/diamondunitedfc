@@ -605,7 +605,7 @@ function applyLineupRoleUI(){
   const manageB = canManageTeamB();
   const full = isFullLineupRole() && lineupWorkspace === "split";
   const capHlv = isCapHlvView();
-  const inHlvWs = lineupWorkspace === "hlv";
+  const inHlvWs = isHlvWorkspace();
   const inSplitWs = lineupWorkspace === "split";
 
   const playerCard = document.getElementById("playerCard");
@@ -621,12 +621,18 @@ function applyLineupRoleUI(){
 
   const panelA = document.getElementById("teamPanelA");
   const panelB = document.getElementById("teamPanelB");
-  if(inHlvWs){
+  if(lineupWorkspace === "hlv_a"){
     if(panelA) panelA.style.display = manageA ? "" : "none";
+    if(panelB) panelB.style.display = "none";
+  }else if(lineupWorkspace === "hlv_b"){
+    if(panelA) panelA.style.display = "none";
     if(panelB) panelB.style.display = manageB ? "" : "none";
-  }else{
+  }else if(inSplitWs){
     if(panelA) panelA.style.display = (full || manageA || splitOk || canSplitTeams()) ? "" : "none";
     if(panelB) panelB.style.display = (full || manageB || splitOk || canSplitTeams()) ? "" : "none";
+  }else{
+    if(panelA) panelA.style.display = "none";
+    if(panelB) panelB.style.display = "none";
   }
   if(panelA){
     panelA.classList.toggle("hlvPanel", isHlvPanelTeam("A"));
@@ -639,7 +645,7 @@ function applyLineupRoleUI(){
 
   const internalTeams = document.getElementById("internalTeams");
   if(internalTeams){
-    const hlvSingle = inHlvWs && ((manageA && !manageB) || (manageB && !manageA));
+    const hlvSingle = lineupWorkspace === "hlv_a" || lineupWorkspace === "hlv_b";
     internalTeams.classList.toggle("singleTeam", hlvSingle);
     internalTeams.classList.toggle("hlvRoleView", isHlvEditor());
   }
@@ -670,8 +676,8 @@ function applyLineupRoleUI(){
   const showTeamControls = !matchLocked && !!lastResult;
   const btnConfA = document.getElementById("btnConfirmA");
   const btnConfB = document.getElementById("btnConfirmB");
-  const showConfA = manageA && showTeamControls && inHlvWs;
-  const showConfB = manageB && showTeamControls && inHlvWs;
+  const showConfA = manageA && showTeamControls && lineupWorkspace === "hlv_a";
+  const showConfB = manageB && showTeamControls && lineupWorkspace === "hlv_b";
   if(btnConfA){
     btnConfA.style.display = showConfA ? "" : "none";
     if(showConfA) setWorkflowBtn(btnConfA, teamConfirmState.A, "✓ Đã chốt", "✓ Chốt đội hình");
@@ -794,6 +800,8 @@ function applyLineupRoleUI(){
   updateResultModalPerms();
   initLineupTeamSwitchers();
   syncAllFormationSegs();
+  syncLineupModeButtons();
+  syncHlvMainTabs();
 }
 
 function shouldRestorePending(){

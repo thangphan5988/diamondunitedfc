@@ -245,10 +245,8 @@ function applyAuthUI(){
   const btnLogin = document.getElementById("btnLogin");
   const btnLogout = document.getElementById("btnLogout");
   const tabLineup = document.getElementById("tabLineup");
-  const tabHlv = document.getElementById("tabHlv");
   const tabAdmin = document.getElementById("tabAdmin");
   const showSplit = loggedIn && canUseSplitTab();
-  const showHlv = loggedIn && canUseHlvTab();
 
   if(loggedIn){
     label.textContent = `Đăng nhập: ${authSession.display_name || authSession.username} · ${permLabelList(authSession.permissions)}`;
@@ -267,13 +265,10 @@ function applyAuthUI(){
     tabLineup.style.display = showSplit ? "" : "none";
     tabLineup.textContent = getLineupTabLabel();
   }
-  if(tabHlv){
-    tabHlv.style.display = showHlv ? "" : "none";
-    tabHlv.textContent = getHlvTabLabel();
-  }
+  syncHlvMainTabs();
   tabAdmin.style.display = loggedIn && canAccessAdminTab() ? "" : "none";
 
-  if(showSplit || showHlv){
+  if(showSplit || canUseHlvTab() || hasHlvAPerm() || hasHlvBPerm() || hasHlvCapPerm()){
     syncLineupModeButtons();
     document.getElementById("btnRandom").style.display =
       lineupWorkspace === "split" && canSplitTeams() && lineupMode === "internal" && !matchLocked && !lastResult ? "" : "none";
@@ -283,10 +278,16 @@ function applyAuthUI(){
   }
 
   if(document.getElementById("tabLineup")?.classList.contains("active") && !showSplit){
-    switchTab(showHlv ? "hlv" : "latest");
+    switchTab(preferredHlvTab());
   }
-  if(document.getElementById("tabHlv")?.classList.contains("active") && !showHlv){
-    switchTab(showSplit ? "lineup" : "latest");
+  if(document.getElementById("tabHlvA")?.classList.contains("active") && !canShowHlvATab()){
+    switchTab(preferredHlvTab());
+  }
+  if(document.getElementById("tabHlvB")?.classList.contains("active") && !canShowHlvBTab()){
+    switchTab(preferredHlvTab());
+  }
+  if(document.getElementById("tabHlvCap")?.classList.contains("active") && !canShowHlvCapTab()){
+    switchTab(preferredHlvTab());
   }
   if(document.getElementById("tabAdmin").classList.contains("active") && !canAccessAdminTab()) switchTab("latest");
 

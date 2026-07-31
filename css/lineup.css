@@ -179,6 +179,19 @@
 .lineupModes{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .lineupMode{background:#1e293b;border:1px solid var(--line);color:#cbd5e1;padding:9px 14px;border-radius:12px;font-weight:800;cursor:pointer;width:auto;margin-top:0;font-size:11px}
 .lineupMode.active{background:#0f766e;color:#fff;border-color:#0f766e}
+.lineupMode.locked,
+.lineupMode:disabled{
+  opacity:.45;cursor:not-allowed;filter:grayscale(.35);
+  box-shadow:none
+}
+.lineupMode.locked:hover,
+.lineupMode:disabled:hover{
+  background:#1e293b;border-color:var(--line);color:#cbd5e1
+}
+.lineupMode.active.locked,
+.lineupMode.active:disabled{
+  opacity:1;filter:none;cursor:default
+}
 
 /* Player picker toolbar */
 .playerCardTools{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}

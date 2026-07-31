@@ -34,7 +34,7 @@ let formationB = "3-1-2";
 let formationCapMain = "3-1-2";
 let formationCapSub = "3-1-2";
 let lineupMode = "internal";
-/** Main-nav workspace for lineup UI: "split" (Chia đội) | "hlv" (HLV) */
+/** Main-nav workspace: "split" | "hlv_a" | "hlv_b" | "hlv_cap" */
 let lineupWorkspace = "split";
 /** User clicked Nội bộ / Cáp — don't let polling snap mode away */
 let lineupModePinned = false;

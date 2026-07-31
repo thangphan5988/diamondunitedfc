@@ -1,7 +1,8 @@
-const WIKI_SQUADS_PAGE = "2026_FIFA_World_Cup_squads";
+const WIKI_SQUADS_PAGE = "2026_ASEAN_Championship_squads";
 const WIKI_TEAM_ALIASES = {
   "Democratic Republic of the Congo": "DR Congo",
-  "Cote d'Ivoire": "Ivory Coast"
+  "Cote d'Ivoire": "Ivory Coast",
+  "Timor Leste": "Timor-Leste"
 };
 
 function stripHtmlTags(html) {

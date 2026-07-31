@@ -1,13 +1,15 @@
 /* Tab switching, match history list */
 
-const MAIN_TAB_ORDER = ["latest", "history", "stats", "teams", "lineup", "hlv", "admin"];
+const MAIN_TAB_ORDER = ["latest", "history", "stats", "teams", "lineup", "hlv_a", "hlv_b", "hlv_cap", "admin"];
 const MAIN_TAB_IDS = {
   latest: "tabLatest",
   history: "tabHistory",
   stats: "tabStats",
   teams: "tabTeams",
   lineup: "tabLineup",
-  hlv: "tabHlv",
+  hlv_a: "tabHlvA",
+  hlv_b: "tabHlvB",
+  hlv_cap: "tabHlvCap",
   admin: "tabAdmin"
 };
 
@@ -96,25 +98,28 @@ function formatHistoryScore(value){
 }
 
 function switchTab(tab){
-  const isLatest = tab === "latest";
+  const hlvTabs = new Set(["hlv_a", "hlv_b", "hlv_cap"]);
   const isLineup = tab === "lineup";
-  const isHlv = tab === "hlv";
-  const isHistory = tab === "history";
-  const isStats = tab === "stats";
-  const isTeams = tab === "teams";
+  const isHlv = hlvTabs.has(tab);
   const isAdmin = tab === "admin";
 
   if(isLineup && !canUseSplitTab()){
-    tab = canUseHlvTab() ? "hlv" : "latest";
+    tab = preferredHlvTab();
   }
-  if(tab === "hlv" && !canUseHlvTab()){
-    tab = canUseSplitTab() ? "lineup" : "latest";
+  if(tab === "hlv_a" && !canShowHlvATab()){
+    tab = preferredHlvTab();
+  }
+  if(tab === "hlv_b" && !canShowHlvBTab()){
+    tab = preferredHlvTab();
+  }
+  if(tab === "hlv_cap" && !canShowHlvCapTab()){
+    tab = preferredHlvTab();
   }
   if(isAdmin && !(isLoggedIn() && canAccessAdminTab())){
     tab = "latest";
   }
 
-  const showLineupView = tab === "lineup" || tab === "hlv";
+  const showLineupView = tab === "lineup" || hlvTabs.has(tab);
   document.getElementById("latestResultView").style.display = tab === "latest" ? "" : "none";
   document.getElementById("lineupView").style.display = showLineupView ? "" : "none";
   document.getElementById("historyView").style.display = tab === "history" ? "" : "none";
@@ -124,15 +129,18 @@ function switchTab(tab){
 
   document.getElementById("tabLatest").classList.toggle("active", tab === "latest");
   document.getElementById("tabLineup").classList.toggle("active", tab === "lineup");
-  const tabHlv = document.getElementById("tabHlv");
-  if(tabHlv) tabHlv.classList.toggle("active", tab === "hlv");
+  document.getElementById("tabHlvA")?.classList.toggle("active", tab === "hlv_a");
+  document.getElementById("tabHlvB")?.classList.toggle("active", tab === "hlv_b");
+  document.getElementById("tabHlvCap")?.classList.toggle("active", tab === "hlv_cap");
   document.getElementById("tabHistory").classList.toggle("active", tab === "history");
   document.getElementById("tabStats").classList.toggle("active", tab === "stats");
   document.getElementById("tabTeams").classList.toggle("active", tab === "teams");
   document.getElementById("tabAdmin").classList.toggle("active", tab === "admin");
 
   if(tab === "lineup") enterLineupWorkspace("split", true);
-  if(tab === "hlv") enterLineupWorkspace("hlv", true);
+  if(tab === "hlv_a") enterLineupWorkspace("hlv_a", true);
+  if(tab === "hlv_b") enterLineupWorkspace("hlv_b", true);
+  if(tab === "hlv_cap") enterLineupWorkspace("hlv_cap", true);
 
   if(tab === "latest") loadLatestMatch();
   else stopLatestMatchPolling();

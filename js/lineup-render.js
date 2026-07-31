@@ -349,6 +349,19 @@ function updateLineupSegVisibility(wrap){
   wrap._lmApply?.();
 }
 
+function setLineupTeamFocus(team){
+  const wrapId = team === "Main" || team === "Sub" ? "capTeamsWrap" : "internalTeamsWrap";
+  const wrap = document.getElementById(wrapId);
+  if(!wrap) return;
+  const seg = wrap.querySelector(".lmTeamSeg");
+  const btn = seg?.querySelector(`.lmSegBtn[data-team="${team}"]`);
+  if(btn){
+    seg.querySelectorAll(".lmSegBtn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  wrap._lmApply?.();
+}
+
 function initLineupTeamSwitchers(){
   ["internalTeamsWrap", "capTeamsWrap"].forEach(id => {
     const wrap = document.getElementById(id);

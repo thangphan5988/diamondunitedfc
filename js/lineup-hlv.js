@@ -17,15 +17,14 @@ function getLineupTeamMeta(team){
 }
 
 function isHlvEditor(){
-  return isLoggedIn() && lineupWorkspace === "hlv" &&
-    (canManageTeamA() || canManageTeamB());
+  return isLoggedIn() && (lineupWorkspace === "hlv_a" || lineupWorkspace === "hlv_b");
 }
 
 function isHlvPanelTeam(team){
   if(team === "Main" || team === "Sub") return isCapHlvView();
-  if(!isLoggedIn() || lineupWorkspace !== "hlv") return false;
-  if(team === "A") return canManageTeamA();
-  if(team === "B") return canManageTeamB();
+  if(!isLoggedIn()) return false;
+  if(lineupWorkspace === "hlv_a") return team === "A" && canManageTeamA();
+  if(lineupWorkspace === "hlv_b") return team === "B" && canManageTeamB();
   return false;
 }
 

@@ -3,7 +3,7 @@ import { fetchWikiTeamSquad, fetchWikiPlayerProfile, enrichWikiSquadPlayers, wik
 const NEWS_SOURCE = "https://www.24h.com.vn/aff-cup-2026-c827.html";
 const STATS_SOURCE = "https://en.wikipedia.org/wiki/2026_ASEAN_Championship";
 const WIKI_EVENT_PAGE = "2026_ASEAN_Championship";
-const WIKI_SQUADS_SOURCE = "https://en.wikipedia.org/wiki/2026_ASEAN_Championship";
+const WIKI_SQUADS_SOURCE = "https://en.wikipedia.org/wiki/2026_ASEAN_Championship_squads";
 
 const CACHE_PREFIX = "aff2026:";
 const TTL = {
@@ -1034,15 +1034,24 @@ export async function wc2026Team(env, params = {}) {
     .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
   const englishName = Object.entries(AFF_TEAM_META).find(([, meta]) => meta.id === id)?.[0] || team.name;
-  const squad = await getCached(env.AVATARS, `wiki:squad:aff:${id}`, TTL.squad, async () => {
+  const squad = await getCached(env.AVATARS, `wiki:squad:aff:v3:${id}`, TTL.squad, async () => {
     try {
       const squadRaw = await fetchWikiTeamSquad(englishName);
-      const squadPlayers = await enrichWikiSquadPlayers(squadRaw.players || [], englishName, async (name, teamLabel) =>
-        getCachedWikiPlayerProfile(env.AVATARS, name, teamLabel)
-      );
-      return { ...squadRaw, players: squadPlayers };
+      const players = (Array.isArray(squadRaw.players) ? squadRaw.players : []).map((p) => ({
+        ...p,
+        image: p.image || "",
+        height: p.height || "",
+        weight: p.weight || "",
+        foot: p.foot || ""
+      }));
+      return {
+        coach: squadRaw.coach || "",
+        players,
+        source: squadRaw.source || "wikipedia.org",
+        source_url: squadRaw.source_url || WIKI_SQUADS_SOURCE
+      };
     } catch (_) {
-      return { players: [], source_url: WIKI_SQUADS_SOURCE, coach: "" };
+      return { players: [], source_url: WIKI_SQUADS_SOURCE, coach: "", source: "wikipedia.org" };
     }
   });
 
