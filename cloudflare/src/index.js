@@ -758,7 +758,7 @@ async function getPlayerStats(db) {
     `SELECT MAX(h.player_name) AS player_name, SUM(h.goals) AS goals, SUM(h.assists) AS assists
      FROM match_history h
      INNER JOIN match_summary s ON s.match_id = h.match_id
-     WHERE h.status = 'completed' AND LOWER(COALESCE(s.match_type, 'internal')) = 'cap'
+     WHERE h.status = 'completed'
      GROUP BY h.player_name_norm
      ORDER BY goals DESC, assists DESC, player_name COLLATE NOCASE`
   ).all();

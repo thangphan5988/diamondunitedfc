@@ -447,7 +447,7 @@ function renderResultForm(){
       `<b>Sửa kết quả trận đã hoàn tất.</b> Rating và MVP sẽ được tính lại từ đầu cho trận này.<br>
        <b>Rating</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
        <b>MVP</b>: mỗi đội (hoặc DUFC với trận Cáp) 1 người điểm cao nhất → +1 MVP.` +
-      (cap ? `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn.` : `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: ghi nhận theo trận · BT/KT không tính bảng Top.`);
+      (cap ? `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn · tính bảng Top.` : `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: ghi nhận theo trận · tính bảng Top.`);
   }else if(cap){
     document.getElementById("resultHint").innerHTML =
       `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
@@ -464,7 +464,7 @@ function renderResultForm(){
     document.getElementById("resultHint").innerHTML =
       `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
        <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.<br>
-       <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · <span class="meta">BT/KT không tính bảng Top (chỉ trận Cáp)</span>.<br>
+       <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · tính bảng Top (nội bộ + Cáp).<br>
        <b>📹 Video</b>: link từng bàn thắng + video trận (tùy chọn).` +
       (canFinalizeMatch()
         ? `<br><b>Host</b>: nhập tỉ số & chấm điểm toàn trận → <b>Xác nhận trận đấu</b> (không cần chờ HLV). Điểm đội đã xác nhận HLV không sửa được.`
