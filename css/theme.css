@@ -512,7 +512,7 @@ html[data-theme="light"] .siteFooterBottom,
 html[data-theme="light"] .siteFooterSeo a{color:var(--muted)}
 html[data-theme="light"] .siteFooterSeo a:hover{color:var(--accent-brand)}
 
-/* World Cup 2026 */
+/* AFF Cup 2026 */
 html[data-theme="light"] .wcLiveBanner{background:#fff;border-color:var(--line)}
 html[data-theme="light"] .wcLiveBanner:not(:has(.wcBannerGrid)){
   background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#991b1b

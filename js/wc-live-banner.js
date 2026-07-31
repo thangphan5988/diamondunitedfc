@@ -1,4 +1,4 @@
-/* Banner World Cup 2026 — trận đang diễn ra + sắp đá (trang chủ + hub WC) */
+/* Banner AFF Cup 2026 — trận đang diễn ra + sắp đá (trang chủ + hub) */
 
 (function initWcLiveBanner() {
   const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "P", "LIVE"];
@@ -91,8 +91,8 @@
 
   function matchLinkAttrs(fx) {
     const id = escapeHtml(String(fx.id));
-    const href = `/world-cup-2026.html?match=${encodeURIComponent(String(fx.id))}`;
-    const onHub = /world-cup-2026\.html$/i.test(location.pathname);
+    const href = `/aff-cup-2026.html?match=${encodeURIComponent(String(fx.id))}`;
+    const onHub = /aff-cup-2026\.html$/i.test(location.pathname);
     if (onHub && typeof window.wcOpenMatchDetail === "function") {
       return `href="${href}" onclick="event.preventDefault();wcOpenMatchDetail('${id}')"`;
     }

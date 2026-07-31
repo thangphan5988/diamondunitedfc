@@ -1,28 +1,42 @@
 import { fetchWikiTeamSquad, fetchWikiPlayerProfile, enrichWikiSquadPlayers, wikiPlayerCacheKey } from "./wc2026-wiki.js";
 
-const RSS_URL = "https://www.24h.com.vn/upload/rss/bongda.rss";
-const WC26_API_BASE = "https://worldcup26.ir/get";
-const NEWS_SOURCE = "https://www.24h.com.vn/world-cup-2026-c860.html";
-const STATS_SOURCE = "https://worldcup26.ir";
-const WIKI_SQUADS_SOURCE = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads";
+const NEWS_SOURCE = "https://www.24h.com.vn/aff-cup-2026-c827.html";
+const STATS_SOURCE = "https://en.wikipedia.org/wiki/2026_ASEAN_Championship";
+const WIKI_EVENT_PAGE = "2026_ASEAN_Championship";
+const WIKI_SQUADS_SOURCE = "https://en.wikipedia.org/wiki/2026_ASEAN_Championship";
 
-const CACHE_PREFIX = "wc2026:";
+const CACHE_PREFIX = "aff2026:";
 const TTL = {
   news: 600,
   newsArticle: 3600,
-  fixtures: 300,
+  fixtures: 180,
   live: 60,
-  standings: 600,
+  standings: 180,
   teams: 3600,
   squad: 86400
 };
 
-const WC_KEYWORDS = [
-  "world cup",
-  "world cup 2026",
-  "wc 2026",
-  "fifa 2026"
+const AFF_KEYWORDS = [
+  "aff cup",
+  "aff cup 2026",
+  "asean cup",
+  "asean cup 2026",
+  "asean championship",
+  "fifa asean"
 ];
+
+const AFF_TEAM_META = {
+  Vietnam: { id: "vietnam", name: "Việt Nam", flag: "vn", code: "VIE", group: "A" },
+  Singapore: { id: "singapore", name: "Singapore", flag: "sg", code: "SGP", group: "A" },
+  Indonesia: { id: "indonesia", name: "Indonesia", flag: "id", code: "IDN", group: "A" },
+  Cambodia: { id: "cambodia", name: "Campuchia", flag: "kh", code: "CAM", group: "A" },
+  "Timor-Leste": { id: "timor-leste", name: "Timor-Leste", flag: "tl", code: "TLS", group: "A" },
+  Thailand: { id: "thailand", name: "Thái Lan", flag: "th", code: "THA", group: "B" },
+  Malaysia: { id: "malaysia", name: "Malaysia", flag: "my", code: "MAS", group: "B" },
+  Philippines: { id: "philippines", name: "Philippines", flag: "ph", code: "PHI", group: "B" },
+  Myanmar: { id: "myanmar", name: "Myanmar", flag: "mm", code: "MYA", group: "B" },
+  Laos: { id: "laos", name: "Lào", flag: "la", code: "LAO", group: "B" }
+};
 
 function extractXmlTag(block, tag) {
   const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
@@ -33,11 +47,16 @@ function extractXmlTag(block, tag) {
 
 function decodeXmlEntities(value) {
   return String(value || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&#160;/g, " ")
+    .replace(/&#x0*a0;/gi, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
 }
 
 function stripHtml(html) {
@@ -66,9 +85,9 @@ function parseRssItems(xml) {
   return items;
 }
 
-function isWorldCupNews(item) {
+function isAffCupNews(item) {
   const hay = `${item.title} ${item.link} ${item.summary}`.toLowerCase();
-  return WC_KEYWORDS.some((kw) => hay.includes(kw));
+  return AFF_KEYWORDS.some((kw) => hay.includes(kw));
 }
 
 const ALLOWED_24H_HOSTS = new Set(["www.24h.com.vn", "24h.com.vn"]);
@@ -230,8 +249,9 @@ function parse24hArticlePage(html, url) {
   };
 }
 
-const NEWS_AJAX_QS = "v_is_ajax=1&v_device_global=pc&v_max_row=10&fk_listing_template=1074&pk_listing_template_box=12538&v_type_box_template=tin_bai_noi_bat_khac&v_show_date=0&v_show_event=0&v_show_icon_special_news=1&p_date=&v_view=5";
+const NEWS_AJAX_QS = "v_is_ajax=1&v_device_global=pc&v_max_row=6&fk_listing_template=784&pk_listing_template_box=9935&v_type_box_template=tin_bai_noi_bat_khac&v_show_date=0&v_show_event=0&v_show_icon_special_news=1&p_date=&v_view=5";
 const NEWS_HUB_MAX_PAGE = 10;
+const NEWS_AJAX_CATEGORY_ID = 827;
 
 function extractNewsImgSrc(block) {
   const original = block.match(/data-original=["']([^"']+)["']/i);
@@ -265,6 +285,8 @@ function isVideoNewsItem(item) {
   if (/\bvideo\b/.test(title) || /\/video-/.test(link)) return true;
   if (/\bclip\b/.test(title)) return true;
   if (/trực tiếp/.test(title)) return true;
+  // Only trust page video flags when URL/title also look like media.
+  if (item.isVideo && (/video|clip|truc-tiep|trực-tiếp/i.test(link) || /trực tiếp|video|clip/i.test(title))) return true;
   return false;
 }
 
@@ -349,19 +371,62 @@ function parse24hNewsListAjax(html) {
   return [...html.matchAll(listRe)].map((m) => parseListNewsArticle(m[0])).filter(Boolean);
 }
 
+const RSS_URL = "https://www.24h.com.vn/upload/rss/bongda.rss";
+
+async function fetchRssAffNews() {
+  const res = await fetch(RSS_URL, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; DUFC/1.0; +https://diamondunitedfc.com)",
+      Accept: "application/rss+xml, application/xml, text/xml"
+    }
+  });
+  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`);
+  const items = parseRssItems(await res.text())
+    .filter((item) => isAffCupNews(item) && !isVideoNewsItem(item))
+    .slice(0, 30)
+    .map((item) => ({
+      title: item.title,
+      link: item.link,
+      image: item.image,
+      summary: item.summary,
+      pubDate: item.pubDate,
+      isVideo: false
+    }));
+  return {
+    hero: {
+      left: items.slice(1, 3),
+      center: items[0] || null,
+      right: items.slice(3, 5)
+    },
+    items: items.slice(5),
+    maxPage: 1
+  };
+}
+
 async function fetch24hNewsHubPage(page) {
   if (page <= 1) {
-    const res = await fetch(NEWS_SOURCE, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; DUFC/1.0; +https://diamondunitedfc.com)",
-        Accept: "text/html,application/xhtml+xml"
-      }
-    });
-    if (!res.ok) throw new Error(`24h HTTP ${res.status}`);
-    return parse24hNewsHubPage(await res.text());
+    try {
+      const res = await fetch(NEWS_SOURCE, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; DUFC/1.0; +https://diamondunitedfc.com)",
+          Accept: "text/html,application/xhtml+xml"
+        }
+      });
+      if (!res.ok) throw new Error(`24h HTTP ${res.status}`);
+      const hub = parse24hNewsHubPage(await res.text());
+      const cleaned = sanitizeNewsHub(hub);
+      const count = (cleaned.items?.length || 0) +
+        (cleaned.hero?.center ? 1 : 0) +
+        (cleaned.hero?.left?.length || 0) +
+        (cleaned.hero?.right?.length || 0);
+      if (count >= 3) return cleaned;
+    } catch (_) {
+      /* fall through to RSS */
+    }
+    return fetchRssAffNews();
   }
 
-  const url = `https://24h.24hstatic.com/ajax/box_template_tin_bai_noi_bat_khac/index/860/${page}/10/0/0/0/0?${NEWS_AJAX_QS}&t=${Date.now()}`;
+  const url = `https://24h.24hstatic.com/ajax/box_template_tin_bai_noi_bat_khac/index/${NEWS_AJAX_CATEGORY_ID}/${page}/6/0/0/0/0?${NEWS_AJAX_QS}&t=${Date.now()}`;
   const res = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (compatible; DUFC/1.0; +https://diamondunitedfc.com)",
@@ -433,236 +498,348 @@ async function getCached(kv, key, ttlSec, loader) {
   return data;
 }
 
-async function fetchWc26(path) {
-  const res = await fetch(`${WC26_API_BASE}${path}`, {
-    headers: { Accept: "application/json" }
+async function fetchWikiEventHtml() {
+  const qs = new URLSearchParams({
+    action: "parse",
+    page: WIKI_EVENT_PAGE,
+    prop: "text",
+    format: "json",
+    origin: "*"
   });
-  if (!res.ok) throw new Error(`WorldCup26 API HTTP ${res.status}`);
-  return res.json();
+  const res = await fetch(`https://en.wikipedia.org/w/api.php?${qs.toString()}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "DUFC-AFFCup/1.0 (diamondunitedfc.com)"
+    }
+  });
+  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status}`);
+  const data = await res.json();
+  const html = data.parse?.text?.["*"];
+  if (!html) throw new Error("Không đọc được trang ASEAN Championship");
+  return html;
 }
 
-function parseUsLocalDate(value) {
-  const m = String(value || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-  if (!m) return { date: String(value || ""), timestamp: null };
-  const [, mm, dd, yyyy, hh, min] = m;
-  const iso = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}T${hh.padStart(2, "0")}:${min.padStart(2, "0")}:00`;
-  const ts = Date.parse(iso);
+function cleanWikiText(value) {
+  return decodeXmlEntities(String(value || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+}
+
+function resolveAffTeam(rawName) {
+  const name = cleanWikiText(rawName)
+    .replace(/\[[^\]]*\]/g, "")
+    .replace(/\bv t e\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!name) return null;
+  if (AFF_TEAM_META[name]) return AFF_TEAM_META[name];
+  const found = Object.entries(AFF_TEAM_META).find(([en, meta]) =>
+    en.toLowerCase() === name.toLowerCase() ||
+    meta.name.toLowerCase() === name.toLowerCase() ||
+    meta.code.toLowerCase() === name.toLowerCase() ||
+    name.toLowerCase().includes(en.toLowerCase()) ||
+    en.toLowerCase().includes(name.toLowerCase())
+  );
+  return found ? found[1] : null;
+}
+
+function teamLogo(meta) {
+  return meta?.flag ? `https://flagcdn.com/w80/${meta.flag}.png` : "";
+}
+
+function parseAffKickoff(dateLabel, timeLabel) {
+  const dm = String(dateLabel || "").match(/(\d{4})-(\d{2})-(\d{2})/);
+  const tm = String(timeLabel || "").match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d+)(?::(\d{2}))?/i);
+  if (!dm) {
+    return { date: "", timestamp: null, localLabel: cleanWikiText(`${dateLabel} ${timeLabel}`) };
+  }
+  const [, y, mo, d] = dm;
+  const hour = tm ? Number(tm[1]) : 0;
+  const minute = tm ? Number(tm[2]) : 0;
+  const offH = tm ? Number(tm[3]) : 7;
+  const offM = tm && tm[4] ? Number(tm[4]) : 0;
+  const offsetMin = offH * 60 + Math.sign(offH || 1) * offM;
+  const utcMs = Date.UTC(Number(y), Number(mo) - 1, Number(d), hour, minute) - offsetMin * 60 * 1000;
   return {
-    date: iso,
-    timestamp: Number.isFinite(ts) ? Math.floor(ts / 1000) : null
+    date: new Date(utcMs).toISOString(),
+    timestamp: Math.floor(utcMs / 1000),
+    localLabel: cleanWikiText(`${dateLabel} ${timeLabel}`)
   };
 }
 
-function stadiumTimezone(stadium) {
-  const country = String(stadium?.country_en || "").trim().toLowerCase();
-  const city = String(stadium?.city_en || "").trim().toLowerCase();
-  const region = String(stadium?.region || "").trim().toLowerCase();
-  if (country.includes("mexico")) {
-    if (city.includes("monterrey")) return "America/Monterrey";
-    return "America/Mexico_City";
+function parseAffScore(raw) {
+  const s = cleanWikiText(raw).replace(/\s+/g, "");
+  if (!s || /^v$/i.test(s) || s === "–" || s === "-") {
+    return { home: null, away: null, finished: false };
   }
-  if (country.includes("canada")) {
-    if (city.includes("vancouver")) return "America/Vancouver";
-    return "America/Toronto";
-  }
-  if (country.includes("united states")) {
-    if (region === "western") return "America/Los_Angeles";
-    if (region === "central") return "America/Chicago";
-    if (region === "eastern") return "America/New_York";
-    return "America/New_York";
-  }
-  return "UTC";
+  const m = s.match(/^(\d+)[–\-:](\d+)$/);
+  if (!m) return { home: null, away: null, finished: false };
+  return { home: Number(m[1]), away: Number(m[2]), finished: true };
 }
 
-function zonedLocalToTimestamp(localDateStr, timeZone) {
-  const m = String(localDateStr || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  const month = Number(m[1]);
-  const day = Number(m[2]);
-  const year = Number(m[3]);
-  const hour = Number(m[4]);
-  const minute = Number(m[5]);
-  if (!timeZone || timeZone === "UTC") {
-    return Math.floor(Date.UTC(year, month - 1, day, hour, minute) / 1000);
-  }
-  let ms = Date.UTC(year, month - 1, day, hour, minute);
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
-  for (let i = 0; i < 6; i++) {
-    const parts = fmt.formatToParts(new Date(ms));
-    const pick = (type) => Number(parts.find((p) => p.type === type)?.value || 0);
-    const got = Date.UTC(pick("year"), pick("month") - 1, pick("day"), pick("hour"), pick("minute"));
-    const want = Date.UTC(year, month - 1, day, hour, minute);
-    const diff = want - got;
-    if (diff === 0) break;
-    ms += diff;
-  }
-  return Math.floor(ms / 1000);
-}
-
-function parseMatchDate(localDateStr, stadium) {
-  const timeZone = stadiumTimezone(stadium);
-  const timestamp = zonedLocalToTimestamp(localDateStr, timeZone);
-  if (!timestamp) return parseUsLocalDate(localDateStr);
-  return {
-    date: new Date(timestamp * 1000).toISOString(),
-    timestamp
-  };
-}
-
-function mapGameStatus(game) {
-  const finished = String(game.finished).toUpperCase() === "TRUE";
-  const elapsedRaw = String(game.time_elapsed || "").toLowerCase();
-  if (finished || elapsedRaw === "finished") {
+function mapAffMatchStatus(score, timestamp) {
+  if (score.finished) {
     return { status: "FT", statusLong: "Kết thúc", elapsed: null };
   }
-  if (elapsedRaw === "notstarted") {
+  if (!timestamp) {
     return { status: "NS", statusLong: "Chưa đá", elapsed: null };
   }
-  const minute = Number.parseInt(elapsedRaw, 10);
-  return { status: "LIVE", statusLong: "Đang đá", elapsed: Number.isFinite(minute) ? minute : null };
+  const now = Date.now();
+  const kick = timestamp * 1000;
+  if (now >= kick && now <= kick + 2.5 * 60 * 60 * 1000) {
+    const elapsed = Math.max(1, Math.floor((now - kick) / 60000));
+    return { status: "LIVE", statusLong: "Đang đá", elapsed: Math.min(elapsed, 120) };
+  }
+  return { status: "NS", statusLong: "Chưa đá", elapsed: null };
 }
 
-function scoreNum(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
+function parseAffFixtures(html) {
+  const parts = String(html || "").split(/class="footballbox"/i).slice(1);
+  const fixtures = [];
+  for (const part of parts) {
+    const block = part.slice(0, 4000);
+    const homeRaw = block.match(/class="fhome"[^>]*>([\s\S]*?)<\/th>/i)?.[1];
+    const awayRaw = block.match(/class="faway"[^>]*>([\s\S]*?)<\/th>/i)?.[1];
+    const scoreRaw = block.match(/class="fscore"[^>]*>([\s\S]*?)<\/th>/i)?.[1] || "";
+    const dateRaw = block.match(/class="fdate"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
+    const timeRaw = block.match(/class="ftime"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
+    const venueRaw = block.match(/class="fline"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
+    const home = resolveAffTeam(homeRaw);
+    const away = resolveAffTeam(awayRaw);
+    if (!home || !away) continue;
+    const score = parseAffScore(scoreRaw);
+    const kick = parseAffKickoff(dateRaw, timeRaw);
+    const st = mapAffMatchStatus(score, kick.timestamp);
+    const group = home.group || away.group || "";
+    fixtures.push({
+      id: `aff-${kick.date?.slice(0, 10) || "x"}-${home.id}-${away.id}`,
+      date: kick.date,
+      timestamp: kick.timestamp,
+      localLabel: kick.localLabel,
+      status: st.status,
+      statusLong: st.statusLong,
+      elapsed: st.elapsed,
+      matchday: "",
+      type: "group",
+      round: group ? `Vòng bảng · Bảng ${group}` : "Vòng bảng",
+      group,
+      venue: cleanWikiText(venueRaw),
+      city: "",
+      stadium: {
+        id: "",
+        name: cleanWikiText(venueRaw),
+        fifaName: "",
+        city: "",
+        country: "",
+        capacity: null,
+        region: ""
+      },
+      home: {
+        id: home.id,
+        name: home.name,
+        logo: teamLogo(home),
+        score: score.home,
+        scorers: []
+      },
+      away: {
+        id: away.id,
+        name: away.name,
+        logo: teamLogo(away),
+        score: score.away,
+        scorers: []
+      }
+    });
+  }
+  return fixtures;
 }
 
-function parseScorers(raw) {
-  if (!raw || String(raw).toLowerCase() === "null") return [];
-  return String(raw)
-    .replace(/^[\[{]+|[\]}]+$/g, "")
-    .split(/[,،]/)
-    .map((part) => part.replace(/["'“”{}]/g, "").trim())
-    .filter(Boolean);
-}
+function parseAffStandings(html) {
+  const groups = [];
+  const tables = [...String(html || "").matchAll(/<table[^>]*class="[^"]*wikitable[^"]*"[^>]*>([\s\S]*?)<\/table>/gi)];
+  let groupIdx = 0;
+  for (const tableMatch of tables) {
+    const table = tableMatch[1];
+    if (!/\bPld\b/i.test(table) || !/\bPts\b/i.test(table) || !/\bPos\b/i.test(table)) continue;
+    const before = String(html || "").slice(Math.max(0, tableMatch.index - 900), tableMatch.index);
+    let letter = "";
+    const head = before.match(/id="Group_([AB])"/i) || before.match(/Group\s+([AB])\s*<\/h[23]>/i);
+    if (head) letter = String(head[1] || "").toUpperCase();
+    if (!letter) letter = groupIdx === 0 ? "A" : "B";
+    groupIdx += 1;
 
-function normalizeGame(game, teamById, stadiumById) {
-  const homeId = String(game.home_team_id);
-  const awayId = String(game.away_team_id);
-  const homeTeam = teamById.get(homeId) || {};
-  const awayTeam = teamById.get(awayId) || {};
-  const stadium = stadiumById.get(String(game.stadium_id)) || {};
-  const { date, timestamp } = parseMatchDate(game.local_date, stadium);
-  const st = mapGameStatus(game);
-
-  return {
-    id: game.id,
-    date,
-    timestamp,
-    localLabel: game.local_date || "",
-    status: st.status,
-    statusLong: st.statusLong,
-    elapsed: st.elapsed,
-    matchday: game.matchday || "",
-    type: game.type || "group",
-    round: game.type === "knockout"
-      ? "Vòng loại trực tiếp"
-      : `Vòng bảng · Lượt ${game.matchday || "?"}`,
-    group: game.group || "",
-    venue: stadium.name_en || "",
-    city: [stadium.city_en, stadium.country_en].filter(Boolean).join(", "),
-    stadium: {
-      id: stadium.id || game.stadium_id || "",
-      name: stadium.name_en || "",
-      fifaName: stadium.fifa_name || "",
-      city: stadium.city_en || "",
-      country: stadium.country_en || "",
-      capacity: stadium.capacity || null,
-      region: stadium.region || ""
-    },
-    home: {
-      id: homeId,
-      name: game.home_team_name_en || homeTeam.name_en || "",
-      logo: homeTeam.flag || "",
-      score: scoreNum(game.home_score),
-      scorers: parseScorers(game.home_scorers)
-    },
-    away: {
-      id: awayId,
-      name: game.away_team_name_en || awayTeam.name_en || "",
-      logo: awayTeam.flag || "",
-      score: scoreNum(game.away_score),
-      scorers: parseScorers(game.away_scorers)
+    const rows = [];
+    for (const tr of table.matchAll(/<tr[\s\S]*?<\/tr>/gi)) {
+      const cells = [...tr[0].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => cleanWikiText(c[1]));
+      if (cells.length < 9) continue;
+      if (/^pos$/i.test(cells[0])) continue;
+      const teamName = String(cells[1] || "").replace(/\bv t e\b/gi, "").trim();
+      const team = resolveAffTeam(teamName);
+      if (!team?.id || !Number.isFinite(Number(cells[2]))) continue;
+      if (!Object.values(AFF_TEAM_META).some((m) => m.id === team.id)) continue;
+      rows.push({
+        team: {
+          id: team.id,
+          name: team.name,
+          logo: teamLogo(team)
+        },
+        played: Number(cells[2]) || 0,
+        win: Number(cells[3]) || 0,
+        draw: Number(cells[4]) || 0,
+        lose: Number(cells[5]) || 0,
+        goalsFor: Number(cells[6]) || 0,
+        goalsAgainst: Number(cells[7]) || 0,
+        goalsDiff: Number(String(cells[8] || "0").replace("+", "").replace(/[−–]/g, "-")) ||
+          ((Number(cells[6]) || 0) - (Number(cells[7]) || 0)),
+        points: Number(cells[9]) || 0,
+        group: `Bảng ${letter}`,
+        rank: Number(cells[0]) || rows.length + 1
+      });
     }
+    if (!rows.length) continue;
+    rows.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+      return a.team.name.localeCompare(b.team.name, "vi");
+    });
+    groups.push(rows.map((row, idx) => ({ ...row, rank: idx + 1 })));
+  }
+  return groups.sort((a, b) => String(a[0]?.group || "").localeCompare(String(b[0]?.group || ""), "vi"));
+}
+
+function buildAffTeamItems(groups, fixtures) {
+  const byId = new Map();
+  Object.values(AFF_TEAM_META).forEach((meta) => {
+    byId.set(meta.id, {
+      id: meta.id,
+      name: meta.name,
+      logo: teamLogo(meta),
+      country: meta.flag.toUpperCase(),
+      group: meta.group,
+      fifaCode: meta.code
+    });
+  });
+  for (const group of groups) {
+    for (const row of group) {
+      const existing = byId.get(row.team.id) || {
+        id: row.team.id,
+        name: row.team.name,
+        logo: row.team.logo,
+        country: "",
+        group: String(row.group || "").replace(/^Bảng\s+/i, ""),
+        fifaCode: ""
+      };
+      existing.group = String(row.group || "").replace(/^Bảng\s+/i, "") || existing.group;
+      byId.set(existing.id, existing);
+    }
+  }
+  for (const fx of fixtures) {
+    for (const side of [fx.home, fx.away]) {
+      if (!byId.has(side.id)) {
+        byId.set(side.id, {
+          id: side.id,
+          name: side.name,
+          logo: side.logo,
+          country: "",
+          group: fx.group || "",
+          fifaCode: ""
+        });
+      }
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "vi"));
+}
+
+function emptyStandingRow(team, letter) {
+  return {
+    team: {
+      id: team.id,
+      name: team.name,
+      logo: teamLogo(team)
+    },
+    played: 0,
+    win: 0,
+    draw: 0,
+    lose: 0,
+    goalsFor: 0,
+    goalsAgainst: 0,
+    goalsDiff: 0,
+    points: 0,
+    group: `Bảng ${letter}`,
+    rank: 0
   };
 }
 
-async function loadWc26Dataset(env) {
-  return getCached(env.AVATARS, "wc26:dataset:v2", TTL.fixtures, async () => {
-    const [gamesRes, teamsRes, groupsRes, stadiumsRes] = await Promise.all([
-      fetchWc26("/games"),
-      fetchWc26("/teams"),
-      fetchWc26("/groups"),
-      fetchWc26("/stadiums")
-    ]);
+function computeStandingsFromFixtures(fixtures) {
+  const byGroup = { A: new Map(), B: new Map() };
+  Object.values(AFF_TEAM_META).forEach((meta) => {
+    if (!byGroup[meta.group]) return;
+    byGroup[meta.group].set(meta.id, emptyStandingRow(meta, meta.group));
+  });
 
-    const teams = teamsRes.teams || [];
-    const stadiums = stadiumsRes.stadiums || [];
-    const teamById = new Map(teams.map((t) => [String(t.id), t]));
-    const stadiumById = new Map(stadiums.map((s) => [String(s.id), s]));
+  for (const fx of fixtures || []) {
+    if (fx.status !== "FT") continue;
+    const letter = fx.group === "A" || fx.group === "B" ? fx.group : (AFF_TEAM_META[Object.keys(AFF_TEAM_META).find((k) => AFF_TEAM_META[k].id === fx.home.id)]?.group);
+    const groupLetter = letter || fx.home?.id && Object.values(AFF_TEAM_META).find((m) => m.id === fx.home.id)?.group;
+    if (!groupLetter || !byGroup[groupLetter]) continue;
+    const home = byGroup[groupLetter].get(fx.home.id) || emptyStandingRow(resolveAffTeam(fx.home.name) || { id: fx.home.id, name: fx.home.name, flag: "" }, groupLetter);
+    const away = byGroup[groupLetter].get(fx.away.id) || emptyStandingRow(resolveAffTeam(fx.away.name) || { id: fx.away.id, name: fx.away.name, flag: "" }, groupLetter);
+    const hs = Number(fx.home.score);
+    const as = Number(fx.away.score);
+    if (!Number.isFinite(hs) || !Number.isFinite(as)) continue;
+    home.played += 1;
+    away.played += 1;
+    home.goalsFor += hs;
+    home.goalsAgainst += as;
+    away.goalsFor += as;
+    away.goalsAgainst += hs;
+    if (hs > as) {
+      home.win += 1;
+      home.points += 3;
+      away.lose += 1;
+    } else if (hs < as) {
+      away.win += 1;
+      away.points += 3;
+      home.lose += 1;
+    } else {
+      home.draw += 1;
+      away.draw += 1;
+      home.points += 1;
+      away.points += 1;
+    }
+    home.goalsDiff = home.goalsFor - home.goalsAgainst;
+    away.goalsDiff = away.goalsFor - away.goalsAgainst;
+    byGroup[groupLetter].set(home.team.id, home);
+    byGroup[groupLetter].set(away.team.id, away);
+  }
 
-    const fixtures = (gamesRes.games || []).map((game) => normalizeGame(game, teamById, stadiumById));
+  return ["A", "B"].map((letter) => {
+    const rows = [...byGroup[letter].values()].sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
+      if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+      return a.team.name.localeCompare(b.team.name, "vi");
+    });
+    return rows.map((row, idx) => ({ ...row, rank: idx + 1, group: `Bảng ${letter}` }));
+  }).filter((g) => g.length);
+}
 
-    const groups = buildStandings(groupsRes.groups || [], teamById);
-    const teamItems = teams.map((t) => ({
-      id: t.id,
-      name: t.name_en || "",
-      logo: t.flag || "",
-      country: t.iso2 || "",
-      group: t.groups || "",
-      fifaCode: t.fifa_code || ""
-    })).sort((a, b) => a.name.localeCompare(b.name, "vi"));
-
+async function loadAffDataset(env) {
+  return getCached(env.AVATARS, "aff26:dataset:v4", TTL.fixtures, async () => {
+    const html = await fetchWikiEventHtml();
+    const fixtures = parseAffFixtures(html);
+    let groups = parseAffStandings(html);
+    if (!groups.length) groups = computeStandingsFromFixtures(fixtures);
+    const teamItems = buildAffTeamItems(groups, fixtures);
     return { fixtures, groups, teamItems };
   });
 }
 
-function buildStandings(rawGroups, teamById) {
-  return rawGroups
-    .map((group) => {
-      const rows = (group.teams || []).map((row) => {
-        const team = teamById.get(String(row.team_id)) || {};
-        return {
-          team: {
-            id: row.team_id,
-            name: team.name_en || "",
-            logo: team.flag || ""
-          },
-          played: Number(row.mp) || 0,
-          win: Number(row.w) || 0,
-          draw: Number(row.d) || 0,
-          lose: Number(row.l) || 0,
-          goalsFor: Number(row.gf) || 0,
-          goalsAgainst: Number(row.ga) || 0,
-          goalsDiff: Number(row.gd) || 0,
-          points: Number(row.pts) || 0,
-          group: group.name ? `Bảng ${group.name}` : ""
-        };
-      });
-
-      rows.sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
-        if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-        return a.team.name.localeCompare(b.team.name);
-      });
-
-      return rows.map((row, idx) => ({ ...row, rank: idx + 1 }));
-    })
-    .sort((a, b) => String(a[0]?.group || "").localeCompare(String(b[0]?.group || ""), "vi"));
+async function loadWc26Dataset(env) {
+  return loadAffDataset(env);
 }
 
 function fixtureScopeFilter(scope) {
   const now = Date.now();
-  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const weekMs = 21 * 24 * 60 * 60 * 1000;
   return (fx) => {
     const ts = fx.timestamp ? fx.timestamp * 1000 : Date.parse(fx.date);
     const status = fx.status;
@@ -681,7 +858,7 @@ export async function wc2026News(env, params = {}) {
   const page = Math.max(1, Math.min(Number(params.page) || 1, NEWS_HUB_MAX_PAGE));
 
   if (page === 1) {
-    const raw = await getCached(env.AVATARS, "news_hub:v3", TTL.news, () => fetch24hNewsHubPage(1));
+    const raw = await getCached(env.AVATARS, "aff_news_hub:v4", TTL.news, () => fetch24hNewsHubPage(1));
     const hub = sanitizeNewsHub(raw);
     return {
       ok: true,
@@ -696,7 +873,7 @@ export async function wc2026News(env, params = {}) {
     };
   }
 
-  const ajax = await getCached(env.AVATARS, `news_hub:v3:page:${page}`, TTL.news, () => fetch24hNewsHubPage(page));
+  const ajax = await getCached(env.AVATARS, `aff_news_hub:v1:page:${page}`, TTL.news, () => fetch24hNewsHubPage(page));
   const items = filterVideoNewsItems(ajax.items);
   return {
     ok: true,
@@ -754,15 +931,14 @@ export async function wc2026NewsArticle(env, params = {}) {
 
 export async function wc2026Fixtures(env, params = {}) {
   const scope = String(params.scope || "upcoming").toLowerCase();
-  const ttl = scope === "live" ? TTL.live : TTL.fixtures;
-  const dataset = await getCached(env.AVATARS, `wc26:fixtures:${scope}`, ttl, () => loadWc26Dataset(env));
+  const dataset = await loadAffDataset(env);
 
   const filtered = dataset.fixtures.filter(fixtureScopeFilter(scope));
   filtered.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
   return {
     ok: true,
-    source: "worldcup26.ir",
+    source: "wikipedia.org",
     source_url: STATS_SOURCE,
     scope,
     updated_at: new Date().toISOString(),
@@ -771,11 +947,11 @@ export async function wc2026Fixtures(env, params = {}) {
 }
 
 export async function wc2026Standings(env) {
-  const dataset = await getCached(env.AVATARS, "wc26:standings", TTL.standings, () => loadWc26Dataset(env));
+  const dataset = await loadAffDataset(env);
 
   return {
     ok: true,
-    source: "worldcup26.ir",
+    source: "wikipedia.org",
     source_url: STATS_SOURCE,
     updated_at: new Date().toISOString(),
     groups: dataset.groups
@@ -783,11 +959,11 @@ export async function wc2026Standings(env) {
 }
 
 export async function wc2026Teams(env) {
-  const dataset = await getCached(env.AVATARS, "wc26:teams", TTL.teams, () => loadWc26Dataset(env));
+  const dataset = await loadAffDataset(env);
 
   return {
     ok: true,
-    source: "worldcup26.ir",
+    source: "wikipedia.org",
     source_url: STATS_SOURCE,
     updated_at: new Date().toISOString(),
     items: dataset.teamItems
@@ -804,7 +980,7 @@ export async function wc2026Match(env, params = {}) {
 
   return {
     ok: true,
-    source: "worldcup26.ir",
+    source: "wikipedia.org",
     source_url: STATS_SOURCE,
     updated_at: new Date().toISOString(),
     item
@@ -838,17 +1014,22 @@ export async function wc2026Team(env, params = {}) {
     .filter((fx) => String(fx.home.id) === id || String(fx.away.id) === id)
     .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-  const squad = await getCached(env.AVATARS, `wiki:squad:v4:${id}`, TTL.squad, async () => {
-    const squadRaw = await fetchWikiTeamSquad(team.name);
-    const squadPlayers = await enrichWikiSquadPlayers(squadRaw.players, team.name, async (name, teamLabel) =>
-      getCachedWikiPlayerProfile(env.AVATARS, name, teamLabel)
-    );
-    return { ...squadRaw, players: squadPlayers };
+  const englishName = Object.entries(AFF_TEAM_META).find(([, meta]) => meta.id === id)?.[0] || team.name;
+  const squad = await getCached(env.AVATARS, `wiki:squad:aff:${id}`, TTL.squad, async () => {
+    try {
+      const squadRaw = await fetchWikiTeamSquad(englishName);
+      const squadPlayers = await enrichWikiSquadPlayers(squadRaw.players || [], englishName, async (name, teamLabel) =>
+        getCachedWikiPlayerProfile(env.AVATARS, name, teamLabel)
+      );
+      return { ...squadRaw, players: squadPlayers };
+    } catch (_) {
+      return { players: [], source_url: WIKI_SQUADS_SOURCE, coach: "" };
+    }
   });
 
   return {
     ok: true,
-    source: "worldcup26.ir",
+    source: "wikipedia.org",
     source_url: STATS_SOURCE,
     updated_at: new Date().toISOString(),
     item: {
@@ -896,7 +1077,7 @@ export async function wc2026Hub(env) {
     teams: pick(teams),
     sources: {
       news: "24h.com.vn",
-      stats: "worldcup26.ir"
+      stats: "wikipedia.org"
     }
   };
 }
