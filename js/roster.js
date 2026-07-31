@@ -25,12 +25,16 @@ function applyRosterFromApi(rows){
       const more = splitPositions(secondaryRaw);
       secondary = [...new Set([...secondary, ...more].filter(x => x !== main))];
     }
-    const rating = Number(row.rating || 5);
+    const rating = isAnonymousPlayer(row) || row.is_anonymous === true || row.is_anonymous === 1
+      ? anonymousLineupRating()
+      : Number(row.rating || 5);
     const mvpCount = Number(row.mvp_count || 0);
     const avatarText = String(row.avatar || "").trim();
     const side = normalizeSideList(row.preferred_side || "");
 
     if(!name || !POS.includes(main)) return null;
+
+    const anonymous = row.is_anonymous === true || row.is_anonymous === 1 || row.is_anonymous === "1";
 
     return {
       id: row.id || (idx + 1) + "_" + name,
@@ -38,8 +42,8 @@ function applyRosterFromApi(rows){
       display_name: String(row.display_name || "").trim(),
       main,
       secondary,
-      rating: Number.isFinite(rating) ? rating : 5,
-      mvp_count: Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0,
+      rating: Number.isFinite(rating) ? rating : anonymousLineupRating(),
+      mvp_count: anonymous ? 0 : (Number.isFinite(mvpCount) && mvpCount >= 0 ? Math.round(mvpCount) : 0),
       jersey_number: row.jersey_number != null && row.jersey_number !== "" ? Number(row.jersey_number) : null,
       description: String(row.description || "").trim(),
       birth_date: String(row.birth_date || "").trim(),
@@ -48,8 +52,9 @@ function applyRosterFromApi(rows){
       profile_card: row.profile_card || "",
       avatar: avatarSrc(avatarText, name),
       side,
-      inactivity_penalty: Number(row.inactivity_penalty) || 0,
-      days_inactive: Number(row.days_inactive) || 0,
+      inactivity_penalty: anonymous ? 0 : (Number(row.inactivity_penalty) || 0),
+      days_inactive: anonymous ? 0 : (Number(row.days_inactive) || 0),
+      anonymous,
       selected: true
     };
   }).filter(Boolean);
@@ -91,7 +96,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
-      <div><div class="name">${escapeHtml(playerDisplayName(p))}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${jerseyLabel(p.jersey_number) ? `<span class="metaJersey">${escapeHtml(jerseyLabel(p.jersey_number))} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}</div></div>
+      <div><div class="name">${escapeHtml(playerDisplayName(p))}${isAnonymousPlayer(p) ? ` <span class="metaAnonTag">Ẩn danh</span>` : ""}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${jerseyLabel(p.jersey_number) ? `<span class="metaJersey">${escapeHtml(jerseyLabel(p.jersey_number))} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · rating ${p.rating}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}${isAnonymousPlayer(p) ? " · đá ké" : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }

@@ -22,6 +22,17 @@ export async function syncPlayerLastMatchDates(db) {
 }
 
 export function inactivityMetaForPlayer(player, lastMatchMap, nowMs = Date.now()) {
+  if (Number(player?.is_anonymous) === 1 || player?.is_anonymous === true || player?.is_anonymous === "1") {
+    const key = normalizeName(player.name);
+    const lastAt = lastMatchMap.get(key) || player.last_match_at || player.joined_at || "";
+    return {
+      base_rating: 5,
+      rating: 5,
+      days_inactive: 0,
+      inactivity_penalty: 0,
+      last_match_at: lastAt || null
+    };
+  }
   const key = normalizeName(player.name);
   const baseRating = clampBaseRating(player.base_rating ?? player.rating ?? 5);
   const lastAt = lastMatchMap.get(key) || player.last_match_at || player.joined_at || "";

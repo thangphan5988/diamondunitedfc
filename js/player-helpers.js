@@ -1,5 +1,38 @@
 /* Position/side normalization helpers */
 
+function isAnonymousPlayer(p){
+  if(!p) return false;
+  return p.anonymous === true || p.is_anonymous === true || p.is_anonymous === 1 || p.is_anonymous === "1";
+}
+
+function findRosterPlayerByName(name){
+  const key = typeof normalizeName === "function" ? normalizeName(name) : String(name || "").trim().toLowerCase();
+  if(!key || typeof players === "undefined" || !Array.isArray(players)) return null;
+  return players.find(p => {
+    const n = typeof normalizeName === "function" ? normalizeName(p.name) : String(p.name || "").trim().toLowerCase();
+    return n === key;
+  }) || null;
+}
+
+/** Ẩn danh trong trận: lấy từ object hoặc roster hiện tại */
+function isAnonymousMatchPlayer(p){
+  if(isAnonymousPlayer(p)) return true;
+  return isAnonymousPlayer(findRosterPlayerByName(p?.name || p?.player_name));
+}
+
+function publicPlayers(list){
+  return (list || players || []).filter(p => !isAnonymousPlayer(p));
+}
+
+/** Cầu thủ tham gia chấm điểm / MVP (bỏ ẩn danh) */
+function scoreablePlayers(list){
+  return (list || []).filter(p => !isAnonymousMatchPlayer(p));
+}
+
+function anonymousLineupRating(){
+  return 5;
+}
+
 function jerseyLabel(jerseyNumber){
   if(jerseyNumber == null || jerseyNumber === "") return "";
   const n = Number(jerseyNumber);

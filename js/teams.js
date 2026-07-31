@@ -188,7 +188,7 @@ async function renderTeamsStars(){
   clearPitch("pitchTeamsStars");
   await ensureTeamsStats();
 
-  const enriched = players.map(enrichPlayerForTeams);
+  const enriched = publicPlayers().map(enrichPlayerForTeams);
   const squad = pickAllStarSquad(enriched);
   const formation = resolveFormation(teamsStarsFormation, "3-1-2");
   const lineup = buildAllStarLineup(squad, formation);
@@ -241,7 +241,7 @@ async function renderTeams(){
   grid.innerHTML = `<div class="teamsEmpty">Đang tải thống kê...</div>`;
   await ensureTeamsStats();
 
-  let list = players.map(enrichPlayerForTeams);
+  let list = publicPlayers().map(enrichPlayerForTeams);
 
   if(teamsFilterPos){
     list = list.filter(p => p.main === teamsFilterPos);

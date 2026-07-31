@@ -59,7 +59,7 @@ async function renderStats(){
     statsError = e.message || "Không tải được thống kê BT/KT.";
   }
 
-  const enriched = players.map(p => {
+  const enriched = publicPlayers().map(p => {
     const totals = statMap.get(normalizeName(p.name)) || { goals: 0, assists: 0 };
     return Object.assign({}, p, {
       total_goals: totals.goals,

@@ -28,7 +28,13 @@ function getResultFormPlayers(){
   return getAllMatchPlayers();
 }
 
+/** Form chấm điểm / MVP: bỏ cầu thủ ẩn danh */
+function getScoreableResultPlayers(){
+  return scoreablePlayers(getResultFormPlayers());
+}
+
 function getRatingBeforeForResultForm(player){
+  if(isAnonymousMatchPlayer(player)) return anonymousLineupRating();
   if(editResultState?.ratingBeforeMap?.[player.name] != null){
     return Number(editResultState.ratingBeforeMap[player.name]) || 5;
   }
@@ -485,7 +491,7 @@ function renderResultForm(){
   const showStats = true;
 
   document.getElementById("resultTeams").innerHTML = teams.map(team => {
-    const list = getResultFormPlayers().filter(p => p.team === team.key);
+    const list = getScoreableResultPlayers().filter(p => p.team === team.key);
     const header = showStats
       ? `<div class="resultPlayer resultPlayerHead">
           <span></span><span>Cầu thủ</span>
@@ -614,13 +620,14 @@ function setPlayerMatchAssists(name, value){
 }
 
 function pickTeamMvp_(teamPlayers, scoreMap){
-  if(!teamPlayers.length) return null;
+  const eligible = scoreablePlayers(teamPlayers);
+  if(!eligible.length) return null;
   let maxScore = -1;
-  teamPlayers.forEach(p => {
+  eligible.forEach(p => {
     const s = Number(scoreMap[p.name] ?? 7);
     if(s > maxScore) maxScore = s;
   });
-  const tied = teamPlayers.filter(p => Number(scoreMap[p.name] ?? 7) === maxScore);
+  const tied = eligible.filter(p => Number(scoreMap[p.name] ?? 7) === maxScore);
   tied.sort((a, b) => {
     if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
     return a.name.localeCompare(b.name, "vi");
@@ -631,7 +638,7 @@ function pickTeamMvp_(teamPlayers, scoreMap){
 function getMvpNamesFromScores(scoreMapOverride){
   const scoreMap = scoreMapOverride || (isEditingCompletedResult() ? editResultState.playerMatchScores : playerMatchScores);
   const cap = isEditingCompletedResult() ? !!editResultState.cap : isCapMode();
-  const formPlayers = getResultFormPlayers();
+  const formPlayers = getScoreableResultPlayers();
   if(cap){
     const winner = pickTeamMvp_(formPlayers, scoreMap);
     return winner ? [winner] : [];
@@ -680,16 +687,20 @@ async function saveMatchResult(){
       return;
     }
     const mvpNames = getMvpNamesFromScores(scoreMap);
-    const payloadPlayers = getResultFormPlayers().map(p => ({
-      player_name: p.name,
-      team: p.team,
-      starter: !!p.starter,
-      match_score: Number(scoreMap[p.name] ?? 7),
-      goals: clampMatchStat(goalMap[p.name] ?? 0),
-      assists: clampMatchStat(assistMap[p.name] ?? 0),
-      goal_video_urls: goalVideoUrlsForPayload(p.name, goalMap[p.name] ?? 0),
-      is_mvp: mvpNames.includes(p.name)
-    }));
+    const payloadPlayers = getResultFormPlayers().map(p => {
+      const anon = isAnonymousMatchPlayer(p);
+      return {
+        player_name: p.name,
+        team: p.team,
+        starter: !!p.starter,
+        match_score: anon ? anonymousLineupRating() : Number(scoreMap[p.name] ?? 7),
+        goals: anon ? 0 : clampMatchStat(goalMap[p.name] ?? 0),
+        assists: anon ? 0 : clampMatchStat(assistMap[p.name] ?? 0),
+        goal_video_urls: anon ? [] : goalVideoUrlsForPayload(p.name, goalMap[p.name] ?? 0),
+        is_mvp: anon ? false : mvpNames.includes(p.name),
+        is_anonymous: anon
+      };
+    });
 
     const label = displayMatchLabel(editResultState.summary);
     if(!confirm(`Lưu thay đổi kết quả trận "${label}"?\nRating và MVP sẽ được tính lại.`)){
@@ -801,18 +812,22 @@ async function saveMatchResult(){
     if(canResultTeamA() && !canResultTeamB() && p.team !== "A") return false;
     if(canResultTeamB() && !canResultTeamA() && p.team !== "B") return false;
     return true;
-  })).map(p => ({
-    player_name: p.name,
-    team: p.team,
-    starter: !!p.starter,
-    match_score: Number(playerMatchScores[p.name] ?? 7),
-    goals: clampMatchStat(playerMatchGoals[p.name] ?? 0),
-    assists: clampMatchStat(playerMatchAssists[p.name] ?? 0),
-    goal_video_urls: goalVideoUrlsForPayload(p.name, playerMatchGoals[p.name] ?? 0),
-    rating_before: Number(p.rating) || 5,
-    mvp_count_before: Number(p.mvp_count) || 0,
-    is_mvp: mvpNames.includes(p.name)
-  }));
+  })).map(p => {
+    const anon = isAnonymousMatchPlayer(p);
+    return {
+      player_name: p.name,
+      team: p.team,
+      starter: !!p.starter,
+      match_score: anon ? anonymousLineupRating() : Number(playerMatchScores[p.name] ?? 7),
+      goals: anon ? 0 : clampMatchStat(playerMatchGoals[p.name] ?? 0),
+      assists: anon ? 0 : clampMatchStat(playerMatchAssists[p.name] ?? 0),
+      goal_video_urls: anon ? [] : goalVideoUrlsForPayload(p.name, playerMatchGoals[p.name] ?? 0),
+      rating_before: anon ? anonymousLineupRating() : (Number(p.rating) || 5),
+      mvp_count_before: anon ? 0 : (Number(p.mvp_count) || 0),
+      is_mvp: anon ? false : mvpNames.includes(p.name),
+      is_anonymous: anon
+    };
+  });
 
   const btn = document.getElementById("btnSaveResult");
   btn.disabled = true;

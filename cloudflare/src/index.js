@@ -223,7 +223,8 @@ async function getRoster(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating,
-      mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at
+      mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at,
+      COALESCE(is_anonymous, 0) AS is_anonymous
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -235,6 +236,29 @@ async function getRoster(db) {
   );
 
   const players = (rows.results || []).map((row) => {
+    const isAnonymous = Number(row.is_anonymous) === 1;
+    if (isAnonymous) {
+      return {
+        name: row.name,
+        display_name: row.display_name || "",
+        position: row.position,
+        secondary_positions: row.secondary_positions,
+        preferred_side: row.preferred_side,
+        rating: 5,
+        base_rating: 5,
+        mvp_count: 0,
+        avatar: row.avatar,
+        profile_card: row.profile_card || "",
+        jersey_number: row.jersey_number != null ? row.jersey_number : null,
+        description: row.description || "",
+        birth_date: row.birth_date || null,
+        last_match_at: row.last_match_at || null,
+        joined_at: row.joined_at || null,
+        inactivity_penalty: 0,
+        days_inactive: 0,
+        is_anonymous: true
+      };
+    }
     const meta = inactivityMetaForPlayer(row, lastMatchMap);
     return {
       name: row.name,
@@ -253,13 +277,15 @@ async function getRoster(db) {
       last_match_at: meta.last_match_at,
       joined_at: row.joined_at || null,
       inactivity_penalty: meta.inactivity_penalty,
-      days_inactive: meta.days_inactive
+      days_inactive: meta.days_inactive,
+      is_anonymous: false
     };
   });
   return { ok: true, version: APP_VERSION, players };
 }
 
 function mapPlayerRow(row) {
+  const isAnonymous = Number(row.is_anonymous) === 1;
   const meta = row._inactivityMeta;
   const base = {
     id: row.id,
@@ -268,16 +294,25 @@ function mapPlayerRow(row) {
     position: row.position,
     secondary_positions: row.secondary_positions || "",
     preferred_side: row.preferred_side || "",
-    base_rating: row.base_rating != null ? row.base_rating : row.rating,
-    mvp_count: row.mvp_count,
+    base_rating: isAnonymous ? 5 : (row.base_rating != null ? row.base_rating : row.rating),
+    mvp_count: isAnonymous ? 0 : row.mvp_count,
     avatar: row.avatar || "",
     profile_card: row.profile_card || "",
     jersey_number: row.jersey_number != null ? row.jersey_number : null,
     description: row.description || "",
     birth_date: row.birth_date || null,
     joined_at: row.joined_at || "",
-    last_match_at: row.last_match_at || ""
+    last_match_at: row.last_match_at || "",
+    is_anonymous: isAnonymous
   };
+  if (isAnonymous) {
+    return {
+      ...base,
+      rating: 5,
+      inactivity_penalty: 0,
+      days_inactive: 0
+    };
+  }
   if (meta) {
     return {
       ...base,
@@ -299,7 +334,8 @@ async function adminListPlayers(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT id, name, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at
+      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at,
+      COALESCE(is_anonymous, 0) AS is_anonymous
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
   const lastRows = await db.prepare(`
@@ -324,8 +360,11 @@ async function adminSavePlayer(db, payload) {
   const position = String(payload.position || payload.main || "").trim().toUpperCase();
   const secondaryPositions = String(payload.secondary_positions || "").trim();
   const preferredSide = String(payload.preferred_side || "").trim();
-  const baseRating = clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
-  const mvpCount = Math.max(0, Math.round(Number(payload.mvp_count) || 0));
+  const isAnonymous = payload.is_anonymous === true || payload.is_anonymous === 1 || payload.is_anonymous === "1" ? 1 : 0;
+  const baseRating = isAnonymous
+    ? 5
+    : clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
+  const mvpCount = isAnonymous ? 0 : Math.max(0, Math.round(Number(payload.mvp_count) || 0));
   const avatar = String(payload.avatar || "").trim();
   const profileCard = String(payload.profile_card || "").trim();
   const jerseyNumber = parseJerseyNumber(payload.jersey_number);
@@ -363,13 +402,13 @@ async function adminSavePlayer(db, payload) {
         rating = ?, base_rating = ?, mvp_count = ?, avatar = ?, profile_card = ?,
         jersey_number = ?, description = ?, birth_date = ?,
         joined_at = CASE WHEN ? != '' THEN ? ELSE joined_at END,
-        last_match_at = ?
+        last_match_at = ?, is_anonymous = ?
       WHERE id = ?
     `).bind(
       name, nameNorm, displayName, position,
       secondaryPositions, preferredSide,
       baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
-      joinedAt, joinedAt, lastMatchAt, id
+      joinedAt, joinedAt, lastMatchAt, isAnonymous, id
     ).run();
 
     return { ok: true, version: APP_VERSION, id, name };
@@ -381,13 +420,13 @@ async function adminSavePlayer(db, payload) {
   const result = await db.prepare(`
     INSERT INTO players (
       name, name_norm, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at, is_anonymous
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     name, nameNorm, displayName, position,
     secondaryPositions, preferredSide,
     baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
-    joinedAt || nowIso, lastMatchAt
+    joinedAt || nowIso, lastMatchAt, isAnonymous
   ).run();
 
   return {
@@ -1039,6 +1078,50 @@ function goalVideoUrlsFromPlayer(item, goalsFallback = 0) {
   return normalizeGoalVideoUrls(raw, clampStatCount(item.goals ?? goalsFallback));
 }
 
+async function loadAnonymousNameNorms(db) {
+  const rows = await db.prepare(
+    "SELECT name_norm FROM players WHERE COALESCE(is_anonymous, 0) = 1"
+  ).all();
+  return new Set((rows.results || []).map((r) => r.name_norm));
+}
+
+function tagAnonymousResultPlayers(players, anonNorms) {
+  return (players || []).map((p) => {
+    const anon = anonNorms.has(normalizeName(p.player_name));
+    if (!anon) return { ...p, is_anonymous: false };
+    return {
+      ...p,
+      is_anonymous: true,
+      match_score: 5,
+      is_mvp: false,
+      rating_before: 5,
+      mvp_count_before: 0
+    };
+  });
+}
+
+function historyRatingFields(item, anonNorms) {
+  const anon = !!item?.is_anonymous || anonNorms.has(normalizeName(item.player_name));
+  if (anon) {
+    return {
+      match_score: 5,
+      rating_before: 5,
+      delta: 0,
+      rating_after: 5,
+      is_mvp: 0
+    };
+  }
+  const ratingBefore = clampRating(item.rating_before);
+  const delta = calcRatingDelta(item.match_score);
+  return {
+    match_score: Number(item.match_score) || 7,
+    rating_before: ratingBefore,
+    delta,
+    rating_after: clampRating(ratingBefore + delta),
+    is_mvp: item.is_mvp ? 1 : 0
+  };
+}
+
 async function saveMatchResult(db, payload, session) {
   const matchId = String(payload.match_id || "").trim();
   let players = Array.isArray(payload.players) ? payload.players : [];
@@ -1059,7 +1142,9 @@ async function saveMatchResult(db, payload, session) {
 
   const finalizeMatch = payload.finalize_match === true && canHost;
   if (!players.length && !finalizeMatch) throw new Error("players is required");
-  players = applyTeamMvpRules(players, matchType);
+  const anonNorms = await loadAnonymousNameNorms(db);
+  players = tagAnonymousResultPlayers(players, anonNorms);
+  players = applyTeamMvpRules(players, matchType, { anonymousNorms: anonNorms });
 
   let summary = await db.prepare("SELECT * FROM match_summary WHERE match_id = ?").bind(matchId).first();
   if (!summary) {
@@ -1207,23 +1292,25 @@ async function saveMatchResult(db, payload, session) {
     const matchScore = ratingLocked
       ? Number(row.match_score) || 7
       : (incoming ? Number(incoming.match_score) : Number(row.match_score) || 7);
+    const anon = anonNorms.has(normalizeName(row.player_name));
     mergedPlayers.push({
       player_name: row.player_name,
       team: teamKey,
       starter: !!row.starter,
-      match_score: matchScore,
+      match_score: anon ? 5 : matchScore,
       goals: incoming && !statsLocked ? clampStatCount(incoming.goals) : Number(row.goals) || 0,
       assists: incoming && !statsLocked ? clampStatCount(incoming.assists) : Number(row.assists) || 0,
-      rating_before: incoming ? clampRating(incoming.rating_before) : clampRating(row.rating_before || row.rating),
-      mvp_count_before: incoming ? Math.max(0, Math.round(Number(incoming.mvp_count_before) || 0)) : Math.max(0, Math.round(Number(row.mvp_count) || 0)),
-      is_mvp: ratingLocked ? !!row.is_mvp : (incoming ? !!incoming.is_mvp : !!row.is_mvp),
+      rating_before: anon ? 5 : (incoming ? clampRating(incoming.rating_before) : clampRating(row.rating_before || row.rating)),
+      mvp_count_before: anon ? 0 : (incoming ? Math.max(0, Math.round(Number(incoming.mvp_count_before) || 0)) : Math.max(0, Math.round(Number(row.mvp_count) || 0))),
+      is_mvp: anon ? false : (ratingLocked ? !!row.is_mvp : (incoming ? !!incoming.is_mvp : !!row.is_mvp)),
+      is_anonymous: anon,
       goal_video_url: incoming && (incoming.goal_video_urls != null || incoming.goal_video_url != null)
         ? goalVideoUrlsFromPlayer(incoming, incoming.goals ?? row.goals)
         : (row.goal_video_url || "")
     });
   }
 
-  const finalized = applyTeamMvpRules(mergedPlayers, matchType);
+  const finalized = applyTeamMvpRules(mergedPlayers, matchType, { anonymousNorms: anonNorms });
   const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
@@ -1244,13 +1331,11 @@ async function saveMatchResult(db, payload, session) {
   for (const row of historyRows.results || []) {
     const item = playerMapFinal[normalizeName(row.player_name)];
     if (!item) continue;
-    const ratingBefore = clampRating(item.rating_before);
-    const delta = calcRatingDelta(item.match_score);
-    const ratingAfter = clampRating(ratingBefore + delta);
+    const ratingFields = historyRatingFields(item, anonNorms);
     histStmts.push(updateHist.bind(
-      nextAScore, nextBScore, item.match_score,
+      nextAScore, nextBScore, ratingFields.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
-      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt,
+      ratingFields.is_mvp, ratingFields.rating_before, ratingFields.delta, ratingFields.rating_after, savedAt,
       item.goal_video_url || "", row.id
     ));
   }
@@ -1291,7 +1376,9 @@ async function editMatchResult(db, payload) {
   }
 
   const matchType = String(payload.match_type || summary.match_type || "internal").trim().toLowerCase();
-  players = applyTeamMvpRules(players, matchType);
+  const anonNorms = await loadAnonymousNameNorms(db);
+  players = tagAnonymousResultPlayers(players, anonNorms);
+  players = applyTeamMvpRules(players, matchType, { anonymousNorms: anonNorms });
 
   const removedLogs = (await db.prepare("SELECT * FROM rating_log WHERE match_id = ?").bind(matchId).all()).results || [];
   await db.prepare("DELETE FROM rating_log WHERE match_id = ?").bind(matchId).run();
@@ -1318,16 +1405,18 @@ async function editMatchResult(db, payload) {
     const incoming = playerMap[normalizeName(row.player_name)];
     if (!incoming) continue;
     const roster = rosterMap[normalizeName(row.player_name)];
+    const anon = anonNorms.has(normalizeName(row.player_name)) || Number(roster?.is_anonymous) === 1;
     mergedPlayers.push({
       player_name: row.player_name,
       team: String(row.team || "").toUpperCase(),
       starter: !!row.starter,
-      match_score: Number(incoming.match_score) || 7,
+      match_score: anon ? 5 : (Number(incoming.match_score) || 7),
       goals: clampStatCount(incoming.goals),
       assists: clampStatCount(incoming.assists),
-      rating_before: clampRating(roster?.base_rating ?? roster?.rating ?? row.rating_before),
-      mvp_count_before: Math.max(0, Math.round(Number(roster?.mvp_count) || 0)),
-      is_mvp: !!incoming.is_mvp,
+      rating_before: anon ? 5 : clampRating(roster?.base_rating ?? roster?.rating ?? row.rating_before),
+      mvp_count_before: anon ? 0 : Math.max(0, Math.round(Number(roster?.mvp_count) || 0)),
+      is_mvp: anon ? false : !!incoming.is_mvp,
+      is_anonymous: anon,
       goal_video_url: (incoming.goal_video_urls != null || incoming.goal_video_url != null)
         ? goalVideoUrlsFromPlayer(incoming, incoming.goals)
         : (row.goal_video_url || "")
@@ -1335,7 +1424,7 @@ async function editMatchResult(db, payload) {
   }
   if (!mergedPlayers.length) throw new Error("Không có cầu thủ để cập nhật.");
 
-  const finalized = applyTeamMvpRules(mergedPlayers, matchType);
+  const finalized = applyTeamMvpRules(mergedPlayers, matchType, { anonymousNorms: anonNorms });
   const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
@@ -1356,13 +1445,11 @@ async function editMatchResult(db, payload) {
   for (const row of historyRows.results || []) {
     const item = playerMapFinal[normalizeName(row.player_name)];
     if (!item) continue;
-    const ratingBefore = clampRating(item.rating_before);
-    const delta = calcRatingDelta(item.match_score);
-    const ratingAfter = clampRating(ratingBefore + delta);
+    const ratingFields = historyRatingFields(item, anonNorms);
     histStmts.push(updateHist.bind(
-      nextAScore, nextBScore, item.match_score,
+      nextAScore, nextBScore, ratingFields.match_score,
       clampStatCount(item.goals), clampStatCount(item.assists),
-      item.is_mvp ? 1 : 0, ratingBefore, delta, ratingAfter, savedAt,
+      ratingFields.is_mvp, ratingFields.rating_before, ratingFields.delta, ratingFields.rating_after, savedAt,
       item.goal_video_url || "", row.id
     ));
   }
@@ -1413,6 +1500,19 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
   for (const p of players) {
     const key = normalizeName(p.player_name);
     const roster = rosterMap[key];
+    const isAnonymous = Number(roster?.is_anonymous) === 1
+      || p.is_anonymous === true
+      || p.is_anonymous === 1
+      || p.is_anonymous === "1";
+
+    // Ẩn danh: luôn rating 5, không cộng/trừ rating, không MVP, không ghi rating_log
+    if (isAnonymous) {
+      if (roster) {
+        stmts.push(updatePlayer.bind(5, 5, 0, savedAt, roster.id));
+      }
+      continue;
+    }
+
     const baseBefore = clampBaseRating(Number(roster?.base_rating ?? roster?.rating ?? p.rating_before) || 5);
     const delta = calcRatingDelta(p.match_score);
     const baseAfter = clampBaseRating(baseBefore + delta);
@@ -1455,6 +1555,11 @@ async function recalculateRosterFromLogs(db, removedLogs = []) {
   const stmts = [];
 
   for (const r of rosterRows.results || []) {
+    if (Number(r.is_anonymous) === 1) {
+      stmts.push(updatePlayer.bind(5, 5, 0, r.id));
+      continue;
+    }
+
     const key = normalizeName(r.name);
     const logs = logsByPlayer[key] || [];
     let rating;
@@ -1544,11 +1649,12 @@ async function importData(db, payload, secret, pepper) {
     const ins = db.prepare(`
       INSERT OR REPLACE INTO players (
         name, name_norm, display_name, position, secondary_positions, preferred_side,
-        rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at, is_anonymous
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const stmts = payload.players.map((p) => {
       const base = clampBaseRating(p.rating || 5);
+      const anon = p.is_anonymous === true || p.is_anonymous === 1 || p.is_anonymous === "1" ? 1 : 0;
       return ins.bind(
         p.name,
         normalizeName(p.name),
@@ -1565,7 +1671,8 @@ async function importData(db, payload, secret, pepper) {
         String(p.description || "").trim(),
         parseBirthDate(p.birth_date),
         p.joined_at || nowIso,
-        p.last_match_at || ""
+        p.last_match_at || "",
+        anon
       );
     });
     if (stmts.length) await db.batch(stmts);

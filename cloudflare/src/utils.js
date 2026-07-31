@@ -254,14 +254,29 @@ export function corsPreflight() {
   });
 }
 
-export function applyTeamMvpRules(players, matchType) {
+function isAnonymousResultPlayer(p) {
+  return p?.is_anonymous === true
+    || p?.is_anonymous === 1
+    || p?.is_anonymous === "1"
+    || p?.anonymous === true;
+}
+
+export function applyTeamMvpRules(players, matchType, options = {}) {
   const mvpKeys = new Set();
   const type = String(matchType || "internal").toLowerCase();
+  const anonNorms = options.anonymousNorms instanceof Set
+    ? options.anonymousNorms
+    : new Set(options.anonymousNorms || []);
+  const eligible = (players || []).filter((p) => {
+    if (isAnonymousResultPlayer(p)) return false;
+    if (anonNorms.has(normalizeName(p.player_name))) return false;
+    return true;
+  });
 
   if (type === "cap") {
     let maxScore = -1;
     let winner = null;
-    for (const p of players) {
+    for (const p of eligible) {
       const s = Number(p.match_score);
       if (!Number.isFinite(s)) continue;
       if (s > maxScore) {
@@ -280,7 +295,7 @@ export function applyTeamMvpRules(players, matchType) {
   } else {
     const teams = ["A", "B"];
     for (const team of teams) {
-      const list = players.filter((p) => String(p.team || "").toUpperCase() === team);
+      const list = eligible.filter((p) => String(p.team || "").toUpperCase() === team);
       let maxScore = -1;
       for (const p of list) {
         const s = Number(p.match_score);

@@ -183,6 +183,13 @@ function rosterFormFieldsHtml(key, p){
     </div>
     ${rosterAvatarFieldsHtml(key, data)}
     ${rosterDescriptionFieldHtml(key, data)}
+    <label class="rosterAnonCheck" for="${rosterFieldId(key, "is_anonymous")}">
+      <input type="checkbox" id="${rosterFieldId(key, "is_anonymous")}" ${data.is_anonymous || data.anonymous ? "checked" : ""}>
+      <span class="rosterAnonCheckText">
+        <b>Ẩn danh (đá ké)</b>
+        <small>Chỉ hiện khi chia đội / đội hình — không hiện ở Teams &amp; Thống kê</small>
+      </span>
+    </label>
     <div class="rosterAdminFormRow">
       ${rosterLabeledInput(key, "birth_date", "Ngày sinh", "Chọn ngày/tháng/năm · để trống nếu chưa biết", `type="date" value="${escapeAttr(toDateInputValue(data.birth_date))}"`)}
       ${rosterLabeledInput(key, "joined_at", "Ngày tham gia", "", `type="date" value="${escapeAttr(toDateInputValue(data.joined_at))}"`)}
@@ -198,6 +205,7 @@ function rosterFormFieldsHtml(key, p){
 
 function readRosterForm(key){
   const val = field => document.getElementById(rosterFieldId(key, field))?.value ?? "";
+  const checked = field => !!document.getElementById(rosterFieldId(key, field))?.checked;
   const posParsed = parsePositionChain(val("positions"));
   return {
     name: val("name").trim(),
@@ -213,7 +221,8 @@ function readRosterForm(key){
     description: val("description").trim(),
     birth_date: val("birth_date").trim(),
     joined_at: fromDateInputValue(val("joined_at")),
-    last_match_at: fromDateInputValue(val("last_match_at"))
+    last_match_at: fromDateInputValue(val("last_match_at")),
+    is_anonymous: checked("is_anonymous")
   };
 }
 
@@ -297,13 +306,14 @@ function renderAdminPlayerList(){
     const jersey = p.jersey_number != null && p.jersey_number !== "" ? ` · #${Number(p.jersey_number)}` : "";
     const birth = birthDateLabel(p.birth_date);
     const birthMeta = birth ? ` · 🎂 ${birth}` : "";
+    const anonMeta = isAnonymousPlayer(p) ? ` · <span class="metaAnonTag">Ẩn danh</span>` : "";
 
-    parts.push(`<div class="rosterAdminCard${expanded ? " expanded" : ""}">
+    parts.push(`<div class="rosterAdminCard${expanded ? " expanded" : ""}${isAnonymousPlayer(p) ? " rosterAdminCard--anon" : ""}">
       <div class="rosterAdminCardHead" onclick="toggleRosterPlayer(${Number(p.id)})">
         <div class="rosterAdminRowMain">
           <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'" alt="">
           <div>
-            <b>${escapeHtml(label)}</b>${canonical}
+            <b>${escapeHtml(label)}</b>${canonical}${anonMeta}
             <div class="meta">${escapeHtml(posText)}${side}${jersey}${birthMeta} · ⭐ ${Number(p.rating) || 5}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>
           </div>
         </div>
@@ -342,15 +352,16 @@ async function saveRosterPlayer(key){
     position: form.position,
     secondary_positions: form.secondary_positions,
     preferred_side: form.preferred_side,
-    base_rating: Number.isFinite(form.base_rating) ? form.base_rating : 5,
+    base_rating: form.is_anonymous ? 5 : (Number.isFinite(form.base_rating) ? form.base_rating : 5),
     jersey_number: form.jersey_number,
-    mvp_count: Number.isFinite(form.mvp_count) ? form.mvp_count : 0,
+    mvp_count: form.is_anonymous ? 0 : (Number.isFinite(form.mvp_count) ? form.mvp_count : 0),
     avatar: form.avatar,
     profile_card: form.profile_card,
     description: form.description,
     birth_date: form.birth_date,
     joined_at: form.joined_at,
-    last_match_at: form.last_match_at
+    last_match_at: form.last_match_at,
+    is_anonymous: !!form.is_anonymous
   };
 
   if(key !== "new"){
