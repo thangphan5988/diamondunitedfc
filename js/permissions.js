@@ -157,10 +157,12 @@ function switchLineupMode(mode, silent){
   document.getElementById("modeInternal").classList.toggle("active", lineupMode === "internal");
   document.getElementById("modeCap").classList.toggle("active", lineupMode === "cap");
 
+  syncLineupModeButtons();
+
   document.getElementById("btnRandom").style.display =
-    lineupMode === "internal" && (!isLoggedIn() || hasPerm(PERMS.LINEUP_INTERNAL)) ? "" : "none";
+    lineupWorkspace === "split" && lineupMode === "internal" && (!isLoggedIn() || canSplitTeams()) && !matchLocked && !lastResult ? "" : "none";
   document.getElementById("btnOptimizeCap").style.display =
-    lineupMode === "cap" && (!isLoggedIn() || canCoordinateCap()) ? "" : "none";
+    lineupWorkspace === "split" && lineupMode === "cap" && (!isLoggedIn() || canCoordinateCap()) ? "" : "none";
 
   document.getElementById("summaryInternal").style.display = lineupMode === "internal" ? "" : "none";
   document.getElementById("summaryCap").style.display = lineupMode === "cap" ? "" : "none";
@@ -254,12 +256,12 @@ function canManageCapLineup(){
 }
 
 function isCapCoordinatorView(){
-  return isLoggedIn() && lineupMode === "cap" &&
-    (isFullLineupRole() || (canCoordinateCap() && (canImportRoster() || canSplitTeams())));
+  return isLoggedIn() && lineupMode === "cap" && lineupWorkspace === "split" &&
+    (isFullLineupRole() || canCoordinateCap());
 }
 
 function isCapHlvView(){
-  return isLoggedIn() && lineupMode === "cap" && canCapHlvEdit() && !isCapCoordinatorView();
+  return isLoggedIn() && lineupMode === "cap" && canCapHlvEdit() && lineupWorkspace === "hlv";
 }
 
 function isCapLineupPublished(){
@@ -276,7 +278,103 @@ function isCapHlvEditor(){
 }
 
 function isCapWorkflow(){
-  return isLoggedIn() && (canCoordinateCap() || isCapHlvEditor());
+  return isLoggedIn() && (canCoordinateCap() || canCapHlvEdit());
+}
+
+function canUseSplitTab(){
+  return isFullLineupRole() || canSplitTeams() || canCoordinateCap() || canImportRoster() ||
+    (hasPerm(PERMS.EXPORT) && !canUseHlvTabOnly());
+}
+
+function canUseHlvTab(){
+  return canManageTeamA() || canManageTeamB() || canCapHlvEdit();
+}
+
+function canUseHlvTabOnly(){
+  return canUseHlvTab() && !isFullLineupRole() && !canSplitTeams() && !canCoordinateCap() && !canImportRoster();
+}
+
+function canUseLineupTab(){
+  return canUseSplitTab() || canUseHlvTab();
+}
+
+function preferredLineupTab(){
+  if(canUseSplitTab()) return "lineup";
+  if(canUseHlvTab()) return "hlv";
+  return "latest";
+}
+
+function enterLineupWorkspace(workspace, silent){
+  const next = workspace === "hlv" ? "hlv" : "split";
+  lineupWorkspace = next;
+
+  if(next === "hlv"){
+    const showInternal = canManageTeamA() || canManageTeamB();
+    const showCap = canCapHlvEdit();
+    if(lineupMode === "cap" && !showCap && showInternal){
+      switchLineupMode("internal", true);
+    }else if(lineupMode === "internal" && !showInternal && showCap){
+      switchLineupMode("cap", true);
+    }else if(showCap && !showInternal){
+      switchLineupMode("cap", true);
+    }else if(showInternal && !showCap){
+      switchLineupMode("internal", true);
+    }
+  }else{
+    const showInternal = isFullLineupRole() || canSplitTeams() || canImportRoster();
+    const showCap = isFullLineupRole() || canCoordinateCap();
+    if(lineupMode === "cap" && !showCap && showInternal){
+      switchLineupMode("internal", true);
+    }else if(lineupMode === "internal" && !showInternal && showCap){
+      switchLineupMode("cap", true);
+    }
+  }
+
+  syncLineupModeButtons();
+  applyLineupRoleUI();
+  if(!silent && typeof updateRoleTaskBanner === "function"){
+    /* banner refreshed inside applyLineupRoleUI */
+  }
+}
+
+function syncLineupModeButtons(){
+  const modeInternal = document.getElementById("modeInternal");
+  const modeCap = document.getElementById("modeCap");
+  const modesWrap = document.querySelector(".lineupModes");
+  if(!modeInternal || !modeCap) return;
+
+  let showInternal = false;
+  let showCap = false;
+  if(lineupWorkspace === "hlv"){
+    showInternal = canManageTeamA() || canManageTeamB();
+    showCap = canCapHlvEdit();
+  }else{
+    showInternal = isFullLineupRole() || canSplitTeams() || canImportRoster() || canManageTeamA() || canManageTeamB();
+    showCap = isFullLineupRole() || canCoordinateCap();
+  }
+
+  modeInternal.style.display = showInternal ? "" : "none";
+  modeCap.style.display = showCap ? "" : "none";
+  if(modesWrap) modesWrap.style.display = (showInternal || showCap) ? "" : "none";
+  modeInternal.classList.toggle("active", lineupMode === "internal");
+  modeCap.classList.toggle("active", lineupMode === "cap");
+}
+
+function getHlvTabLabel(){
+  if(!isLoggedIn()) return "HLV";
+  const a = canManageTeamA();
+  const b = canManageTeamB();
+  const cap = canCapHlvEdit();
+  const count = [a, b, cap].filter(Boolean).length;
+  if(count > 1) return "HLV";
+  if(cap) return "HLV Cáp";
+  if(a) return "HLV Đội A";
+  if(b) return "HLV Đội B";
+  return "HLV";
+}
+
+function getLineupTabLabel(){
+  return "Chia đội";
 }
 
 function canResultTeamA(){
@@ -338,42 +436,32 @@ function canOpenResultEntry(){
 }
 
 function isSplitWorkflow(){
-  return isLoggedIn() && !isFullLineupRole() &&
-    (canSplitTeams() || canManageTeamA() || canManageTeamB());
-}
-
-function getLineupTabLabel(){
-  if(!isLoggedIn()) return "Chia đội";
-  if(canCapHlvEdit() && !canManageTeamA() && !canManageTeamB() && !canSplitTeams() && !isFullLineupRole()){
-    return "HLV Cáp";
-  }
-  if(canManageTeamA() && !canManageTeamB() && !canSplitTeams() && !isFullLineupRole()){
-    return "HLV Đội A";
-  }
-  if(canManageTeamB() && !canManageTeamA() && !canSplitTeams() && !isFullLineupRole()){
-    return "HLV Đội B";
-  }
-  return "Chia đội";
+  return isLoggedIn() && lineupWorkspace === "split" &&
+    (canSplitTeams() || canCoordinateCap() || isFullLineupRole());
 }
 
 function getRoleTaskLabel(){
   if(!isLoggedIn()) return "";
+  if(lineupWorkspace === "hlv"){
+    if(canCapHlvEdit() && isCapMode()){
+      if(isMatchReadyForResults()) return "⚽ Nhập kết quả trận Cáp";
+      if(matchLocked && bothTeamsConfirmed()) return "⚽ Đã chốt đội hình — nhập kết quả sau trận";
+      if(!isCapLineupPublished()) return "⏳ Chờ Host gửi đội hình Cáp (bấm Gửi HLV)";
+      return "⚽ Kéo thả Chính/Phụ → Chốt đội hình Cáp";
+    }
+    if(canManageTeamA() && canResultTeamA() && !canManageTeamB()) return "🔴 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội A → Xác nhận";
+    if(canManageTeamB() && canResultTeamB() && !canManageTeamA()) return "🟡 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội B → Xác nhận";
+    if(canManageTeamA() && !canManageTeamB()) return "🔴 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
+    if(canManageTeamB() && !canManageTeamA()) return "🟡 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
+    if(canManageTeamA() || canManageTeamB()) return "⚽ Chỉnh đội hình HLV → Chốt";
+    return "HLV";
+  }
   if(hasPerm(PERMS.ALL)) return "⚙️ Toàn quyền quản lý trận";
   if(isMatchHost() && isCapMode()) return "📋 Host Cáp: Gửi HLV → HLV chốt hoặc bạn Chốt trận → Nhập KQ";
   if(isMatchHost()) return "📋 Host: Gửi HLV → HLV chốt hoặc bạn Chốt trận → Nhập KQ";
   if(canSplitTeams() && canImportRoster()) return "📋 Random → Gửi HLV → Chốt trận / Lưu ảnh Zalo";
-  if(canManageTeamA() && canResultTeamA() && !canManageTeamB()) return "🔴 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội A → Xác nhận";
-  if(canManageTeamB() && canResultTeamB() && !canManageTeamA()) return "🟡 Chốt đội hình → Sau trận: nhập tỉ số & điểm Đội B → Xác nhận";
-  if(canManageTeamA() && !canManageTeamB()) return "🔴 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
-  if(canManageTeamB() && !canManageTeamA()) return "🟡 Chọn sơ đồ · Kéo thả · Hoán đổi dự bị → Chốt";
   if(canCoordinateCap() && isCapMode() && isMatchReadyForResults() && canFinalizeMatch()){
     return "📋 Host Cáp: nhập & Xác nhận trận đấu (không cần HLV nhập KQ)";
-  }
-  if(isCapHlvEditor() && isCapMode()){
-    if(isMatchReadyForResults()) return "⚽ Nhập kết quả trận Cáp";
-    if(matchLocked && bothTeamsConfirmed()) return "⚽ Đã chốt đội hình — nhập kết quả sau trận";
-    if(!isCapLineupPublished()) return "⏳ Chờ Host gửi đội hình Cáp (bấm Gửi HLV)";
-    return "⚽ Kéo thả Chính/Phụ → Chốt đội hình Cáp";
   }
   if(canCoordinateCap() && isCapMode()) return "📋 Import → Sắp Cáp → Gửi HLV → Chốt trận / Lưu ảnh Zalo";
   return permLabelList(authSession.permissions);

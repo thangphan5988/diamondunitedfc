@@ -564,18 +564,20 @@ function setWorkflowBtn(el, done, doneText, activeText){
 }
 
 function applyLineupRoleUI(){
-  const importOk = canImportRoster();
-  const splitOk = canSplitTeams();
+  const importOk = canImportRoster() && lineupWorkspace === "split";
+  const splitOk = canSplitTeams() && lineupWorkspace === "split";
   const manageA = canManageTeamA();
   const manageB = canManageTeamB();
-  const full = isFullLineupRole();
+  const full = isFullLineupRole() && lineupWorkspace === "split";
   const capHlv = isCapHlvView();
+  const inHlvWs = lineupWorkspace === "hlv";
+  const inSplitWs = lineupWorkspace === "split";
 
   const playerCard = document.getElementById("playerCard");
   const lineupGrid = document.getElementById("lineupGrid");
   const summaryCap = document.getElementById("summaryCap");
   if(playerCard) playerCard.style.display = (importOk && !capHlv) ? "" : "none";
-  if(summaryCap) summaryCap.style.display = (lineupMode === "cap" && !capHlv) ? "" : "none";
+  if(summaryCap) summaryCap.style.display = (lineupMode === "cap" && inSplitWs && !capHlv) ? "" : "none";
   if(lineupGrid){
     lineupGrid.classList.toggle("singleTeam", !importOk && !capHlv);
     lineupGrid.classList.toggle("hlvRoleView", isHlvEditor());
@@ -584,8 +586,13 @@ function applyLineupRoleUI(){
 
   const panelA = document.getElementById("teamPanelA");
   const panelB = document.getElementById("teamPanelB");
-  if(panelA) panelA.style.display = (full || manageA || splitOk) ? "" : "none";
-  if(panelB) panelB.style.display = (full || manageB || splitOk) ? "" : "none";
+  if(inHlvWs){
+    if(panelA) panelA.style.display = manageA ? "" : "none";
+    if(panelB) panelB.style.display = manageB ? "" : "none";
+  }else{
+    if(panelA) panelA.style.display = (full || manageA || splitOk || canSplitTeams()) ? "" : "none";
+    if(panelB) panelB.style.display = (full || manageB || splitOk || canSplitTeams()) ? "" : "none";
+  }
   if(panelA){
     panelA.classList.toggle("hlvPanel", isHlvPanelTeam("A"));
     panelA.classList.toggle("hlvConfirmed", isHlvPanelTeam("A") && teamConfirmState.A);
@@ -597,12 +604,12 @@ function applyLineupRoleUI(){
 
   const internalTeams = document.getElementById("internalTeams");
   if(internalTeams){
-    const hlvSingle = (manageA && !manageB && !splitOk) || (manageB && !manageA && !splitOk);
+    const hlvSingle = inHlvWs && ((manageA && !manageB) || (manageB && !manageA));
     internalTeams.classList.toggle("singleTeam", hlvSingle);
     internalTeams.classList.toggle("hlvRoleView", isHlvEditor());
   }
 
-  const coordinatorLocked = (splitOk || (canCoordinateCap() && isCapMode())) && lineupPublishedToHlv && !matchLocked;
+  const coordinatorLocked = inSplitWs && (canSplitTeams() || (canCoordinateCap() && isCapMode())) && lineupPublishedToHlv && !matchLocked;
   if(lineupGrid) lineupGrid.classList.toggle("coordinatorLocked", coordinatorLocked);
 
   const importControls = ["searchBox"];
@@ -614,7 +621,7 @@ function applyLineupRoleUI(){
   if(screenshotLabel) screenshotLabel.style.display = importOk ? "" : "none";
   const selectAllBtn = document.querySelector("#playerCard .secondary.lockable");
   const hideAfterLineupReady = !!lastResult && !matchLocked &&
-    ((splitOk && lineupMode === "internal") || (canCoordinateCap() && lineupMode === "cap"));
+    ((splitOk && lineupMode === "internal") || (canCoordinateCap() && lineupMode === "cap" && inSplitWs));
   if(selectAllBtn) selectAllBtn.style.display = importOk && !hideAfterLineupReady ? "" : "none";
 
   const formA = document.getElementById("formationSelectA");
@@ -628,8 +635,8 @@ function applyLineupRoleUI(){
   const showTeamControls = !matchLocked && !!lastResult;
   const btnConfA = document.getElementById("btnConfirmA");
   const btnConfB = document.getElementById("btnConfirmB");
-  const showConfA = manageA && showTeamControls && !splitOk;
-  const showConfB = manageB && showTeamControls && !splitOk;
+  const showConfA = manageA && showTeamControls && inHlvWs;
+  const showConfB = manageB && showTeamControls && inHlvWs;
   if(btnConfA){
     btnConfA.style.display = showConfA ? "" : "none";
     if(showConfA) setWorkflowBtn(btnConfA, teamConfirmState.A, "✓ Đã chốt", "✓ Chốt đội hình");
@@ -641,7 +648,7 @@ function applyLineupRoleUI(){
 
   const btnPublish = document.getElementById("btnPublish");
   const showPublishInternal = splitOk && showTeamControls && !matchLocked;
-  const showPublishCap = canCoordinateCap() && isCapMode() && !!lastResult && !matchLocked;
+  const showPublishCap = inSplitWs && canCoordinateCap() && isCapMode() && !!lastResult && !matchLocked;
   const showPublish = showPublishInternal || showPublishCap;
   if(btnPublish){
     btnPublish.style.display = showPublish ? "" : "none";
@@ -651,11 +658,11 @@ function applyLineupRoleUI(){
   const btnRandom = document.getElementById("btnRandom");
   if(btnRandom) btnRandom.style.display = splitOk && lineupMode === "internal" && !matchLocked && !lastResult ? "" : "none";
 
-  const exportOk = hasPerm(PERMS.EXPORT) && (splitOk || canCoordinateCap());
+  const exportOk = inSplitWs && hasPerm(PERMS.EXPORT) && (canSplitTeams() || canCoordinateCap());
   const btnExport = document.getElementById("btnExport");
   const btnHostLockMatch = document.getElementById("btnHostLockMatch");
   const showExport = exportOk && !!lastResult && lineupPublishedToHlv;
-  const showHostLock = canHostControlMatch() && !!lastResult && lineupPublishedToHlv && !isMatchReadyForResults();
+  const showHostLock = inSplitWs && canHostControlMatch() && !!lastResult && lineupPublishedToHlv && !isMatchReadyForResults();
   if(btnExport){
     btnExport.style.display = (showExport && !capHlv) ? "" : "none";
     if(showExport){
@@ -684,7 +691,7 @@ function applyLineupRoleUI(){
     if(isHlvPanelTeam("A") && !lastResult) renderHlvTeamLineupView("A", false);
     if(isHlvPanelTeam("B") && !lastResult) renderHlvTeamLineupView("B", false);
     const capHlvDone = capHlv && teamConfirmState.Main && teamConfirmState.Sub;
-    if((capHlv || (canCapHlvEdit() && lineupMode === "cap")) && lastResult && isCapLineupPublished()){
+    if((capHlv || (canCapHlvEdit() && lineupMode === "cap" && inHlvWs)) && lastResult && isCapLineupPublished()){
       if(!capHlv || capHlvDone){
         refreshTeamLineupUI("Main");
         refreshTeamLineupUI("Sub");
@@ -708,7 +715,7 @@ function applyLineupRoleUI(){
   }
   const formCapMain = document.getElementById("formationSelectCapMain");
   const formCapSub = document.getElementById("formationSelectCapSub");
-  const capCoord = canCoordinateCap() && isCapMode();
+  const capCoord = inSplitWs && canCoordinateCap() && isCapMode();
   if(formCapMain) formCapMain.disabled = capHlv ? (matchLocked || !lineupPublishedToHlv) : (coordinatorLocked || matchLocked || !capCoord);
   if(formCapSub) formCapSub.disabled = capHlv ? (matchLocked || !lineupPublishedToHlv) : (coordinatorLocked || matchLocked || !capCoord);
   const btnOptimizeCap = document.getElementById("btnOptimizeCap");
@@ -740,7 +747,7 @@ function applyLineupRoleUI(){
 
   const banner = document.getElementById("roleTaskBanner");
   if(banner){
-    if(isLoggedIn() && (isSplitWorkflow() || full || isCapWorkflow())){
+    if(isLoggedIn() && (isSplitWorkflow() || full || isCapWorkflow() || inHlvWs)){
       banner.style.display = "";
       banner.textContent = getRoleTaskLabel();
     }else{
@@ -752,11 +759,6 @@ function applyLineupRoleUI(){
   updateResultModalPerms();
   initLineupTeamSwitchers();
   syncAllFormationSegs();
-}
-
-function canUseLineupTab(){
-  return hasPerm(PERMS.EXPORT) || hasPerm(PERMS.LINEUP_INTERNAL) || canManageCapLineup() ||
-    canSplitTeams() || canManageTeamA() || canManageTeamB() || canImportRoster();
 }
 
 function shouldRestorePending(){

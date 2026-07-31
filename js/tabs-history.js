@@ -1,12 +1,13 @@
 /* Tab switching, match history list */
 
-const MAIN_TAB_ORDER = ["latest", "history", "stats", "teams", "lineup", "admin"];
+const MAIN_TAB_ORDER = ["latest", "history", "stats", "teams", "lineup", "hlv", "admin"];
 const MAIN_TAB_IDS = {
   latest: "tabLatest",
   history: "tabHistory",
   stats: "tabStats",
   teams: "tabTeams",
   lineup: "tabLineup",
+  hlv: "tabHlv",
   admin: "tabAdmin"
 };
 
@@ -97,20 +98,25 @@ function formatHistoryScore(value){
 function switchTab(tab){
   const isLatest = tab === "latest";
   const isLineup = tab === "lineup";
+  const isHlv = tab === "hlv";
   const isHistory = tab === "history";
   const isStats = tab === "stats";
   const isTeams = tab === "teams";
   const isAdmin = tab === "admin";
 
-  if(isLineup && !canUseLineupTab()){
-    tab = "latest";
+  if(isLineup && !canUseSplitTab()){
+    tab = canUseHlvTab() ? "hlv" : "latest";
+  }
+  if(tab === "hlv" && !canUseHlvTab()){
+    tab = canUseSplitTab() ? "lineup" : "latest";
   }
   if(isAdmin && !(isLoggedIn() && canAccessAdminTab())){
     tab = "latest";
   }
 
+  const showLineupView = tab === "lineup" || tab === "hlv";
   document.getElementById("latestResultView").style.display = tab === "latest" ? "" : "none";
-  document.getElementById("lineupView").style.display = tab === "lineup" ? "" : "none";
+  document.getElementById("lineupView").style.display = showLineupView ? "" : "none";
   document.getElementById("historyView").style.display = tab === "history" ? "" : "none";
   document.getElementById("statsView").style.display = tab === "stats" ? "" : "none";
   document.getElementById("teamsView").style.display = tab === "teams" ? "" : "none";
@@ -118,10 +124,15 @@ function switchTab(tab){
 
   document.getElementById("tabLatest").classList.toggle("active", tab === "latest");
   document.getElementById("tabLineup").classList.toggle("active", tab === "lineup");
+  const tabHlv = document.getElementById("tabHlv");
+  if(tabHlv) tabHlv.classList.toggle("active", tab === "hlv");
   document.getElementById("tabHistory").classList.toggle("active", tab === "history");
   document.getElementById("tabStats").classList.toggle("active", tab === "stats");
   document.getElementById("tabTeams").classList.toggle("active", tab === "teams");
   document.getElementById("tabAdmin").classList.toggle("active", tab === "admin");
+
+  if(tab === "lineup") enterLineupWorkspace("split", true);
+  if(tab === "hlv") enterLineupWorkspace("hlv", true);
 
   if(tab === "latest") loadLatestMatch();
   else stopLatestMatchPolling();
@@ -139,7 +150,7 @@ function switchTab(tab){
     else if(canManageRoster()) switchAdminSection("roster");
     else if(canManageSponsors()) switchAdminSection("sponsors");
   }
-  if(tab === "lineup" && shouldRestorePending()) restorePendingMatchIfAny();
+  if(showLineupView && shouldRestorePending()) restorePendingMatchIfAny();
   if(shouldPollPendingMatch()) startConfirmPolling();
   else stopConfirmPolling();
   syncMobileTabNav(tab);

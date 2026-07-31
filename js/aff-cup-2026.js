@@ -156,6 +156,33 @@ function wcEscapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function wcIsVietnamTeam(teamOrName) {
+  if (!teamOrName) return false;
+  if (typeof teamOrName === "object") {
+    const id = String(teamOrName.id || "").toLowerCase();
+    const code = String(teamOrName.code || teamOrName.fifaCode || "").toUpperCase();
+    if (id === "vietnam" || code === "VIE" || code === "VN") return true;
+    return wcIsVietnamTeam(teamOrName.name);
+  }
+  const name = String(teamOrName).trim().toLowerCase();
+  return name === "việt nam" || name === "vietnam" || name === "viet nam";
+}
+
+function wcTeamNameHtml(teamOrName, fallback = "") {
+  const name = typeof teamOrName === "object"
+    ? (teamOrName?.name || fallback)
+    : (teamOrName || fallback);
+  const text = wcEscapeHtml(name);
+  if (!text) return "";
+  return wcIsVietnamTeam(teamOrName) || wcIsVietnamTeam(name)
+    ? `<span class="wcTeamVn">${text}</span>`
+    : text;
+}
+
+function wcTeamNameClass(teamOrName, base = "") {
+  return [base, (wcIsVietnamTeam(teamOrName) ? "wcTeamVn" : "")].filter(Boolean).join(" ");
+}
+
 function wcFormatDate(value) {
   if (!value) return "";
   const d = value instanceof Date ? value : new Date(value);
@@ -319,9 +346,9 @@ function wcMatchCardHtml(fx, compact) {
       <span class="wcMatchStatus">${wcEscapeHtml(wcStatusLabel(fx.status, fx.elapsed))}</span>
     </div>
     <div class="wcMatchTeams">
-      <div class="wcMatchTeam">${homeLogo}<span>${wcEscapeHtml(fx.home?.name || "")}</span></div>
+      <div class="wcMatchTeam">${homeLogo}<span class="${wcTeamNameClass(fx.home)}">${wcEscapeHtml(fx.home?.name || "")}</span></div>
       <div class="wcMatchScore">${wcEscapeHtml(wcScoreLine(fx))}</div>
-      <div class="wcMatchTeam wcMatchTeam--away">${awayLogo}<span>${wcEscapeHtml(fx.away?.name || "")}</span></div>
+      <div class="wcMatchTeam wcMatchTeam--away">${awayLogo}<span class="${wcTeamNameClass(fx.away)}">${wcEscapeHtml(fx.away?.name || "")}</span></div>
     </div>
     <div class="wcMatchFoot">${wcEscapeHtml([round, fx.venue, fx.city].filter(Boolean).join(" · "))}</div>
     ${hint}
@@ -340,7 +367,7 @@ function wcRenderStandings(data) {
     const groupName = rows[0]?.group || `Bảng ${String.fromCharCode(65 + idx)}`;
     const body = rows.map((row) => `<tr>
       <td>${row.rank}</td>
-      <td class="wcStandTeam"><button type="button" class="wcStandTeamBtn" onclick="wcOpenTeamDetail('${wcEscapeHtml(String(row.team.id))}')"><img src="${wcEscapeHtml(row.team.logo)}" alt="">${wcEscapeHtml(row.team.name)}</button></td>
+      <td class="wcStandTeam"><button type="button" class="wcStandTeamBtn" onclick="wcOpenTeamDetail('${wcEscapeHtml(String(row.team.id))}')"><img src="${wcEscapeHtml(row.team.logo)}" alt="">${wcTeamNameHtml(row.team)}</button></td>
       <td>${row.played}</td>
       <td>${row.win}</td>
       <td>${row.draw}</td>
@@ -372,7 +399,7 @@ function wcRenderTeams(data) {
     <article class="wcTeamCard" role="button" tabindex="0" onclick="wcOpenTeamDetail('${wcEscapeHtml(String(team.id))}')" onkeydown="wcCardKey(event,'team','${wcEscapeHtml(String(team.id))}')">
       <img src="${wcEscapeHtml(team.logo)}" alt="${wcEscapeHtml(team.name)}">
       <div>
-        <strong>${wcEscapeHtml(team.name)}</strong>
+        <strong class="${wcTeamNameClass(team)}">${wcEscapeHtml(team.name)}</strong>
         <span>${wcEscapeHtml([team.group ? `Bảng ${team.group}` : "", team.fifaCode].filter(Boolean).join(" · "))}</span>
       </div>
     </article>`).join("")}</div>`;
@@ -423,12 +450,12 @@ function wcRenderMatchDetail(match) {
     <div class="wcDetailHero">
       <div class="wcDetailHeroTeam">
         <img src="${wcEscapeHtml(match.home?.logo || "")}" alt="">
-        <strong>${wcEscapeHtml(match.home?.name || "")}</strong>
+        <strong class="${wcTeamNameClass(match.home)}">${wcEscapeHtml(match.home?.name || "")}</strong>
       </div>
       <div class="wcDetailHeroScore">${wcEscapeHtml(wcScoreLine(match))}</div>
       <div class="wcDetailHeroTeam">
         <img src="${wcEscapeHtml(match.away?.logo || "")}" alt="">
-        <strong>${wcEscapeHtml(match.away?.name || "")}</strong>
+        <strong class="${wcTeamNameClass(match.away)}">${wcEscapeHtml(match.away?.name || "")}</strong>
       </div>
     </div>
     <div class="wcDetailSection">
@@ -447,11 +474,11 @@ function wcRenderMatchDetail(match) {
       <h3>Cầu thủ ghi bàn</h3>
       <div class="wcDetailScorers">
         <div class="wcDetailScorerCol">
-          <h4>${wcEscapeHtml(match.home?.name || "Đội nhà")}</h4>
+          <h4 class="${wcTeamNameClass(match.home)}">${wcEscapeHtml(match.home?.name || "Đội nhà")}</h4>
           <ul>${wcScorersList(match.home?.scorers, "Không có")}</ul>
         </div>
         <div class="wcDetailScorerCol">
-          <h4>${wcEscapeHtml(match.away?.name || "Đội khách")}</h4>
+          <h4 class="${wcTeamNameClass(match.away)}">${wcEscapeHtml(match.away?.name || "Đội khách")}</h4>
           <ul>${wcScorersList(match.away?.scorers, "Không có")}</ul>
         </div>
       </div>
@@ -467,12 +494,12 @@ function wcTeamOverviewHtml(team) {
   const standing = team.standing;
   const upcoming = (team.upcoming || []).map((fx) => `
     <div class="wcDetailMiniMatch" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')">
-      <span>${wcEscapeHtml(fx.home?.name)} ${wcEscapeHtml(wcScoreLine(fx))} ${wcEscapeHtml(fx.away?.name)}</span>
+      <span>${wcTeamNameHtml(fx.home)} ${wcEscapeHtml(wcScoreLine(fx))} ${wcTeamNameHtml(fx.away)}</span>
       <span class="wcMatchStatus">${wcEscapeHtml(wcFormatMatchTime(fx))}</span>
     </div>`).join("");
   const results = (team.results || []).map((fx) => `
     <div class="wcDetailMiniMatch" onclick="wcOpenMatchDetail('${wcEscapeHtml(String(fx.id))}')">
-      <span>${wcEscapeHtml(fx.home?.name)} ${wcEscapeHtml(wcScoreLine(fx))} ${wcEscapeHtml(fx.away?.name)}</span>
+      <span>${wcTeamNameHtml(fx.home)} ${wcEscapeHtml(wcScoreLine(fx))} ${wcTeamNameHtml(fx.away)}</span>
       <span class="wcMatchStatus">${wcEscapeHtml(wcStatusLabel(fx.status, fx.elapsed))}</span>
     </div>`).join("");
 
@@ -480,7 +507,7 @@ function wcTeamOverviewHtml(team) {
     <div class="wcDetailHero">
       <div class="wcDetailHeroTeam" style="grid-column:1/-1">
         <img src="${wcEscapeHtml(team.logo || "")}" alt="">
-        <strong>${wcEscapeHtml(team.name || "")}</strong>
+        <strong class="${wcTeamNameClass(team)}">${wcEscapeHtml(team.name || "")}</strong>
       </div>
     </div>
     <div class="wcDetailSection">
@@ -505,7 +532,7 @@ function wcTeamStandingsHtml(team) {
     const highlight = String(row.team.id) === String(team.id) ? " wcDetailStandRow--self" : "";
     return `<tr class="${highlight.trim()}">
       <td>${row.rank}</td>
-      <td class="wcStandTeam"><img src="${wcEscapeHtml(row.team.logo)}" alt="">${wcEscapeHtml(row.team.name)}</td>
+      <td class="wcStandTeam"><img src="${wcEscapeHtml(row.team.logo)}" alt="">${wcTeamNameHtml(row.team)}</td>
       <td>${row.played}</td>
       <td>${row.win}</td>
       <td>${row.draw}</td>
@@ -622,7 +649,10 @@ async function wcOpenMatchDetail(id) {
   try {
     const data = await wcApiGet("wc2026_match", { id });
     const match = data.item;
-    wcEl("wcDetailTitle").textContent = `${match.home?.name || ""} vs ${match.away?.name || ""}`;
+    const titleEl = wcEl("wcDetailTitle");
+    if (titleEl) {
+      titleEl.innerHTML = `${wcTeamNameHtml(match.home)} vs ${wcTeamNameHtml(match.away)}`;
+    }
     wcEl("wcDetailSubtitle").textContent = [wcFormatMatchTime(match), match.venue].filter(Boolean).join(" · ");
     wcRenderMatchDetail(match);
   } catch (err) {
@@ -635,7 +665,8 @@ async function wcOpenTeamDetail(id) {
   try {
     const data = await wcApiGet("wc2026_team", { id });
     const team = data.item;
-    wcEl("wcDetailTitle").textContent = team.name || "Đội bóng";
+    const titleEl = wcEl("wcDetailTitle");
+    if (titleEl) titleEl.innerHTML = wcTeamNameHtml(team) || "Đội bóng";
     wcEl("wcDetailSubtitle").textContent = [team.fifaCode, team.group ? `Bảng ${team.group}` : ""].filter(Boolean).join(" · ");
     wcRenderTeamDetail(team);
   } catch (err) {

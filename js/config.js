@@ -34,6 +34,8 @@ let formationB = "3-1-2";
 let formationCapMain = "3-1-2";
 let formationCapSub = "3-1-2";
 let lineupMode = "internal";
+/** Main-nav workspace for lineup UI: "split" (Chia đội) | "hlv" (HLV) */
+let lineupWorkspace = "split";
 let opponentTeamName = "";
 const FORMATION_COORDS = {
   "3-2-1": {

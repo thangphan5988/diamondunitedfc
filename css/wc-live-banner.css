@@ -61,6 +61,10 @@
 }
 .wcBannerTeam--home{text-align:right}
 .wcBannerTeam--away{text-align:left}
+.wcBannerTeam.wcTeamVn{
+  color:#dc2626!important;
+  font-weight:900!important;
+}
 .wcBannerScore{
   font-size:12px;font-weight:900;line-height:1;white-space:nowrap;text-align:center
 }

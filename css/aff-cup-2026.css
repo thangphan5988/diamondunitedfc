@@ -13,6 +13,20 @@
 .wcSourceChip a{color:var(--accent-brand);text-decoration:none}
 .wcSourceChip a:hover{text-decoration:underline}
 
+.wcTeamVn,
+.wcTeamVn strong,
+strong.wcTeamVn,
+h4.wcTeamVn,
+.wcStandTeamBtn .wcTeamVn,
+.wcMatchTeam .wcTeamVn,
+.wcDetailHeroTeam .wcTeamVn,
+.wcDetailScorerCol .wcTeamVn,
+.wcDetailMiniMatch .wcTeamVn,
+#wcDetailTitle .wcTeamVn{
+  color:#dc2626!important;
+  font-weight:800!important;
+}
+
 .wcTabs{
   display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px
 }

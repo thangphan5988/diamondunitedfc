@@ -92,12 +92,28 @@
     return `href="${escapeHtml(href)}"`;
   }
 
+  function isVietnamTeam(teamOrName) {
+    if (!teamOrName) return false;
+    if (typeof teamOrName === "object") {
+      const id = String(teamOrName.id || "").toLowerCase();
+      const code = String(teamOrName.code || teamOrName.fifaCode || "").toUpperCase();
+      if (id === "vietnam" || code === "VIE" || code === "VN") return true;
+      return isVietnamTeam(teamOrName.name);
+    }
+    const name = String(teamOrName).trim().toLowerCase();
+    return name === "việt nam" || name === "vietnam" || name === "viet nam";
+  }
+
+  function teamNameClass(team, base) {
+    return [base || "", isVietnamTeam(team) ? "wcTeamVn" : ""].filter(Boolean).join(" ");
+  }
+
   function liveItemHtml(fx) {
     return `<a class="wcLiveItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
       <div class="wcBannerMatchTeams">
-        <span class="wcBannerTeam wcBannerTeam--home">${escapeHtml(fx.home?.name)}</span>
+        <span class="${teamNameClass(fx.home, "wcBannerTeam wcBannerTeam--home")}">${escapeHtml(fx.home?.name)}</span>
         <span class="wcBannerScore">${escapeHtml(scoreLine(fx))}</span>
-        <span class="wcBannerTeam wcBannerTeam--away">${escapeHtml(fx.away?.name)}</span>
+        <span class="${teamNameClass(fx.away, "wcBannerTeam wcBannerTeam--away")}">${escapeHtml(fx.away?.name)}</span>
       </div>
       <span class="wcMatchStatus">${escapeHtml(statusLabel(fx.status, fx.elapsed))}</span>
     </a>`;
@@ -106,9 +122,9 @@
   function upcomingItemHtml(fx) {
     return `<a class="wcUpcomingItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
       <div class="wcBannerMatchTeams">
-        <span class="wcBannerTeam wcBannerTeam--home">${escapeHtml(fx.home?.name)}</span>
+        <span class="${teamNameClass(fx.home, "wcBannerTeam wcBannerTeam--home")}">${escapeHtml(fx.home?.name)}</span>
         <span class="wcBannerScore">vs</span>
-        <span class="wcBannerTeam wcBannerTeam--away">${escapeHtml(fx.away?.name)}</span>
+        <span class="${teamNameClass(fx.away, "wcBannerTeam wcBannerTeam--away")}">${escapeHtml(fx.away?.name)}</span>
       </div>
       <span class="wcMatchTime">${escapeHtml(formatMatchTime(fx))}</span>
     </a>`;

@@ -147,7 +147,7 @@ async function adminLogin(){
       await restorePendingMatchIfAny();
     }
     if(canUseLineupTab()){
-      switchTab("lineup");
+      switchTab(preferredLineupTab());
       startConfirmPolling();
     }
   }catch(e){
@@ -245,8 +245,10 @@ function applyAuthUI(){
   const btnLogin = document.getElementById("btnLogin");
   const btnLogout = document.getElementById("btnLogout");
   const tabLineup = document.getElementById("tabLineup");
+  const tabHlv = document.getElementById("tabHlv");
   const tabAdmin = document.getElementById("tabAdmin");
-  const showLineup = loggedIn && canUseLineupTab();
+  const showSplit = loggedIn && canUseSplitTab();
+  const showHlv = loggedIn && canUseHlvTab();
 
   if(loggedIn){
     label.textContent = `Đăng nhập: ${authSession.display_name || authSession.username} · ${permLabelList(authSession.permissions)}`;
@@ -262,31 +264,30 @@ function applyAuthUI(){
   }
 
   if(tabLineup){
-    tabLineup.style.display = showLineup ? "" : "none";
+    tabLineup.style.display = showSplit ? "" : "none";
     tabLineup.textContent = getLineupTabLabel();
+  }
+  if(tabHlv){
+    tabHlv.style.display = showHlv ? "" : "none";
+    tabHlv.textContent = getHlvTabLabel();
   }
   tabAdmin.style.display = loggedIn && canAccessAdminTab() ? "" : "none";
 
-  if(showLineup){
-    const showInternal = isFullLineupRole() || canSplitTeams() || canManageTeamA() || canManageTeamB();
-    document.getElementById("modeInternal").style.display = showInternal ? "" : "none";
-    document.getElementById("modeCap").style.display = (canCoordinateCap() || canCapHlvEdit() || isFullLineupRole()) ? "" : "none";
+  if(showSplit || showHlv){
+    syncLineupModeButtons();
     document.getElementById("btnRandom").style.display =
-      canSplitTeams() && lineupMode === "internal" && !matchLocked && !lastResult ? "" : "none";
+      lineupWorkspace === "split" && canSplitTeams() && lineupMode === "internal" && !matchLocked && !lastResult ? "" : "none";
     document.getElementById("btnOptimizeCap").style.display =
-      canCoordinateCap() && lineupMode === "cap" ? "" : "none";
-
-    if(lineupMode === "internal" && !showInternal && canCapHlvEdit()){
-      switchLineupMode("cap", true);
-    }else if(lineupMode === "internal" && !showInternal && canCoordinateCap()){
-      switchLineupMode("cap", true);
-    }else if(lineupMode === "cap" && !canManageCapLineup() && showInternal){
-      switchLineupMode("internal", true);
-    }
+      lineupWorkspace === "split" && canCoordinateCap() && lineupMode === "cap" ? "" : "none";
     applyLineupRoleUI();
   }
 
-  if(document.getElementById("tabLineup").classList.contains("active") && !showLineup) switchTab("latest");
+  if(document.getElementById("tabLineup")?.classList.contains("active") && !showSplit){
+    switchTab(showHlv ? "hlv" : "latest");
+  }
+  if(document.getElementById("tabHlv")?.classList.contains("active") && !showHlv){
+    switchTab(showSplit ? "lineup" : "latest");
+  }
   if(document.getElementById("tabAdmin").classList.contains("active") && !canAccessAdminTab()) switchTab("latest");
 
   const adminTabs = document.getElementById("adminSectionTabs");
