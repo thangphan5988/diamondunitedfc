@@ -169,7 +169,7 @@ async function openEditResultModal(historyIdx, ev){
 
     editResultState.formPlayers.forEach(p => {
       if(editResultState.playerMatchScores[p.name] == null){
-        editResultState.playerMatchScores[p.name] = 7;
+        editResultState.playerMatchScores[p.name] = DEFAULT_MATCH_SCORE;
       }
     });
 
@@ -506,7 +506,7 @@ function renderResultForm(){
           <span></span>
         </div>`;
     const rows = list.map(p => {
-      const score = Number(scoreMap[p.name] ?? 7);
+      const score = Number(scoreMap[p.name] ?? DEFAULT_MATCH_SCORE);
       const goals = Number(goalMap[p.name] ?? 0);
       const assists = Number(assistMap[p.name] ?? 0);
       const ratingBefore = getRatingBeforeForResultForm(p);
@@ -624,10 +624,10 @@ function pickTeamMvp_(teamPlayers, scoreMap){
   if(!eligible.length) return null;
   let maxScore = -1;
   eligible.forEach(p => {
-    const s = Number(scoreMap[p.name] ?? 7);
+    const s = Number(scoreMap[p.name] ?? DEFAULT_MATCH_SCORE);
     if(s > maxScore) maxScore = s;
   });
-  const tied = eligible.filter(p => Number(scoreMap[p.name] ?? 7) === maxScore);
+  const tied = eligible.filter(p => Number(scoreMap[p.name] ?? DEFAULT_MATCH_SCORE) === maxScore);
   tied.sort((a, b) => {
     if(!!a.starter !== !!b.starter) return a.starter ? -1 : 1;
     return a.name.localeCompare(b.name, "vi");
@@ -693,7 +693,7 @@ async function saveMatchResult(){
         player_name: p.name,
         team: p.team,
         starter: !!p.starter,
-        match_score: anon ? anonymousLineupRating() : Number(scoreMap[p.name] ?? 7),
+        match_score: anon ? anonymousLineupRating() : Number(scoreMap[p.name] ?? DEFAULT_MATCH_SCORE),
         goals: anon ? 0 : clampMatchStat(goalMap[p.name] ?? 0),
         assists: anon ? 0 : clampMatchStat(assistMap[p.name] ?? 0),
         goal_video_urls: anon ? [] : goalVideoUrlsForPayload(p.name, goalMap[p.name] ?? 0),
@@ -818,7 +818,7 @@ async function saveMatchResult(){
       player_name: p.name,
       team: p.team,
       starter: !!p.starter,
-      match_score: anon ? anonymousLineupRating() : Number(playerMatchScores[p.name] ?? 7),
+      match_score: anon ? anonymousLineupRating() : Number(playerMatchScores[p.name] ?? DEFAULT_MATCH_SCORE),
       goals: anon ? 0 : clampMatchStat(playerMatchGoals[p.name] ?? 0),
       assists: anon ? 0 : clampMatchStat(playerMatchAssists[p.name] ?? 0),
       goal_video_urls: anon ? [] : goalVideoUrlsForPayload(p.name, playerMatchGoals[p.name] ?? 0),

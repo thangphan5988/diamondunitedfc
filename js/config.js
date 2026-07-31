@@ -66,6 +66,8 @@ let currentImageFilename = null;
 let playerMatchScores = {};
 let playerMatchGoals = {};
 let playerMatchAssists = {};
+/** Điểm trận mặc định khi mở form kết quả (8–10 → +1 rating) */
+const DEFAULT_MATCH_SCORE = 8;
 let highlightVideoUrl = "";
 let playerGoalVideoUrls = {};
 let cachedHistoryMatches = [];

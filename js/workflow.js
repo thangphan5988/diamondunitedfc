@@ -408,7 +408,7 @@ function maybeAutoLockFromConfirm(){
     playerMatchGoals = {};
     playerMatchAssists = {};
     allPlayers.forEach(p => {
-      playerMatchScores[p.name] = 7;
+      playerMatchScores[p.name] = DEFAULT_MATCH_SCORE;
       playerMatchGoals[p.name] = 0;
       playerMatchAssists[p.name] = 0;
     });
@@ -469,7 +469,7 @@ function applyServerPendingMatch(data){
   playerMatchGoals = playerMatchGoals || {};
   playerMatchAssists = playerMatchAssists || {};
   getAllMatchPlayers().forEach(p => {
-    if(playerMatchScores[p.name] == null) playerMatchScores[p.name] = 7;
+    if(playerMatchScores[p.name] == null) playerMatchScores[p.name] = DEFAULT_MATCH_SCORE;
     if(playerMatchGoals[p.name] == null) playerMatchGoals[p.name] = 0;
     if(playerMatchAssists[p.name] == null) playerMatchAssists[p.name] = 0;
   });

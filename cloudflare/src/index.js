@@ -1114,7 +1114,7 @@ function historyRatingFields(item, anonNorms) {
   const ratingBefore = clampRating(item.rating_before);
   const delta = calcRatingDelta(item.match_score);
   return {
-    match_score: Number(item.match_score) || 7,
+    match_score: Number(item.match_score) || 8,
     rating_before: ratingBefore,
     delta,
     rating_after: clampRating(ratingBefore + delta),
@@ -1290,8 +1290,8 @@ async function saveMatchResult(db, payload, session) {
     const ratingLocked = capHlvConfirmed || teamHlvLocked;
     const statsLocked = !finalize && (capHlvConfirmed || teamHlvLocked);
     const matchScore = ratingLocked
-      ? Number(row.match_score) || 7
-      : (incoming ? Number(incoming.match_score) : Number(row.match_score) || 7);
+      ? Number(row.match_score) || 8
+      : (incoming ? Number(incoming.match_score) : Number(row.match_score) || 8);
     const anon = anonNorms.has(normalizeName(row.player_name));
     mergedPlayers.push({
       player_name: row.player_name,
@@ -1410,7 +1410,7 @@ async function editMatchResult(db, payload) {
       player_name: row.player_name,
       team: String(row.team || "").toUpperCase(),
       starter: !!row.starter,
-      match_score: anon ? 5 : (Number(incoming.match_score) || 7),
+      match_score: anon ? 5 : (Number(incoming.match_score) || 8),
       goals: clampStatCount(incoming.goals),
       assists: clampStatCount(incoming.assists),
       rating_before: anon ? 5 : clampRating(roster?.base_rating ?? roster?.rating ?? row.rating_before),

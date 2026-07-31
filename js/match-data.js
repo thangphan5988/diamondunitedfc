@@ -130,7 +130,7 @@ function lockMatchState(matchId, matchLabel, imageFilename){
   playerGoalVideoUrls = {};
   highlightVideoUrl = "";
   allPlayers.forEach(p => {
-    playerMatchScores[p.name] = 7;
+    playerMatchScores[p.name] = DEFAULT_MATCH_SCORE;
     playerMatchGoals[p.name] = 0;
     playerMatchAssists[p.name] = 0;
   });
