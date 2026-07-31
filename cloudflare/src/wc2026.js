@@ -545,11 +545,30 @@ function teamLogo(meta) {
   return meta?.flag ? `https://flagcdn.com/w80/${meta.flag}.png` : "";
 }
 
+function formatVnDateTime(ms) {
+  try {
+    return new Intl.DateTimeFormat("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date(ms));
+  } catch {
+    return new Date(ms).toISOString();
+  }
+}
+
 function parseAffKickoff(dateLabel, timeLabel) {
-  const dm = String(dateLabel || "").match(/(\d{4})-(\d{2})-(\d{2})/);
-  const tm = String(timeLabel || "").match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d+)(?::(\d{2}))?/i);
+  const dateText = cleanWikiText(dateLabel);
+  const timeText = cleanWikiText(timeLabel);
+  const fallbackLabel = [dateText, timeText].filter(Boolean).join(" ");
+  const dm = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+  const tm = timeText.match(/(\d{1,2}):(\d{2})\s*UTC\s*([+-]\d+)(?::(\d{2}))?/i);
   if (!dm) {
-    return { date: "", timestamp: null, localLabel: cleanWikiText(`${dateLabel} ${timeLabel}`) };
+    return { date: "", timestamp: null, localLabel: fallbackLabel };
   }
   const [, y, mo, d] = dm;
   const hour = tm ? Number(tm[1]) : 0;
@@ -561,7 +580,7 @@ function parseAffKickoff(dateLabel, timeLabel) {
   return {
     date: new Date(utcMs).toISOString(),
     timestamp: Math.floor(utcMs / 1000),
-    localLabel: cleanWikiText(`${dateLabel} ${timeLabel}`)
+    localLabel: formatVnDateTime(utcMs)
   };
 }
 
@@ -823,7 +842,7 @@ function computeStandingsFromFixtures(fixtures) {
 }
 
 async function loadAffDataset(env) {
-  return getCached(env.AVATARS, "aff26:dataset:v4", TTL.fixtures, async () => {
+  return getCached(env.AVATARS, "aff26:dataset:v5", TTL.fixtures, async () => {
     const html = await fetchWikiEventHtml();
     const fixtures = parseAffFixtures(html);
     let groups = parseAffStandings(html);

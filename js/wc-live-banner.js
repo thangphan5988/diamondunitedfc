@@ -49,29 +49,22 @@
   }
 
   function formatMatchTime(fx) {
+    const opts = {
+      timeZone: "Asia/Ho_Chi_Minh",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    };
     if (fx?.timestamp) {
       const d = new Date(fx.timestamp * 1000);
-      if (!Number.isNaN(d.getTime())) {
-        return d.toLocaleString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-      }
+      if (!Number.isNaN(d.getTime())) return d.toLocaleString("vi-VN", opts);
     }
     if (fx?.date) {
       const d = new Date(fx.date);
-      if (!Number.isNaN(d.getTime())) {
-        return d.toLocaleString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-      }
+      if (!Number.isNaN(d.getTime())) return d.toLocaleString("vi-VN", opts);
     }
     return String(fx?.localLabel || "").trim() || "Sắp đá";
   }
