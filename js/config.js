@@ -36,6 +36,9 @@ let formationCapSub = "3-1-2";
 let lineupMode = "internal";
 /** Main-nav workspace for lineup UI: "split" (Chia đội) | "hlv" (HLV) */
 let lineupWorkspace = "split";
+/** User clicked Nội bộ / Cáp — don't let polling snap mode away */
+let lineupModePinned = false;
+let lastPendingPollFingerprint = "";
 let opponentTeamName = "";
 const FORMATION_COORDS = {
   "3-2-1": {

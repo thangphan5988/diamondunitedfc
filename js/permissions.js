@@ -153,7 +153,9 @@ function switchLineupMode(mode, silent){
     return;
   }
 
-  lineupMode = mode === "cap" ? "cap" : "internal";
+  const nextMode = mode === "cap" ? "cap" : "internal";
+  if(!silent) lineupModePinned = true;
+  lineupMode = nextMode;
   document.getElementById("modeInternal").classList.toggle("active", lineupMode === "internal");
   document.getElementById("modeCap").classList.toggle("active", lineupMode === "cap");
 
@@ -323,7 +325,12 @@ function enterLineupWorkspace(workspace, silent){
   }else{
     const showInternal = isFullLineupRole() || canSplitTeams() || canImportRoster();
     const showCap = isFullLineupRole() || canCoordinateCap();
-    if(lineupMode === "cap" && !showCap && showInternal){
+    // Default Nội bộ when both modes available and no match loaded yet
+    if(showInternal && showCap){
+      if(!lineupModePinned && !lastResult && lineupMode !== "internal"){
+        switchLineupMode("internal", true);
+      }
+    }else if(lineupMode === "cap" && !showCap && showInternal){
       switchLineupMode("internal", true);
     }else if(lineupMode === "internal" && !showInternal && showCap){
       switchLineupMode("cap", true);
@@ -332,9 +339,6 @@ function enterLineupWorkspace(workspace, silent){
 
   syncLineupModeButtons();
   applyLineupRoleUI();
-  if(!silent && typeof updateRoleTaskBanner === "function"){
-    /* banner refreshed inside applyLineupRoleUI */
-  }
 }
 
 function syncLineupModeButtons(){

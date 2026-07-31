@@ -139,13 +139,15 @@ function lockMatchState(matchId, matchLabel, imageFilename){
 
 function unlockMatchState(){
   matchLocked = false;
-  teamConfirmState = { A: false, B: false };
+  teamConfirmState = { A: false, B: false, Main: false, Sub: false };
   teamResultSaved = { A: false, B: false };
   matchCaptains = { A: null, B: null };
   pendingTeamAScore = "";
   pendingTeamBScore = "";
   lineupPublishedToHlv = false;
   lineupDragSession = null;
+  lineupModePinned = false;
+  lastPendingPollFingerprint = "";
   localStorage.removeItem("dufc_team_workflow");
   currentMatchId = null;
   currentMatchLabel = null;

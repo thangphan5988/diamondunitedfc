@@ -284,16 +284,44 @@ function updateCoordinatorConfirmStatus(){
   el.innerHTML = msg;
 }
 
-function shouldFullApplyServerPendingMatch(){
+function pendingMatchFingerprint(summary){
+  if(!summary) return "";
+  return [
+    summary.match_id,
+    summary.status,
+    summary.match_type,
+    summary.team_a_lineup_confirmed,
+    summary.team_b_lineup_confirmed,
+    summary.team_a_result_saved,
+    summary.team_b_result_saved,
+    summary.image_filename || "",
+    summary.match_start_time || ""
+  ].join("|");
+}
+
+function shouldFullApplyServerPendingMatch(summary){
   if(lineupDragSession) return false;
   if(typeof shouldPreserveLocalMatchResult === "function" && shouldPreserveLocalMatchResult()) return false;
   if(canCoordinateCap() && isCapMode() && lastResult && !lineupPublishedToHlv && !matchLocked){
+    return false;
+  }
+  // Protect local Nội bộ draft / pinned mode from Cap pending overwrite
+  const isCapPending = String(summary?.match_type || "").toLowerCase() === "cap";
+  if(lineupWorkspace === "split" && lineupMode === "internal" && isCapPending && (lineupModePinned || (lastResult && !matchLocked))){
+    return false;
+  }
+  if(lineupWorkspace === "split" && lineupMode === "cap" && !isCapPending && lineupModePinned && lastResult && !matchLocked){
     return false;
   }
   if(isCapHlvView() && lineupPublishedToHlv && !matchLocked && !(teamConfirmState.Main && teamConfirmState.Sub)){
     return !lastResult;
   }
   if(isCapHlvView() && isMatchReadyForResults() && canResultCap()){
+    return false;
+  }
+  // Already synced — avoid full re-render every poll tick
+  const fp = pendingMatchFingerprint(summary);
+  if(fp && fp === lastPendingPollFingerprint && lastResult && currentMatchId === summary.match_id){
     return false;
   }
   return true;
@@ -447,14 +475,19 @@ function applyServerPendingMatch(data){
   });
   if(!preserveResult) syncPlayerMatchScoresFromHistory(data.players);
 
-  switchLineupMode(isCapMode() ? "cap" : "internal", true);
-  if(isCapMode()){
+  const serverMode = String(summary.match_type || "").toLowerCase() === "cap" || lastResult?.matchMode === "cap"
+    ? "cap"
+    : "internal";
+  if(!lineupModePinned || lineupMode === serverMode){
+    switchLineupMode(serverMode, true);
+  }
+  if(lineupMode === "cap"){
     document.getElementById("formationSelectCapMain").value = formationCapMain;
     document.getElementById("formationSelectCapSub").value = formationCapSub;
     renderCapLineups(lastResult);
     updateCapResultStats(lastResult);
     document.getElementById("textResult").textContent = textResultCap(lastResult);
-  }else{
+  }else if(lineupMode === "internal"){
     document.getElementById("formationSelectA").value = formationA;
     document.getElementById("formationSelectB").value = formationB;
     renderInternalLineups();
@@ -474,6 +507,7 @@ function applyServerPendingMatch(data){
   updateHlvResultStatusUI();
   persistTeamWorkflowState();
   applyLineupRoleUI();
+  lastPendingPollFingerprint = pendingMatchFingerprint(summary);
   return true;
 }
 
@@ -496,10 +530,11 @@ async function refreshTeamConfirmFromServer(){
       const prevB = teamConfirmState.B;
       const prevMain = teamConfirmState.Main;
       const prevSub = teamConfirmState.Sub;
-      if(shouldFullApplyServerPendingMatch()){
+      if(shouldFullApplyServerPendingMatch(summary)){
         applyServerPendingMatch(data);
       }else{
         applyServerPendingMatchLight(summary);
+        lastPendingPollFingerprint = pendingMatchFingerprint(summary);
         return;
       }
       if(canSplitTeams() && !isCapPending){
