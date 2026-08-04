@@ -34,57 +34,92 @@
   <link rel="icon" href="assets/logo.png" type="image/png" />
   <link rel="apple-touch-icon" href="assets/logo.png" />
   <script>
-  /* Boot nhạc ngay — muted fallback nếu browser chặn autoplay có tiếng */
+  /* Boot nhạc — browser thường chặn autoplay có tiếng trên web thật */
   (function () {
     try {
-      var SRC = "assets/audio/diamond-united-rap.mp3";
+      var SRC = "/assets/audio/diamond-united-rap.mp3";
+      var VOL = 0.55;
       var a = new Audio();
       a.preload = "auto";
       a.loop = true;
-      a.volume = 0.55;
+      a.volume = VOL;
+      a.playsInline = true;
       a.setAttribute("playsinline", "");
       a.setAttribute("webkit-playsinline", "");
       a.src = SRC;
       window.__dufcBgAudio = a;
       window.__dufcBgNeedsUnmute = false;
+      window.__dufcBgUnlockBound = false;
 
-      function unmute() {
-        if (!window.__dufcBgNeedsUnmute) return;
-        window.__dufcBgNeedsUnmute = false;
-        a.muted = false;
-        a.volume = 0.55;
-        if (a.paused) {
-          var p = a.play();
-          if (p && p.catch) p.catch(function () {});
-        }
-        document.removeEventListener("pointerdown", unmute, true);
-        document.removeEventListener("touchstart", unmute, true);
-        document.removeEventListener("keydown", unmute, true);
-      }
-
-      function bindUnmute() {
+      function showUnlockUi() {
         window.__dufcBgNeedsUnmute = true;
-        document.addEventListener("pointerdown", unmute, true);
-        document.addEventListener("touchstart", unmute, true);
-        document.addEventListener("keydown", unmute, true);
+        try { document.documentElement.setAttribute("data-bgm-locked", "1"); } catch (e) {}
+        window.dispatchEvent(new Event("dufc-bgm-locked"));
       }
+
+      function hideUnlockUi() {
+        window.__dufcBgNeedsUnmute = false;
+        try { document.documentElement.removeAttribute("data-bgm-locked"); } catch (e) {}
+        window.dispatchEvent(new Event("dufc-bgm-unlocked"));
+      }
+
+      function startWithSound() {
+        if (window.__dufcBgAudioPaused) return Promise.resolve(false);
+        a.muted = false;
+        a.volume = VOL;
+        try { if (a.currentTime > 0.35) a.currentTime = 0; } catch (e) {}
+        var p = a.play();
+        if (!p || !p.then) { hideUnlockUi(); return Promise.resolve(true); }
+        return p.then(function () { hideUnlockUi(); return true; })
+          .catch(function () { return false; });
+      }
+
+      function unlockFromGesture(e) {
+        if (window.__dufcBgAudioPaused) return;
+        // Tránh đụng nút Play/Pause — để handler nút xử lý (không play rồi pause ngay)
+        try {
+          var t = e && e.target;
+          if (t && t.closest && (t.closest("#bgMusicToggle") || t.closest("#bgMusicUnlockTip"))) {
+            return;
+          }
+        } catch (err) {}
+        startWithSound().then(function (ok) { if (ok) unbindUnlock(); });
+      }
+
+      function bindUnlock() {
+        if (window.__dufcBgUnlockBound) return;
+        window.__dufcBgUnlockBound = true;
+        showUnlockUi();
+        document.addEventListener("pointerdown", unlockFromGesture, true);
+        document.addEventListener("touchstart", unlockFromGesture, true);
+        document.addEventListener("keydown", unlockFromGesture, true);
+      }
+
+      function unbindUnlock() {
+        window.__dufcBgUnlockBound = false;
+        document.removeEventListener("pointerdown", unlockFromGesture, true);
+        document.removeEventListener("touchstart", unlockFromGesture, true);
+        document.removeEventListener("keydown", unlockFromGesture, true);
+      }
+
+      window.__dufcBgUnlock = function () {
+        return startWithSound().then(function (ok) {
+          if (ok) unbindUnlock();
+          return ok;
+        });
+      };
 
       function kick() {
         if (window.__dufcBgAudioPaused) return;
-        // 1) Thử phát có tiếng
-        a.muted = false;
-        var p = a.play();
-        if (!p || !p.then) return;
-        p.then(function () {
-          window.__dufcBgNeedsUnmute = false;
-        }).catch(function () {
-          // 2) Browser chặn autoplay có tiếng → phát muted để buffer sẵn, unmute ở gesture đầu
+        startWithSound().then(function (ok) {
+          if (ok) return;
           a.muted = true;
-          a.play().then(function () {
-            bindUnmute();
-          }).catch(function () {
-            bindUnmute();
-          });
+          var warm = a.play();
+          if (warm && warm.then) {
+            warm.then(function () { bindUnlock(); }).catch(function () { bindUnlock(); });
+          } else {
+            bindUnlock();
+          }
         });
       }
 
@@ -105,7 +140,7 @@
   <link rel="stylesheet" href="css/teams-cards.css?v=2.6.0">
   <link rel="stylesheet" href="css/ads.css?v=2.4.87">
   <link rel="stylesheet" href="css/wc-live-banner.css?v=2.8.9">
-  <link rel="stylesheet" href="css/bg-music.css?v=1.0.6">
+  <link rel="stylesheet" href="css/bg-music.css?v=1.0.9">
   <link rel="stylesheet" href="css/seo.css?v=2.4.93">
   <link rel="stylesheet" href="css/analytics.css?v=2.4.96">
   <script type="application/ld+json">
@@ -768,7 +803,7 @@
 
 
   <script src="js/config.js?v=2.8.9"></script>
-  <script src="js/bg-music.js?v=1.0.6"></script>
+  <script src="js/bg-music.js?v=1.0.9"></script>
   <script src="js/wc-live-banner.js?v=2.8.9"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>

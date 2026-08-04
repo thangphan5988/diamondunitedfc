@@ -46,12 +46,37 @@ html[data-theme="light"] .bgMusicCore{
 .bgMusicToggle:not(.is-playing) .bgMusicIcon--play{display:inline;margin-left:2px}
 
 .bgMusicToggle.is-muted-warm .bgMusicCore{
-  background:linear-gradient(135deg,#ea580c,#c2410c)
+  background:linear-gradient(135deg,#ea580c,#c2410c);
+  animation:bgMusicPulse 1.2s ease-in-out infinite
 }
 .bgMusicToggle.is-muted-warm::after{
   content:"🔊";position:absolute;right:-2px;top:-2px;font-size:11px;
   filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))
 }
+@keyframes bgMusicPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+}
+
+.bgMusicUnlockTip{
+  position:fixed;right:16px;bottom:80px;z-index:91;
+  display:inline-flex;align-items:center;gap:8px;
+  max-width:min(280px,calc(100vw - 32px));
+  margin:0;padding:10px 14px;
+  border:0;border-radius:999px;cursor:pointer;
+  background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;
+  font-weight:800;font-size:12px;line-height:1.25;text-align:left;
+  box-shadow:0 12px 28px rgba(234,88,12,.4);
+  animation:bgMusicTipIn .35s ease both
+}
+.bgMusicUnlockTip[hidden]{display:none!important}
+.bgMusicUnlockTipIcon{font-size:14px;flex:0 0 auto}
+html:not([data-bgm-locked="1"]) .bgMusicUnlockTip{display:none!important}
+@keyframes bgMusicTipIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
 .bgMusicToggle.is-buffering .bgMusicRingProgress{
   stroke:#fb923c;stroke-dashoffset:40;animation:bgMusicSpin 1s linear infinite
 }
@@ -63,4 +88,5 @@ html[data-theme="light"] .bgMusicCore{
   .bgMusicToggle{right:12px;bottom:12px;width:52px;height:52px}
   .bgMusicCore{width:38px;height:38px}
   .bgMusicIcon{font-size:14px}
+  .bgMusicUnlockTip{right:12px;bottom:72px;font-size:11px;padding:9px 12px}
 }

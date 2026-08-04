@@ -1,7 +1,7 @@
-/* Background music UI — sync với boot muted/unmute ở <head> */
+/* Background music UI + unlock toast (browser chặn autoplay có tiếng) */
 
 (function initBgMusic() {
-  const SRC = "assets/audio/diamond-united-rap.mp3";
+  const SRC = "/assets/audio/diamond-united-rap.mp3";
   const VOLUME = 0.55;
   const RING_R = 24;
   const RING_C = 2 * Math.PI * RING_R;
@@ -14,34 +14,77 @@
   audio.loop = true;
   audio.preload = "auto";
   audio.volume = VOLUME;
+  audio.playsInline = true;
   audio.setAttribute("playsinline", "");
   audio.setAttribute("webkit-playsinline", "");
-  if (!audio.getAttribute("src") && !audio.src) audio.src = SRC;
+  if (!audio.src) audio.src = SRC;
 
   let playing = !audio.paused && !audio.ended;
   let pausedThisVisit = !!window.__dufcBgAudioPaused;
-  let unlockBound = false;
   let waitingForBuffer = false;
   let rafId = 0;
   let progressEl = null;
+  let tipEl = null;
 
-  function needsUnmute() {
-    return !!window.__dufcBgNeedsUnmute || !!audio.muted;
+  function needsUnlock() {
+    return (
+      document.documentElement.getAttribute("data-bgm-locked") === "1" ||
+      !!window.__dufcBgNeedsUnmute ||
+      (!!audio.muted && !audio.paused)
+    );
+  }
+
+  function ensureTip() {
+    if (tipEl || !document.body) return tipEl;
+    tipEl = document.createElement("button");
+    tipEl.type = "button";
+    tipEl.id = "bgMusicUnlockTip";
+    tipEl.className = "bgMusicUnlockTip";
+    tipEl.hidden = true;
+    tipEl.innerHTML =
+      '<span class="bgMusicUnlockTipIcon" aria-hidden="true">🎵</span>' +
+      "<span>Nghe nhạc Diamond United FC</span>";
+    tipEl.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+    });
+    tipEl.addEventListener("touchstart", (e) => {
+      e.stopPropagation();
+    }, { passive: true });
+    tipEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      unlockNow();
+    });
+    document.body.appendChild(tipEl);
+    return tipEl;
+  }
+
+  function syncTip() {
+    ensureTip();
+    if (!tipEl) return;
+    const show = needsUnlock() && !pausedThisVisit;
+    tipEl.hidden = !show;
   }
 
   function syncUi() {
     const btn = document.getElementById("bgMusicToggle");
-    if (!btn) return;
     const active = playing || (!audio.paused && !audio.ended);
-    btn.classList.toggle("is-playing", active);
-    btn.classList.toggle("is-buffering", waitingForBuffer && !active);
-    btn.classList.toggle("is-muted-warm", needsUnmute() && active);
-    btn.setAttribute("aria-pressed", active ? "true" : "false");
-    let label = "Phát nhạc nền Diamond United RAP";
-    if (active && needsUnmute()) label = "Chạm để bật tiếng nhạc";
-    else if (active) label = "Tạm dừng nhạc nền";
-    btn.setAttribute("aria-label", label);
-    btn.title = active && needsUnmute() ? "Chạm để bật tiếng" : active ? "Pause" : "Play";
+    if (btn) {
+      btn.classList.toggle("is-playing", active && !needsUnlock());
+      btn.classList.toggle("is-buffering", waitingForBuffer && !active);
+      btn.classList.toggle("is-muted-warm", needsUnlock());
+      btn.setAttribute("aria-pressed", active && !needsUnlock() ? "true" : "false");
+      btn.setAttribute(
+        "aria-label",
+        needsUnlock()
+          ? "Nghe nhạc Diamond United FC"
+          : active
+            ? "Tạm dừng nhạc nền"
+            : "Nghe nhạc Diamond United FC"
+      );
+      btn.title = needsUnlock() ? "Nghe nhạc Diamond United FC" : active ? "Tạm dừng" : "Nghe nhạc Diamond United FC";
+    }
+    syncTip();
   }
 
   function setProgress(ratio) {
@@ -75,75 +118,77 @@
     updateProgress();
   }
 
-  function hasPlayableBuffer() {
-    return audio.readyState >= 2;
-  }
-
-  function clearUnmuteFlag() {
-    window.__dufcBgNeedsUnmute = false;
-    audio.muted = false;
-    audio.volume = VOLUME;
+  async function unlockNow() {
+    pausedThisVisit = false;
+    window.__dufcBgAudioPaused = false;
+    if (typeof window.__dufcBgUnlock === "function") {
+      const ok = await window.__dufcBgUnlock();
+      if (ok) {
+        playing = true;
+        syncUi();
+        startProgressLoop();
+        return true;
+      }
+    }
+    try {
+      audio.muted = false;
+      audio.volume = VOLUME;
+      if (audio.currentTime > 0.35) audio.currentTime = 0;
+      await audio.play();
+      window.__dufcBgNeedsUnmute = false;
+      document.documentElement.removeAttribute("data-bgm-locked");
+      playing = true;
+      syncUi();
+      startProgressLoop();
+      return true;
+    } catch (_) {
+      syncUi();
+      return false;
+    }
   }
 
   async function play(fromUser) {
-    if (fromUser) {
-      pausedThisVisit = false;
-      window.__dufcBgAudioPaused = false;
-      clearUnmuteFlag();
-    }
+    if (fromUser) return unlockNow();
 
-    // Đang warm muted từ <head> → giữ nguyên, đừng gọi play() unmuted (bị chặn / abort)
-    if (!fromUser && !audio.paused) {
+    if (!audio.paused) {
       playing = true;
-      waitingForBuffer = false;
       syncUi();
       startProgressLoop();
       return { ok: true };
     }
 
-    waitingForBuffer = !hasPlayableBuffer();
+    waitingForBuffer = audio.readyState < 2;
     syncUi();
     try {
-      if (!fromUser && window.__dufcBgNeedsUnmute) audio.muted = true;
+      if (needsUnlock()) audio.muted = true;
       else audio.muted = false;
-      const p = audio.play();
-      if (p && typeof p.then === "function") await p;
+      await audio.play();
       playing = true;
-      pausedThisVisit = false;
-      window.__dufcBgAudioPaused = false;
       waitingForBuffer = false;
       syncUi();
       startProgressLoop();
       return { ok: true };
     } catch (err) {
-      playing = false;
-      const name = err && err.name;
-      if (name === "NotAllowedError") {
-        // Fallback: muted warm + unmute ở gesture (giống boot <head>)
+      if (err && err.name === "NotAllowedError") {
         try {
           audio.muted = true;
           await audio.play();
           playing = true;
           window.__dufcBgNeedsUnmute = true;
-          bindUnmuteOnce();
+          document.documentElement.setAttribute("data-bgm-locked", "1");
           syncUi();
           startProgressLoop();
           return { ok: true };
         } catch (_) {
+          window.__dufcBgNeedsUnmute = true;
+          document.documentElement.setAttribute("data-bgm-locked", "1");
           syncUi();
-          bindUnmuteOnce();
           return { ok: false, reason: "policy" };
         }
       }
-      if (name === "AbortError" || !hasPlayableBuffer()) {
-        waitingForBuffer = true;
-        syncUi();
-        return { ok: false, reason: "buffer" };
-      }
-      waitingForBuffer = false;
+      waitingForBuffer = true;
       syncUi();
-      stopProgressLoop();
-      return { ok: false, reason: "policy" };
+      return { ok: false, reason: "buffer" };
     }
   }
 
@@ -151,6 +196,7 @@
     pausedThisVisit = true;
     window.__dufcBgAudioPaused = true;
     window.__dufcBgNeedsUnmute = false;
+    document.documentElement.removeAttribute("data-bgm-locked");
     waitingForBuffer = false;
     audio.pause();
     playing = false;
@@ -159,43 +205,15 @@
   }
 
   function toggle() {
-    if (playing || !audio.paused) {
-      // Nếu đang muted warm → lần bấm đầu = unmute, chưa pause
-      if (needsUnmute()) {
-        clearUnmuteFlag();
-        play(true);
-        return;
-      }
-      pause();
-    } else {
-      play(true);
-    }
-  }
+    const btn = document.getElementById("bgMusicToggle");
+    const showingPause = !!(btn && btn.classList.contains("is-playing"));
 
-  function bindUnmuteOnce() {
-    if (unlockBound) return;
-    unlockBound = true;
-    const unmute = () => {
-      if (pausedThisVisit) return;
-      clearUnmuteFlag();
-      if (audio.paused) {
-        play(true).then(() => {
-          teardown();
-        });
-      } else {
-        syncUi();
-        teardown();
-      }
-    };
-    function teardown() {
-      document.removeEventListener("pointerdown", unmute, true);
-      document.removeEventListener("touchstart", unmute, true);
-      document.removeEventListener("keydown", unmute, true);
-      unlockBound = false;
+    // Đang hiện ▶ (hoặc còn lock/muted) → lần nhấn đầu luôn PLAY, không pause
+    if (!showingPause || needsUnlock() || audio.muted) {
+      unlockNow();
+      return;
     }
-    document.addEventListener("pointerdown", unmute, true);
-    document.addEventListener("touchstart", unmute, true);
-    document.addEventListener("keydown", unmute, true);
+    pause();
   }
 
   function tryAutoplay() {
@@ -204,7 +222,6 @@
       playing = true;
       syncUi();
       startProgressLoop();
-      if (needsUnmute()) bindUnmuteOnce();
       return;
     }
     play(false);
@@ -220,27 +237,41 @@
     btn.className = "bgMusicToggle";
     btn.innerHTML =
       '<svg class="bgMusicRing" viewBox="0 0 56 56" aria-hidden="true">' +
-      '<circle class="bgMusicRingTrack" cx="28" cy="28" r="' + RING_R + '"></circle>' +
-      '<circle class="bgMusicRingProgress" cx="28" cy="28" r="' + RING_R + '" ' +
-      'stroke-dasharray="' + RING_C.toFixed(2) + '" stroke-dashoffset="' + RING_C.toFixed(2) + '"></circle>' +
+      '<circle class="bgMusicRingTrack" cx="28" cy="28" r="' +
+      RING_R +
+      '"></circle>' +
+      '<circle class="bgMusicRingProgress" cx="28" cy="28" r="' +
+      RING_R +
+      '" ' +
+      'stroke-dasharray="' +
+      RING_C.toFixed(2) +
+      '" stroke-dashoffset="' +
+      RING_C.toFixed(2) +
+      '"></circle>' +
       "</svg>" +
       '<span class="bgMusicCore">' +
       '<span class="bgMusicIcon bgMusicIcon--pause" aria-hidden="true">⏸</span>' +
       '<span class="bgMusicIcon bgMusicIcon--play" aria-hidden="true">▶</span>' +
       "</span>";
     progressEl = btn.querySelector(".bgMusicRingProgress");
+    btn.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+    });
+    btn.addEventListener("touchstart", (e) => {
+      e.stopPropagation();
+    }, { passive: true });
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       toggle();
     });
     document.body.appendChild(btn);
+    ensureTip();
 
     playing = !audio.paused && !audio.ended;
     syncUi();
     updateProgress();
     if (playing) startProgressLoop();
-    if (needsUnmute()) bindUnmuteOnce();
 
     audio.addEventListener("play", () => {
       playing = true;
@@ -273,9 +304,13 @@
     audio.addEventListener("loadeddata", tryAutoplay);
     audio.addEventListener("canplay", tryAutoplay);
 
+    window.addEventListener("dufc-bgm-locked", syncUi);
+    window.addEventListener("dufc-bgm-unlocked", syncUi);
+
     pausedThisVisit = false;
     window.__dufcBgAudioPaused = false;
     tryAutoplay();
+    syncTip();
 
     window.addEventListener("pageshow", () => {
       pausedThisVisit = false;
