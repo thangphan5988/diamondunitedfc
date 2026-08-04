@@ -37,6 +37,7 @@ import {
 import { applyInactivityDecay, inactivityMetaForPlayer } from "./inactivity.js";
 import { trackSiteEvent, adminGetAnalytics } from "./analytics.js";
 import { wc2026News, wc2026NewsArticle, wc2026Fixtures, wc2026Standings, wc2026Teams, wc2026Match, wc2026Team, wc2026PlayerProfile, wc2026Hub } from "./wc2026.js";
+import { kqxsHub, kqxsLive, kqxsResults } from "./kqxs.js";
 
 export default {
   async scheduled(event, env) {
@@ -92,7 +93,8 @@ export default {
             "admin_list_sponsors", "admin_save_sponsor", "admin_delete_sponsor", "admin_upload_sponsor_image",
             "admin_get_analytics",
             "import_data",
-            "wc2026_news", "wc2026_news_article", "wc2026_fixtures", "wc2026_standings", "wc2026_teams", "wc2026_match", "wc2026_team", "wc2026_player", "wc2026_hub"
+            "wc2026_news", "wc2026_news_article", "wc2026_fixtures", "wc2026_standings", "wc2026_teams", "wc2026_match", "wc2026_team", "wc2026_player", "wc2026_hub",
+            "kqxs_hub", "kqxs_live", "kqxs_results"
           ]
         });
       }
@@ -210,6 +212,12 @@ export default {
           return json(await wc2026PlayerProfile(env, params));
         case "wc2026_hub":
           return json(await wc2026Hub(env));
+        case "kqxs_hub":
+          return json(await kqxsHub(env, params));
+        case "kqxs_live":
+          return json(await kqxsLive(env));
+        case "kqxs_results":
+          return json(await kqxsResults(env, params));
         default:
           return json({ ok: false, error: "Invalid action: " + action }, 400);
       }

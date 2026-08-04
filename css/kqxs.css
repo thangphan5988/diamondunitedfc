@@ -1,0 +1,160 @@
+/* KQXS 3 miền — kết quả xổ số kiến thiết */
+
+.kqxsPage{
+  --kqxs-mb:#b91c1c;
+  --kqxs-mt:#0369a1;
+  --kqxs-mn:#0f766e;
+  --kqxs-db:#b45309;
+}
+
+.kqxsToolbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
+  margin:0 0 16px;padding:14px 16px;border-radius:16px;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)
+}
+.kqxsField{display:flex;flex-direction:column;gap:6px;min-width:140px}
+.kqxsField label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kqxsField input[type="date"],
+.kqxsQuickBtn,
+.kqxsRefreshBtn{
+  height:40px;border-radius:12px;border:1px solid var(--line);
+  background:var(--input-bg);color:var(--text);font-weight:700;font-size:13px;padding:0 12px
+}
+.kqxsQuickRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.kqxsQuickBtn{cursor:pointer}
+.kqxsQuickBtn.active,
+.kqxsQuickBtn:hover{
+  background:var(--accent-brand);border-color:transparent;color:#fff
+}
+.kqxsRefreshBtn{
+  cursor:pointer;background:var(--accent-soft);border-color:transparent;color:var(--accent-brand)
+}
+.kqxsRefreshBtn:hover{filter:brightness(.97)}
+.kqxsStatus{
+  margin-left:auto;font-size:12px;color:var(--muted);line-height:1.45;max-width:320px;text-align:right
+}
+.kqxsStatus strong{color:var(--text-soft)}
+.kqxsLiveChip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-size:11px;font-weight:800
+}
+html:not([data-theme="light"]) .kqxsLiveChip{
+  background:rgba(127,29,29,.28);border-color:rgba(248,113,113,.35);color:#fecaca
+}
+.kqxsLiveDot{
+  width:7px;height:7px;border-radius:50%;background:#ef4444;
+  box-shadow:0 0 0 0 rgba(239,68,68,.55);animation:kqxsPulse 1.4s infinite
+}
+@keyframes kqxsPulse{
+  0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}
+  70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}
+  100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+}
+
+.kqxsTabs{
+  display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px
+}
+.kqxsTab{
+  width:auto;margin:0;padding:9px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--text-soft);font-size:12px;font-weight:800;cursor:pointer
+}
+.kqxsTab.active{color:#fff;border-color:transparent}
+.kqxsTab[data-region="mb"].active,
+.kqxsTab[data-region="mb"]:hover{background:var(--kqxs-mb)}
+.kqxsTab[data-region="mt"].active,
+.kqxsTab[data-region="mt"]:hover{background:var(--kqxs-mt)}
+.kqxsTab[data-region="mn"].active,
+.kqxsTab[data-region="mn"]:hover{background:var(--kqxs-mn)}
+.kqxsTab[data-region="all"].active,
+.kqxsTab[data-region="all"]:hover{background:var(--accent-brand)}
+
+.kqxsBoardGrid{
+  display:grid;gap:16px
+}
+.kqxsBoardGrid--all{
+  grid-template-columns:repeat(3,minmax(0,1fr))
+}
+@media (max-width:1100px){
+  .kqxsBoardGrid--all{grid-template-columns:1fr}
+  .kqxsStatus{margin-left:0;text-align:left;max-width:none}
+}
+
+.kqxsBoard{
+  border-radius:18px;border:1px solid var(--line);background:var(--card);
+  box-shadow:var(--shadow);overflow:hidden;min-width:0
+}
+.kqxsBoardHead{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--line)
+}
+.kqxsBoardHead h2{
+  margin:0;font-size:17px;font-weight:900;letter-spacing:-.02em
+}
+.kqxsBoard--mb .kqxsBoardHead h2{color:var(--kqxs-mb)}
+.kqxsBoard--mt .kqxsBoardHead h2{color:var(--kqxs-mt)}
+.kqxsBoard--mn .kqxsBoardHead h2{color:var(--kqxs-mn)}
+.kqxsBoardMeta{font-size:12px;color:var(--muted);font-weight:700}
+
+.kqxsEmpty,.kqxsLoading,.kqxsError{
+  padding:18px;border-radius:14px;border:1px dashed var(--line);font-size:13px;color:var(--muted)
+}
+.kqxsError{color:#f87171;border-color:rgba(248,113,113,.35);background:rgba(127,29,29,.12)}
+
+.kqxsTableWrap{overflow-x:auto}
+.kqxsTable{
+  width:100%;border-collapse:collapse;font-size:13px
+}
+.kqxsTable th,
+.kqxsTable td{
+  border-bottom:1px solid var(--row-line);padding:9px 10px;vertical-align:middle
+}
+.kqxsTable th{
+  text-align:left;font-size:11px;font-weight:800;color:var(--muted);
+  background:var(--surface);white-space:nowrap
+}
+.kqxsPrizeLabel{
+  width:96px;font-weight:800;color:var(--text-soft);white-space:nowrap
+}
+.kqxsNums{
+  display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center
+}
+.kqxsNum{
+  font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:.02em;color:var(--text)
+}
+.kqxsTable tr[data-prize="db"] .kqxsNum{
+  color:var(--kqxs-db);font-size:16px
+}
+.kqxsBoard--mb tr[data-prize="db"] .kqxsNum{color:var(--kqxs-mb);font-size:18px}
+.kqxsStationCell{min-width:110px}
+.kqxsStationName{
+  font-size:12px;font-weight:900;color:var(--text);margin:0 0 2px
+}
+
+.kqxsLotoBlock{
+  padding:12px 16px 16px;border-top:1px solid var(--line);background:var(--surface)
+}
+.kqxsLotoBlock h3{
+  margin:0 0 8px;font-size:12px;font-weight:900;color:var(--text-soft);text-transform:uppercase;letter-spacing:.04em
+}
+.kqxsLotoChips{
+  display:flex;flex-wrap:wrap;gap:6px
+}
+.kqxsLotoChip{
+  min-width:34px;padding:4px 7px;border-radius:8px;text-align:center;
+  background:var(--card);border:1px solid var(--line);font-size:12px;font-weight:800;
+  font-variant-numeric:tabular-nums
+}
+.kqxsHeadTail{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px
+}
+@media (max-width:640px){
+  .kqxsHeadTail{grid-template-columns:1fr}
+}
+.kqxsHtTable{width:100%;border-collapse:collapse;font-size:12px;background:var(--card);border-radius:12px;overflow:hidden}
+.kqxsHtTable th,.kqxsHtTable td{padding:6px 8px;border-bottom:1px solid var(--row-line);vertical-align:top}
+.kqxsHtTable th{width:42px;background:var(--surface-2);color:var(--muted);font-weight:800}
+.kqxsNote{
+  margin:16px 0 0;padding:12px 14px;border-radius:14px;background:var(--surface-2);
+  border:1px solid var(--line);font-size:12px;line-height:1.55;color:var(--muted)
+}
+.kqxsNote a{color:var(--accent-brand);font-weight:700}
