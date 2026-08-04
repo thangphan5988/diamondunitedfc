@@ -415,3 +415,90 @@ export async function kqxsHub(env, params = {}) {
     }
   };
 }
+
+const MN_PROVINCE_IDS = new Set([
+  "tp-hcm", "dong-thap", "ca-mau", "ben-tre", "vung-tau", "bac-lieu",
+  "dong-nai", "can-tho", "soc-trang", "tay-ninh", "an-giang", "binh-thuan",
+  "vinh-long", "binh-duong", "tra-vinh", "long-an", "binh-phuoc", "hau-giang",
+  "tien-giang", "kien-giang", "lam-dong", "da-lat"
+]);
+
+const MT_PROVINCE_IDS = new Set([
+  "phu-yen", "thua-thien-hue", "dak-lak", "quang-nam", "da-nang", "khanh-hoa",
+  "quang-binh", "binh-dinh", "quang-tri", "gia-lai", "ninh-thuan", "quang-ngai",
+  "dak-nong", "kon-tum"
+]);
+
+function resolveProvinceRegion(provinceId) {
+  const id = String(provinceId || "").trim().toLowerCase();
+  if (!id || id === "mb" || id === "mien-bac" || id === "xsmb") return { region: "mb", province: "mb" };
+  if (id === "mn" || id === "mien-nam" || id === "xsmn") return { region: "mn", province: "" };
+  if (id === "mt" || id === "mien-trung" || id === "xsmt") return { region: "mt", province: "" };
+  if (MN_PROVINCE_IDS.has(id)) return { region: "mn", province: id === "da-lat" ? "lam-dong" : id };
+  if (MT_PROVINCE_IDS.has(id)) return { region: "mt", province: id };
+  if (PROVINCE_NAMES[id]) {
+    // northern station ids in MB history
+    return { region: "mb", province: id };
+  }
+  throw new Error("Không nhận diện được tỉnh/đài: " + provinceId);
+}
+
+function boardFromProvinceItem(region, item, provinceId) {
+  if (region === "mb") {
+    return normalizeMbBoard(item);
+  }
+  const station = (item.ps || []).find((p) => String(p.i || "").toLowerCase() === provinceId);
+  if (!station) return null;
+  return normalizeMultiBoard(region, {
+    d: item.d,
+    w: item.w,
+    state: item.state || "complete",
+    ps: [station]
+  });
+}
+
+/** Kết quả N kỳ gần nhất của 1 tỉnh/đài */
+export async function kqxsProvince(env, params = {}) {
+  const kv = env.AVATARS;
+  const rawProvince = String(params.province || "").trim().toLowerCase();
+  if (!rawProvince) throw new Error("province is required");
+  const limit = Math.min(10, Math.max(1, Math.round(Number(params.limit) || 3)));
+  const { region, province } = resolveProvinceRegion(rawProvince);
+  const items = await fetchRegionItems(kv, region);
+
+  const matched = [];
+  for (const item of items || []) {
+    if (region === "mb") {
+      if (!province || province === "mb") {
+        matched.push(boardFromProvinceItem("mb", item, province));
+      } else if (String(item.draw_i || "").toLowerCase() === province) {
+        matched.push(boardFromProvinceItem("mb", item, province));
+      }
+    } else if (!province) {
+      matched.push(normalizeMultiBoard(region, item));
+    } else {
+      const board = boardFromProvinceItem(region, item, province);
+      if (board) matched.push(board);
+    }
+    if (matched.length >= limit) break;
+  }
+
+  const name = province && province !== "mb"
+    ? provinceName(province === "lam-dong" && rawProvince === "da-lat" ? "da-lat" : province)
+    : REGION_LABELS[region];
+
+  return {
+    ok: true,
+    version: APP_VERSION,
+    source: "383.im",
+    mode: "province",
+    region,
+    province: province || region,
+    province_name: name,
+    limit,
+    today: vnTodayYmd(),
+    draws: matched.filter(Boolean),
+    empty: !matched.length,
+    message: matched.length ? "" : `Chưa có kết quả gần đây cho ${name}`
+  };
+}

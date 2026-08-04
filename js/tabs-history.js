@@ -97,6 +97,40 @@ function formatHistoryScore(value){
   return String(Math.floor(f));
 }
 
+function historyMatchDateParts(match){
+  const dateStr = String(
+    match?.match_date
+    || parseMatchDateFromLabel(match?.match_label)
+    || parseMatchDateFromMatchId(match?.match_id)
+    || ""
+  ).trim();
+  const m = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return { weekday: "", date: dateStr };
+  const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  if(Number.isNaN(d.getTime())) return { weekday: "", date: dateStr };
+  return {
+    weekday: String(WEEKDAYS_VI[d.getDay()] || "").toLowerCase(),
+    date: `${Number(m[1])}/${Number(m[2])}/${m[3]}`
+  };
+}
+
+function historyMatchWhenLine(match){
+  const { weekday, date } = historyMatchDateParts(match);
+  const venue = "sân Đồng Tâm";
+  return [weekday, date, venue].filter(Boolean).join(" - ");
+}
+
+function historyMatchTitle(match){
+  const isCap = String(match?.match_type || "").toLowerCase() === "cap";
+  const scoreA = formatHistoryScore(match?.team_a_score);
+  const scoreB = formatHistoryScore(match?.team_b_score);
+  if(isCap){
+    const opponent = String(match?.opponent_name || "Đội bạn").trim() || "Đội bạn";
+    return `Cáp - DUFC ${scoreA} - ${scoreB} ${opponent}`;
+  }
+  return `Nội bộ - 🔴 ${scoreA} - ${scoreB} 🟡`;
+}
+
 function switchTab(tab){
   const hlvTabs = new Set(["hlv_a", "hlv_b", "hlv_cap"]);
   const isLineup = tab === "lineup";
@@ -186,17 +220,13 @@ function renderMatchHistoryList(matches){
 
   el.innerHTML = matches.map((m, idx) => {
     const isCap = String(m.match_type || "").toLowerCase() === "cap";
-    const scoreA = formatHistoryScore(m.team_a_score);
-    const scoreB = formatHistoryScore(m.team_b_score);
-    const score = isCap
-      ? `DUFC ${scoreA} - ${scoreB} ${escapeHtml(String(m.opponent_name || "Đội bạn"))}`
-      : `🔴 ${scoreA} - ${scoreB} 🟡`;
+    const title = historyMatchTitle(m);
+    const whenLine = historyMatchWhenLine(m);
     const formationText = isCap
       ? escapeHtml(String(m.formation_a || ""))
       : `${escapeHtml(String(m.formation_a || ""))} vs ${escapeHtml(String(m.formation_b || ""))}`;
-    const typeTag = isCap ? " · ⚽ Cáp" : "";
     const videoTag = normalizeVideoUrlInput(m.highlight_video_url)
-      ? ` · <span class="historyVideoTag">🎬 Video</span>`
+      ? ` <span class="historyVideoTag">🎬 Video</span>`
       : "";
     const deleteBtn = hasPerm(PERMS.DELETE_MATCH)
       ? `<button type="button" class="danger historyActionBtn" onclick="deleteHistoryMatch(${idx}, event)">🗑 Xóa</button>`
@@ -209,7 +239,10 @@ function renderMatchHistoryList(matches){
       : "";
     return `<div class="historyItem" onclick="toggleHistoryDetail(${idx})">
       <div class="historyItemHead">
-        <h3>${escapeHtml(displayMatchLabel(m))}${typeTag}${videoTag} · ${score}</h3>
+        <div class="historyItemTitle">
+          <h3>${escapeHtml(title)}${videoTag}</h3>
+          <div class="historyWhen">${escapeHtml(whenLine)}</div>
+        </div>
         ${actionBtns}
       </div>
       <div class="historyMeta">
