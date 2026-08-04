@@ -5,7 +5,9 @@ export const ANALYTICS_EVENT_TYPES = [
   "interaction",
   "ad_click",
   "cta_giao_huu",
-  "cta_dat_quang_cao"
+  "cta_dat_quang_cao",
+  "kqxs_view",
+  "affcup_view"
 ];
 
 const ALLOWED_EVENTS = new Set(ANALYTICS_EVENT_TYPES);
@@ -15,7 +17,9 @@ const EVENT_LABELS = {
   interaction: "Tương tác",
   ad_click: "Click quảng cáo",
   cta_giao_huu: "Giao hữu",
-  cta_dat_quang_cao: "Đặt quảng cáo"
+  cta_dat_quang_cao: "Đặt quảng cáo",
+  kqxs_view: "KQXS",
+  affcup_view: "AFF Cup"
 };
 
 function emptyTotals() {
@@ -76,7 +80,10 @@ function bucketExpr(groupBy) {
 }
 
 export async function trackSiteEvent(db, payload) {
-  const eventType = String(payload.event_type || "").trim();
+  let eventType = String(payload.event_type || "").trim();
+  // Alias cũ / typo từ frontend
+  if (eventType === "aff2026_page_view") eventType = "affcup_view";
+  if (eventType === "kqxs_page_view") eventType = "kqxs_view";
   if (!ALLOWED_EVENTS.has(eventType)) {
     throw new Error("Loại sự kiện analytics không hợp lệ.");
   }

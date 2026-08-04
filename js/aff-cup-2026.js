@@ -302,6 +302,7 @@ function wcSetNewsUrl(url) {
 
 async function wcOpenNewsArticle(url) {
   if (!url) return;
+  if (typeof trackAffcupEvent === "function") trackAffcupEvent("news", { url: String(url).slice(0, 180) });
   wcSetLoading("wcPanelNews", "Đang tải bài…");
   wcScrollToNewsPanel();
   try {
@@ -645,6 +646,7 @@ function wcRenderTeamDetailTab(tab) {
 }
 
 async function wcOpenMatchDetail(id) {
+  if (typeof trackAffcupEvent === "function") trackAffcupEvent("match", { id: String(id || "") });
   wcShowDetailModal("Chi tiết trận đấu", "");
   try {
     const data = await wcApiGet("wc2026_match", { id });
@@ -661,6 +663,7 @@ async function wcOpenMatchDetail(id) {
 }
 
 async function wcOpenTeamDetail(id) {
+  if (typeof trackAffcupEvent === "function") trackAffcupEvent("team", { id: String(id || "") });
   wcShowDetailModal("Chi tiết đội bóng", "");
   try {
     const data = await wcApiGet("wc2026_team", { id });
@@ -685,6 +688,7 @@ window.wcRenderTeamDetailTab = wcRenderTeamDetailTab;
 
 async function wcLoadTab(tab) {
   wcActiveTab = tab;
+  if (typeof trackAffcupEvent === "function") trackAffcupEvent("tab", { tab: String(tab || "") });
   document.querySelectorAll(".wcTabBtn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });

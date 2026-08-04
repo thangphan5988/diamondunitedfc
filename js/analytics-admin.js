@@ -5,7 +5,9 @@ const ANALYTICS_EVENT_ORDER = [
   "interaction",
   "ad_click",
   "cta_giao_huu",
-  "cta_dat_quang_cao"
+  "cta_dat_quang_cao",
+  "kqxs_view",
+  "affcup_view"
 ];
 
 const ANALYTICS_EVENT_LABELS = {
@@ -13,7 +15,9 @@ const ANALYTICS_EVENT_LABELS = {
   interaction: "Tương tác",
   ad_click: "Click QC",
   cta_giao_huu: "Giao hữu",
-  cta_dat_quang_cao: "Đặt QC"
+  cta_dat_quang_cao: "Đặt QC",
+  kqxs_view: "KQXS",
+  affcup_view: "AFF Cup"
 };
 
 let analyticsLabels = { ...ANALYTICS_EVENT_LABELS };

@@ -432,6 +432,7 @@ function jumpTo(region) {
 function setQuick(mode) {
   kqxsState.mode = "hub";
   kqxsState.province = "";
+  if (typeof trackKqxsEvent === "function") trackKqxsEvent("quick", { mode });
   const today = kqxsState.today || vnToday();
   if (mode === "yesterday") {
     kqxsState.quickMode = "yesterday";
@@ -511,6 +512,7 @@ function bindGlobal() {
       e.preventDefault();
       const id = el.getAttribute("data-province");
       if (!id) return;
+      if (typeof trackKqxsEvent === "function") trackKqxsEvent("province", { province: id });
       loadProvince(id);
       document.getElementById("kqxsNav")?.classList.remove("is-open");
     });
@@ -523,6 +525,7 @@ function bindGlobal() {
       if (el.getAttribute("data-quick")) {
         e.preventDefault();
         const mode = el.getAttribute("data-quick");
+        if (typeof trackKqxsEvent === "function") trackKqxsEvent("quick", { mode, jump });
         const today = kqxsState.today || vnToday();
         kqxsState.mode = "hub";
         kqxsState.province = "";
@@ -575,6 +578,7 @@ function bindGlobal() {
 
   document.getElementById("kqxsRegionSelect")?.addEventListener("change", (e) => {
     const view = e.target.value || "all";
+    if (typeof trackKqxsEvent === "function") trackKqxsEvent("region", { view });
     if (kqxsState.mode === "province") {
       kqxsState.quickMode = "today";
       kqxsState.date = "";
@@ -590,6 +594,7 @@ function bindGlobal() {
   document.getElementById("kqxsDate")?.addEventListener("change", (e) => {
     const ymd = String(e.target.value || "").trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
+    if (typeof trackKqxsEvent === "function") trackKqxsEvent("date", { date: ymd });
     kqxsState.mode = "hub";
     kqxsState.province = "";
     kqxsState.quickMode = "date";

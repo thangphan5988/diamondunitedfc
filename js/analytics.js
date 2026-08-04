@@ -34,6 +34,14 @@ function trackSiteInteraction(name, meta){
   trackSiteEvent("interaction", Object.assign({ name: String(name || "unknown") }, meta || {}));
 }
 
+function trackKqxsEvent(kind, meta){
+  trackSiteEvent("kqxs_view", Object.assign({ kind: String(kind || "view") }, meta || {}));
+}
+
+function trackAffcupEvent(kind, meta){
+  trackSiteEvent("affcup_view", Object.assign({ kind: String(kind || "view") }, meta || {}));
+}
+
 let siteInteractionTrackingBound = false;
 
 function ensureSiteInteractionTracking(){
