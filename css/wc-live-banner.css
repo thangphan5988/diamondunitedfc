@@ -17,15 +17,14 @@
   display:grid;grid-template-columns:1fr;gap:0
 }
 
-.wcLiveBanner--upcomingOnly .wcBannerGrid{grid-template-columns:1fr}
-.wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols2 .wcBannerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.wcLiveBanner--upcomingOnly.wcLiveBanner--upcomingCols3 .wcBannerGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* Mỗi trận = 1 cột ngang đều; 2 mobile · 3 desktop */
+.wcLiveBanner--cols2 .wcBannerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.wcLiveBanner--cols3 .wcBannerGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 
-.wcLiveBanner--mixed .wcBannerGrid{grid-template-columns:minmax(0,1.1fr) repeat(var(--wc-upcoming-cols,1),minmax(0,1fr))}
-.wcLiveBanner--mixed.wcLiveBanner--upcomingCols2 .wcBannerGrid{--wc-upcoming-cols:2}
-.wcLiveBanner--mixed.wcLiveBanner--upcomingCols3 .wcBannerGrid{--wc-upcoming-cols:3}
-
-.wcBannerCol{padding:12px 14px;min-width:0}
+.wcBannerCol{
+  display:block;padding:12px 14px;min-width:0;
+  color:inherit;text-decoration:none
+}
 .wcBannerCol + .wcBannerCol{border-left:1px solid rgba(255,255,255,.1)}
 .wcBannerCol--live{
   background:linear-gradient(135deg,#450a0a,#7f1d1d);color:#fecaca
@@ -33,27 +32,17 @@
 .wcBannerCol--upcoming{
   background:linear-gradient(135deg,#0c2340,#1e3a5f);color:#bfdbfe
 }
-.wcLiveBanner--mixed .wcBannerCol--live{border-right:1px solid rgba(248,113,113,.25)}
 
 .wcLiveHead,.wcUpcomingHead{font-size:12px;font-weight:900;margin-bottom:8px;line-height:1.2}
 .wcLiveHead{color:#fca5a5}
 .wcUpcomingHead{color:#93c5fd}
 
-.wcLiveItem,.wcUpcomingItem{
-  display:flex;flex-direction:column;align-items:stretch;gap:6px;
-  font-size:12px;font-weight:700;padding:0;border-top:0
-}
-.wcBannerCol--live .wcLiveItem + .wcLiveItem{
-  margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)
-}
 .wcLiveItem--click{cursor:pointer;color:inherit;text-decoration:none}
 .wcLiveItem--click:hover{opacity:.92;text-decoration:none;color:inherit}
 
-.wcBannerCol--upcoming .wcUpcomingItem .wcMatchTime{text-align:center}
-
 .wcBannerMatchTeams{
   display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  align-items:center;gap:6px;min-width:0
+  align-items:center;gap:6px;min-width:0;margin-bottom:6px
 }
 .wcBannerTeam{
   font-size:11px;line-height:1.25;font-weight:800;
@@ -70,29 +59,18 @@
 }
 
 .wcMatchStatus,.wcMatchTime{
-  color:var(--accent-brand);font-weight:900;font-size:11px;
-  line-height:1.2;white-space:nowrap
+  display:block;color:var(--accent-brand);font-weight:900;font-size:11px;
+  line-height:1.2;white-space:nowrap;text-align:center
 }
 
 @media(max-width:760px){
   .wcBannerCol{padding:8px 10px}
   .wcLiveHead,.wcUpcomingHead{font-size:10px;margin-bottom:5px}
-  .wcLiveItem,.wcUpcomingItem{gap:4px;font-size:10px}
-  .wcLiveBanner--mixed .wcBannerGrid{grid-template-columns:1fr}
-  .wcLiveBanner--mixed .wcBannerCol + .wcBannerCol{border-left:0;border-top:1px solid rgba(255,255,255,.1)}
-  .wcLiveBanner--mixed .wcBannerCol--live{border-right:0}
   .wcBannerMatchTeams{
-    grid-template-columns:1fr;gap:1px;text-align:center
+    grid-template-columns:1fr;gap:1px;text-align:center;margin-bottom:4px
   }
   .wcBannerTeam{font-size:9px;line-height:1.2}
   .wcBannerTeam--home,.wcBannerTeam--away{text-align:center}
   .wcBannerScore{font-size:10px}
   .wcMatchStatus,.wcMatchTime{font-size:9px;white-space:normal}
-}
-
-@media(min-width:761px){
-  .wcLiveBanner--mixed .wcLiveItem{
-    flex-direction:row;justify-content:space-between;align-items:center;gap:10px
-  }
-  .wcLiveBanner--mixed .wcMatchStatus{text-align:right;flex:0 0 auto}
 }

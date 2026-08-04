@@ -38,7 +38,7 @@
 }
 .adMobileTopInner{overflow:hidden;padding:8px}
 .adMobileItem{
-  flex:0 0 auto;width:min(92vw,360px);overflow:hidden;
+  flex:0 0 auto;width:min(92vw,360px);max-width:100%;overflow:hidden;
   border:1px solid rgba(56,189,248,.18);background:#020617;text-decoration:none;color:inherit
 }
 .adMobileItem img{

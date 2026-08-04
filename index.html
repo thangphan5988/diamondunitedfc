@@ -40,12 +40,12 @@
   <link rel="stylesheet" href="css/theme.css?v=2.7.8">
   <link rel="stylesheet" href="css/lineup.css?v=2.8.5">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
-  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.8.8">
+  <link rel="stylesheet" href="css/tabs-workflow.css?v=2.8.9">
   <link rel="stylesheet" href="css/latest-match.css?v=2.8.0">
   <link rel="stylesheet" href="css/teams.css?v=2.6.2">
   <link rel="stylesheet" href="css/teams-cards.css?v=2.6.0">
   <link rel="stylesheet" href="css/ads.css?v=2.4.87">
-  <link rel="stylesheet" href="css/wc-live-banner.css?v=2.8.7">
+  <link rel="stylesheet" href="css/wc-live-banner.css?v=2.8.9">
   <link rel="stylesheet" href="css/seo.css?v=2.4.93">
   <link rel="stylesheet" href="css/analytics.css?v=2.4.96">
   <script type="application/ld+json">
@@ -127,6 +127,21 @@
   </header>
   <div class="buildVersion">Build v2.8.2</div>
 
+  <nav class="homeFeatureNav" aria-label="Chức năng nổi bật">
+    <a class="friendlyMatchBtn friendlyMatchBtn--wc homeFeatureBtn" href="/livescore.html" title="Livescore bóng đá">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">⏱</span>
+      <span class="friendlyMatchBtnText">Livescore</span>
+    </a>
+    <a class="friendlyMatchBtn friendlyMatchBtn--wc homeFeatureBtn" href="/kqxs.html" title="KQXS 3 miền">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">🎱</span>
+      <span class="friendlyMatchBtnText">KQXS</span>
+    </a>
+    <a class="friendlyMatchBtn friendlyMatchBtn--wc homeFeatureBtn" href="/aff-cup-2026.html" title="AFF Cup 2026">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">🏆</span>
+      <span class="friendlyMatchBtnText">AFF Cup 2026</span>
+    </a>
+  </nav>
+
   <div id="homeWcLiveBanner" class="wcLiveBanner homeWcLiveBanner" hidden aria-live="polite"></div>
 
   <div class="authBar">
@@ -137,18 +152,6 @@
         </button>
         <div class="mainNavMobileMenu" id="mainNavMobileMenu" role="listbox" hidden></div>
       </div>
-      <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/livescore.html" title="Livescore bóng đá">
-        <span class="friendlyMatchBtnIcon" aria-hidden="true">⏱</span>
-        <span class="friendlyMatchBtnText">Livescore</span>
-      </a>
-      <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/kqxs.html" title="KQXS 3 miền">
-        <span class="friendlyMatchBtnIcon" aria-hidden="true">🎱</span>
-        <span class="friendlyMatchBtnText">KQXS</span>
-      </a>
-      <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/aff-cup-2026.html" title="AFF Cup 2026">
-        <span class="friendlyMatchBtnIcon" aria-hidden="true">🏆</span>
-        <span class="friendlyMatchBtnText">AFF Cup 2026</span>
-      </a>
       <div id="authUserLabel" class="meta" style="display:none"></div>
     </div>
     <div class="authActions">
@@ -158,18 +161,6 @@
   </div>
 
   <nav class="mainNav" id="mainNav">
-    <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/livescore.html" title="Livescore bóng đá">
-      <span class="friendlyMatchBtnIcon" aria-hidden="true">⏱</span>
-      <span class="friendlyMatchBtnText">Livescore</span>
-    </a>
-    <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/kqxs.html" title="KQXS 3 miền">
-      <span class="friendlyMatchBtnIcon" aria-hidden="true">🎱</span>
-      <span class="friendlyMatchBtnText">KQXS</span>
-    </a>
-    <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/aff-cup-2026.html" title="AFF Cup 2026">
-      <span class="friendlyMatchBtnIcon" aria-hidden="true">🏆</span>
-      <span class="friendlyMatchBtnText">AFF Cup 2026</span>
-    </a>
     <div class="tabs" id="mainTabs">
       <button id="tabLatest" class="tab active" onclick="switchTab('latest')">Trận đấu gần nhất</button>
       <button id="tabHistory" class="tab" onclick="switchTab('history')">Lịch sử trận</button>
@@ -717,7 +708,7 @@
 
 
   <script src="js/config.js?v=2.8.9"></script>
-  <script src="js/wc-live-banner.js?v=2.8.7"></script>
+  <script src="js/wc-live-banner.js?v=2.8.9"></script>
   <script src="js/theme.js?v=2.6.0"></script>
   <script src="js/utils.js?v=2.4.24"></script>
   <script src="js/permissions.js?v=2.8.6"></script>

@@ -1,7 +1,7 @@
 /* Banner AFF Cup 2026 — trận đang diễn ra + sắp đá (trang chủ + hub) */
 
 (function initWcLiveBanner() {
-  const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "P", "LIVE"];
+  const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "P", "LIVE", "BT"];
   const POLL_MS = 60000;
   const BANNER_IDS = ["homeWcLiveBanner", "wcLiveBanner"];
   const MOBILE_MQ = window.matchMedia("(max-width:760px)");
@@ -9,7 +9,8 @@
   let lastLiveData = null;
   let lastUpcomingData = null;
 
-  function upcomingLimit() {
+  /** Tổng số trận hiện trên banner: 2 mobile · 3 desktop (ưu tiên live) */
+  function slotLimit() {
     return MOBILE_MQ.matches ? 2 : 3;
   }
 
@@ -108,71 +109,67 @@
     return [base || "", isVietnamTeam(team) ? "wcTeamVn" : ""].filter(Boolean).join(" ");
   }
 
-  function liveItemHtml(fx) {
-    return `<a class="wcLiveItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
+  function slotHtml(slot) {
+    const fx = slot.fx;
+    const live = slot.kind === "live";
+    const head = live ? "🔴 Đang đá" : "⏰ Sắp đá";
+    const meta = live
+      ? escapeHtml(statusLabel(fx.status, fx.elapsed))
+      : escapeHtml(formatMatchTime(fx));
+    const score = live ? escapeHtml(scoreLine(fx)) : "vs";
+    return `<a class="wcBannerCol ${live ? "wcBannerCol--live" : "wcBannerCol--upcoming"} wcLiveItem--click" ${matchLinkAttrs(fx)}>
+      <div class="${live ? "wcLiveHead" : "wcUpcomingHead"}">${head}</div>
       <div class="wcBannerMatchTeams">
         <span class="${teamNameClass(fx.home, "wcBannerTeam wcBannerTeam--home")}">${escapeHtml(fx.home?.name)}</span>
-        <span class="wcBannerScore">${escapeHtml(scoreLine(fx))}</span>
+        <span class="wcBannerScore">${score}</span>
         <span class="${teamNameClass(fx.away, "wcBannerTeam wcBannerTeam--away")}">${escapeHtml(fx.away?.name)}</span>
       </div>
-      <span class="wcMatchStatus">${escapeHtml(statusLabel(fx.status, fx.elapsed))}</span>
+      <span class="${live ? "wcMatchStatus" : "wcMatchTime"}">${meta}</span>
     </a>`;
-  }
-
-  function upcomingItemHtml(fx) {
-    return `<a class="wcUpcomingItem wcLiveItem--click" ${matchLinkAttrs(fx)}>
-      <div class="wcBannerMatchTeams">
-        <span class="${teamNameClass(fx.home, "wcBannerTeam wcBannerTeam--home")}">${escapeHtml(fx.home?.name)}</span>
-        <span class="wcBannerScore">vs</span>
-        <span class="${teamNameClass(fx.away, "wcBannerTeam wcBannerTeam--away")}">${escapeHtml(fx.away?.name)}</span>
-      </div>
-      <span class="wcMatchTime">${escapeHtml(formatMatchTime(fx))}</span>
-    </a>`;
-  }
-
-  function upcomingColHtml(fx) {
-    return `<section class="wcBannerCol wcBannerCol--upcoming" aria-label="Trận sắp đá">
-      <div class="wcUpcomingHead">⏰ Sắp đá</div>
-      ${upcomingItemHtml(fx)}
-    </section>`;
   }
 
   function getBannerElements() {
     return BANNER_IDS.map((id) => document.getElementById(id)).filter(Boolean);
   }
 
+  function buildSlots(liveData, upcomingData) {
+    const limit = slotLimit();
+    const live = (liveData?.items || []).filter((fx) => LIVE_STATUSES.includes(fx.status));
+    const liveIds = new Set(live.map((fx) => String(fx.id)));
+    const upcoming = (upcomingData?.items || []).filter(
+      (fx) => !liveIds.has(String(fx.id)) && fx.status !== "FT" && !LIVE_STATUSES.includes(fx.status)
+    );
+
+    const slots = [
+      ...live.map((fx) => ({ kind: "live", fx })),
+      ...upcoming.map((fx) => ({ kind: "upcoming", fx }))
+    ].slice(0, limit);
+
+    return slots;
+  }
+
   function renderBanner(el, liveData, upcomingData) {
     if (!el) return;
 
-    const live = (liveData?.items || []).filter((fx) => LIVE_STATUSES.includes(fx.status));
-    const liveIds = new Set(live.map((fx) => String(fx.id)));
-    const upcoming = (upcomingData?.items || [])
-      .filter((fx) => !liveIds.has(String(fx.id)) && fx.status !== "FT" && !LIVE_STATUSES.includes(fx.status))
-      .slice(0, upcomingLimit());
-
-    if (!live.length && !upcoming.length) {
+    const slots = buildSlots(liveData, upcomingData);
+    if (!slots.length) {
       el.innerHTML = "";
       el.hidden = true;
       return;
     }
 
+    const liveCount = slots.filter((s) => s.kind === "live").length;
+    const upcomingCount = slots.length - liveCount;
+
     el.hidden = false;
-    el.classList.toggle("wcLiveBanner--liveOnly", live.length > 0 && !upcoming.length);
-    el.classList.toggle("wcLiveBanner--upcomingOnly", !live.length && upcoming.length > 0);
-    el.classList.toggle("wcLiveBanner--mixed", live.length > 0 && upcoming.length > 0);
-    el.classList.toggle("wcLiveBanner--upcomingCols2", upcoming.length === 2);
-    el.classList.toggle("wcLiveBanner--upcomingCols3", upcoming.length >= 3);
+    el.classList.toggle("wcLiveBanner--liveOnly", liveCount > 0 && !upcomingCount);
+    el.classList.toggle("wcLiveBanner--upcomingOnly", !liveCount && upcomingCount > 0);
+    el.classList.toggle("wcLiveBanner--mixed", liveCount > 0 && upcomingCount > 0);
+    el.classList.toggle("wcLiveBanner--cols2", slots.length === 2);
+    el.classList.toggle("wcLiveBanner--cols3", slots.length >= 3);
+    el.classList.remove("wcLiveBanner--upcomingCols2", "wcLiveBanner--upcomingCols3");
 
-    const liveCol = live.length
-      ? `<section class="wcBannerCol wcBannerCol--live" aria-label="Trận đang diễn ra">
-          <div class="wcLiveHead">🔴 Đang diễn ra</div>
-          ${live.slice(0, 3).map(liveItemHtml).join("")}
-        </section>`
-      : "";
-
-    const upcomingCols = upcoming.map(upcomingColHtml).join("");
-
-    el.innerHTML = `<div class="wcBannerGrid">${liveCol}${upcomingCols}</div>`;
+    el.innerHTML = `<div class="wcBannerGrid">${slots.map(slotHtml).join("")}</div>`;
   }
 
   function renderAllBanners(liveData, upcomingData) {
