@@ -3,6 +3,7 @@
 const DEAD_PREFIX = "odds:key:dead:";
 const CURSOR_KEY = "odds:keys:cursor";
 const QUOTA_FLAG_KEY = "odds:quota_blocked_until";
+const ADMIN_KEYS_KV = "odds:keys:admin";
 const DEAD_TTL_SEC = 40 * 24 * 3600; // ~tháng free tier
 const QUOTA_BLOCK_MS = 6 * 3600 * 1000;
 
@@ -20,23 +21,71 @@ export function shouldRotateOddsKey(msg) {
   return isQuotaErrorMessage(msg) || isInvalidKeyMessage(msg);
 }
 
-export function listOddsApiKeys(env) {
-  const multi = String(env.ODDS_API_KEYS || "").trim();
-  const single = String(env.ODDS_API_KEY || "").trim();
-  const parts = `${multi}\n${single}`
-    .split(/[\s,;]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return [...new Set(parts)];
-}
-
-function keyFingerprint(key) {
+export function keyFingerprint(key) {
   let h = 2166136261;
-  for (let i = 0; i < key.length; i++) {
-    h ^= key.charCodeAt(i);
+  const s = String(key || "");
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   return (h >>> 0).toString(16);
+}
+
+export function maskOddsKey(key) {
+  const s = String(key || "").trim();
+  if (s.length <= 8) return "••••";
+  return `${s.slice(0, 4)}…${s.slice(-4)}`;
+}
+
+export function parseOddsKeysText(raw) {
+  return [...new Set(
+    String(raw || "")
+      .split(/[\s,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )];
+}
+
+function envOddsKeys(env) {
+  const multi = String(env?.ODDS_API_KEYS || "").trim();
+  const single = String(env?.ODDS_API_KEY || "").trim();
+  return parseOddsKeysText(`${multi}\n${single}`);
+}
+
+export async function loadAdminOddsKeys(kv) {
+  if (!kv) return [];
+  try {
+    const raw = await kv.get(ADMIN_KEYS_KV);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parseOddsKeysText(parsed.join("\n"));
+    if (typeof parsed === "string") return parseOddsKeysText(parsed);
+    return [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export async function saveAdminOddsKeys(kv, keys) {
+  if (!kv) throw new Error("KV chưa sẵn sàng.");
+  const cleaned = parseOddsKeysText((keys || []).join("\n"));
+  await kv.put(ADMIN_KEYS_KV, JSON.stringify(cleaned));
+  for (const key of cleaned) {
+    try {
+      await kv.delete(DEAD_PREFIX + keyFingerprint(key));
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  await clearOddsQuotaBlocked(kv);
+  return cleaned;
+}
+
+/** Admin keys first, then env secrets — deduped */
+export async function listOddsApiKeys(env, kv) {
+  const admin = await loadAdminOddsKeys(kv);
+  const fromEnv = envOddsKeys(env);
+  return [...new Set([...admin, ...fromEnv])];
 }
 
 async function isKeyDead(kv, key) {
@@ -82,7 +131,7 @@ async function setCursor(kv, index) {
 
 /** Keys still usable, starting from last successful cursor */
 export async function getOrderedOddsApiKeys(env, kv) {
-  const keys = listOddsApiKeys(env);
+  const keys = await listOddsApiKeys(env, kv);
   if (!keys.length) return [];
   const cursor = await getCursor(kv, keys.length);
   const rotated = keys.slice(cursor).concat(keys.slice(0, cursor));
@@ -130,9 +179,9 @@ export async function clearOddsQuotaBlocked(kv) {
  * runner(apiKey) should throw on failure (quota/invalid/etc).
  */
 export async function withOddsApiKey(env, kv, runner) {
-  const keys = listOddsApiKeys(env);
+  const keys = await listOddsApiKeys(env, kv);
   if (!keys.length) {
-    throw new Error("Chưa cấu hình ODDS_API_KEY / ODDS_API_KEYS trên Worker.");
+    throw new Error("Chưa cấu hình Odds API key (Admin hoặc secret Worker).");
   }
 
   let usable = await getOrderedOddsApiKeys(env, kv);
@@ -161,4 +210,55 @@ export async function withOddsApiKey(env, kv, runner) {
 
   await markOddsQuotaBlocked(kv);
   throw lastErr || new Error("Đã hết tất cả Odds API key (quota).");
+}
+
+/** Admin: list keys (admin full text for edit + env masked) */
+export async function adminListOddsKeys(env, kv) {
+  const adminKeys = await loadAdminOddsKeys(kv);
+  const envKeys = envOddsKeys(env);
+  const blocked = await isOddsQuotaBlocked(kv);
+  const items = [];
+  for (const key of adminKeys) {
+    items.push({
+      id: keyFingerprint(key),
+      hint: maskOddsKey(key),
+      source: "admin",
+      dead: await isKeyDead(kv, key),
+      key
+    });
+  }
+  for (const key of envKeys) {
+    if (adminKeys.includes(key)) continue;
+    items.push({
+      id: keyFingerprint(key),
+      hint: maskOddsKey(key),
+      source: "env",
+      dead: await isKeyDead(kv, key),
+      key: null
+    });
+  }
+  return {
+    ok: true,
+    quota_blocked: blocked,
+    admin_count: adminKeys.length,
+    env_count: envKeys.length,
+    total: items.length,
+    usable: items.filter((x) => !x.dead).length,
+    admin_keys_text: adminKeys.join("\n"),
+    keys: items
+  };
+}
+
+export async function adminSaveOddsKeys(env, kv, payload = {}) {
+  const fromList = Array.isArray(payload.keys) ? payload.keys : null;
+  const fromText = payload.keys_text != null ? payload.keys_text : payload.text;
+  const next = fromList
+    ? parseOddsKeysText(fromList.join("\n"))
+    : parseOddsKeysText(fromText);
+  const saved = await saveAdminOddsKeys(kv, next);
+  return {
+    ok: true,
+    message: `Đã lưu ${saved.length} Odds API key.`,
+    ...(await adminListOddsKeys(env, kv))
+  };
 }

@@ -295,26 +295,31 @@ function applyAuthUI(){
   const adminUsersPanel = document.getElementById("adminUsersPanel");
   const adminRosterPanel = document.getElementById("adminRosterPanel");
   const adminSponsorsPanel = document.getElementById("adminSponsorsPanel");
+  const adminOddsKeysPanel = document.getElementById("adminOddsKeysPanel");
   const adminAnalyticsPanel = document.getElementById("adminAnalyticsPanel");
   const adminTabUsers = document.getElementById("adminTabUsers");
   const adminTabRoster = document.getElementById("adminTabRoster");
   const adminTabSponsors = document.getElementById("adminTabSponsors");
+  const adminTabOddsKeys = document.getElementById("adminTabOddsKeys");
   const adminTabAnalytics = document.getElementById("adminTabAnalytics");
   if(adminTabs){
     const showUsers = canManageUsers();
     const showRoster = canManageRoster();
     const showSponsors = canManageSponsors();
+    const showOddsKeys = canManageSponsors();
     const showAnalytics = canManageSponsors();
-    const tabCount = [showUsers, showRoster, showSponsors, showAnalytics].filter(Boolean).length;
+    const tabCount = [showUsers, showRoster, showSponsors, showOddsKeys, showAnalytics].filter(Boolean).length;
     adminTabs.style.display = tabCount > 1 ? "" : "none";
     if(adminTabUsers) adminTabUsers.style.display = showUsers ? "" : "none";
     if(adminTabRoster) adminTabRoster.style.display = showRoster ? "" : "none";
     if(adminTabSponsors) adminTabSponsors.style.display = showSponsors ? "" : "none";
+    if(adminTabOddsKeys) adminTabOddsKeys.style.display = showOddsKeys ? "" : "none";
     if(adminTabAnalytics) adminTabAnalytics.style.display = showAnalytics ? "" : "none";
     if(adminUsersPanel) adminUsersPanel.style.display = showUsers ? "" : "none";
-    if(adminRosterPanel && showRoster && !showUsers && !showSponsors && !showAnalytics) adminRosterPanel.style.display = "";
-    if(adminSponsorsPanel && showSponsors && !showUsers && !showRoster && !showAnalytics) adminSponsorsPanel.style.display = "";
-    if(adminAnalyticsPanel && showAnalytics && !showUsers && !showRoster && !showSponsors) adminAnalyticsPanel.style.display = "";
+    if(adminRosterPanel && showRoster && !showUsers && !showSponsors && !showOddsKeys && !showAnalytics) adminRosterPanel.style.display = "";
+    if(adminSponsorsPanel && showSponsors && !showUsers && !showRoster && !showOddsKeys && !showAnalytics) adminSponsorsPanel.style.display = "";
+    if(adminOddsKeysPanel && showOddsKeys && !showUsers && !showRoster && !showSponsors && !showAnalytics) adminOddsKeysPanel.style.display = "";
+    if(adminAnalyticsPanel && showAnalytics && !showUsers && !showRoster && !showSponsors && !showOddsKeys) adminAnalyticsPanel.style.display = "";
   }
 
   updateResultModalPerms();

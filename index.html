@@ -483,6 +483,7 @@
       <button id="adminTabUsers" class="statsTab active" type="button" onclick="switchAdminSection('users')">Tài khoản</button>
       <button id="adminTabRoster" class="statsTab" type="button" onclick="switchAdminSection('roster')">Cầu thủ</button>
       <button id="adminTabSponsors" class="statsTab" type="button" onclick="switchAdminSection('sponsors')">Nhà tài trợ</button>
+      <button id="adminTabOddsKeys" class="statsTab" type="button" onclick="switchAdminSection('oddskeys')">Odds API</button>
       <button id="adminTabAnalytics" class="statsTab" type="button" onclick="switchAdminSection('analytics')">Traffic</button>
     </div>
 
@@ -521,6 +522,21 @@
         <button type="button" style="width:auto;margin:0" onclick="loadAdminSponsors()">↻ Làm mới thống kê</button>
       </div>
       <div id="adminSponsorList"></div>
+    </div>
+
+    <div id="adminOddsKeysPanel" class="card" style="display:none">
+      <div class="sponsorAdminToolbar">
+        <div>
+          <h2>Odds API keys</h2>
+          <div class="meta">Dán mỗi key một dòng · Hệ thống tự xoay khi hết quota · Secret Worker (nếu có) vẫn dùng thêm</div>
+        </div>
+        <button type="button" style="width:auto;margin:0" onclick="loadAdminOddsKeysPanel()">↻ Làm mới</button>
+        <button id="oddsKeysSaveBtn" type="button" class="gold" style="width:auto;margin:0" onclick="saveAdminOddsKeysPanel()">Lưu danh sách</button>
+      </div>
+      <label class="meta" for="oddsKeysText" style="display:block;margin:0 0 6px">Danh sách key (admin)</label>
+      <textarea id="oddsKeysText" rows="10" placeholder="dc8398...\na4741e...\n..." style="width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;resize:vertical"></textarea>
+      <div id="oddsKeysStatus" class="meta" style="margin-top:8px;min-height:1.2em"></div>
+      <div id="oddsKeysMeta" style="margin-top:12px"></div>
     </div>
 
     <div id="adminAnalyticsPanel" class="card" style="display:none">
@@ -710,10 +726,11 @@
   <script src="js/match-data.js?v=2.8.9"></script>
   <script src="js/match-result.js?v=2.8.10"></script>
   <script src="js/stats.js?v=2.8.7"></script>
-  <script src="js/auth-admin.js?v=2.8.6"></script>
-  <script src="js/roster-admin.js?v=2.8.8"></script>
+  <script src="js/auth-admin.js?v=2.8.7"></script>
+  <script src="js/roster-admin.js?v=2.8.9"></script>
   <script src="js/sponsors.js?v=2.4.95"></script>
   <script src="js/sponsors-admin.js?v=2.4.87"></script>
+  <script src="js/odds-keys-admin.js?v=1.0.0"></script>
   <script src="js/analytics-admin.js?v=2.5.2"></script>
   <script src="js/latest-match.js?v=2.8.0"></script>
   <script src="js/tabs-history.js?v=2.8.8"></script>

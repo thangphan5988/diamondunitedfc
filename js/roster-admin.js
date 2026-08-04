@@ -11,10 +11,12 @@ function switchAdminSection(section){
   const usersPanel = document.getElementById("adminUsersPanel");
   const rosterPanel = document.getElementById("adminRosterPanel");
   const sponsorsPanel = document.getElementById("adminSponsorsPanel");
+  const oddsKeysPanel = document.getElementById("adminOddsKeysPanel");
   const analyticsPanel = document.getElementById("adminAnalyticsPanel");
   const tabUsers = document.getElementById("adminTabUsers");
   const tabRoster = document.getElementById("adminTabRoster");
   const tabSponsors = document.getElementById("adminTabSponsors");
+  const tabOddsKeys = document.getElementById("adminTabOddsKeys");
   const tabAnalytics = document.getElementById("adminTabAnalytics");
   if(!usersPanel || !rosterPanel || !sponsorsPanel || !analyticsPanel) return;
 
@@ -22,12 +24,14 @@ function switchAdminSection(section){
     users: canManageUsers(),
     roster: canManageRoster(),
     sponsors: canManageSponsors(),
+    oddskeys: canManageSponsors(),
     analytics: canManageSponsors()
   };
   if(!allowed[section]){
     section = allowed.users ? "users"
       : allowed.roster ? "roster"
       : allowed.sponsors ? "sponsors"
+      : allowed.oddskeys ? "oddskeys"
       : allowed.analytics ? "analytics"
       : "users";
   }
@@ -35,15 +39,18 @@ function switchAdminSection(section){
   usersPanel.style.display = section === "users" ? "" : "none";
   rosterPanel.style.display = section === "roster" ? "" : "none";
   sponsorsPanel.style.display = section === "sponsors" ? "" : "none";
+  if(oddsKeysPanel) oddsKeysPanel.style.display = section === "oddskeys" ? "" : "none";
   analyticsPanel.style.display = section === "analytics" ? "" : "none";
   if(tabUsers) tabUsers.classList.toggle("active", section === "users");
   if(tabRoster) tabRoster.classList.toggle("active", section === "roster");
   if(tabSponsors) tabSponsors.classList.toggle("active", section === "sponsors");
+  if(tabOddsKeys) tabOddsKeys.classList.toggle("active", section === "oddskeys");
   if(tabAnalytics) tabAnalytics.classList.toggle("active", section === "analytics");
 
   if(section === "users") loadAdminUsers();
   if(section === "roster") loadAdminPlayers();
   if(section === "sponsors") loadAdminSponsors();
+  if(section === "oddskeys" && typeof loadAdminOddsKeysPanel === "function") loadAdminOddsKeysPanel();
   if(section === "analytics"){
     initAnalyticsAdminFilters();
     loadAdminAnalytics();

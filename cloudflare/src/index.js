@@ -40,6 +40,7 @@ import { wc2026News, wc2026NewsArticle, wc2026Fixtures, wc2026Standings, wc2026T
 import { kqxsHub, kqxsLive, kqxsResults, kqxsProvince } from "./kqxs.js";
 import { oddsHub, oddsMatch } from "./odds.js";
 import { livescoreHub } from "./livescore.js";
+import { adminListOddsKeys, adminSaveOddsKeys } from "./odds-keys.js";
 
 export default {
   async scheduled(event, env) {
@@ -93,7 +94,7 @@ export default {
             "admin_validate_session", "admin_list_users", "admin_list_players",
             "admin_save_player", "admin_delete_player", "admin_upload_avatar",
             "admin_list_sponsors", "admin_save_sponsor", "admin_delete_sponsor", "admin_upload_sponsor_image",
-            "admin_get_analytics",
+            "admin_get_analytics", "admin_list_odds_keys", "admin_save_odds_keys",
             "import_data",
             "wc2026_news", "wc2026_news_article", "wc2026_fixtures", "wc2026_standings", "wc2026_teams", "wc2026_match", "wc2026_team", "wc2026_player", "wc2026_hub",
             "kqxs_hub", "kqxs_live", "kqxs_results", "kqxs_province",
@@ -168,6 +169,12 @@ export default {
         case "admin_get_analytics":
           await requireAuth(db, token, ["manage_sponsors"]);
           return json(await adminGetAnalytics(db, params));
+        case "admin_list_odds_keys":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminListOddsKeys(env, env.AVATARS));
+        case "admin_save_odds_keys":
+          await requireAuth(db, token, ["manage_sponsors"]);
+          return json(await adminSaveOddsKeys(env, env.AVATARS, payload));
         case "save_match_history":
           await requireAuth(db, token, ["export", "lineup_internal", "lineup_cap", "lineup_split"]);
           return json(await saveMatchHistory(db, payload));
