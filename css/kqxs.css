@@ -270,3 +270,7 @@ button,input,select{font:inherit}
   .kqxsNum--db{font-size:18px}
   .kqxsPrize{width:78px;font-size:12px}
 }
+
+@media (max-width:1119px){
+  .kqxsBody .kqxsFilterSticky{top:var(--ad-mobile-offset, 0px)}
+}

@@ -38,6 +38,8 @@ import { applyInactivityDecay, inactivityMetaForPlayer } from "./inactivity.js";
 import { trackSiteEvent, adminGetAnalytics } from "./analytics.js";
 import { wc2026News, wc2026NewsArticle, wc2026Fixtures, wc2026Standings, wc2026Teams, wc2026Match, wc2026Team, wc2026PlayerProfile, wc2026Hub } from "./wc2026.js";
 import { kqxsHub, kqxsLive, kqxsResults, kqxsProvince } from "./kqxs.js";
+import { oddsHub, oddsMatch } from "./odds.js";
+import { livescoreHub } from "./livescore.js";
 
 export default {
   async scheduled(event, env) {
@@ -94,7 +96,8 @@ export default {
             "admin_get_analytics",
             "import_data",
             "wc2026_news", "wc2026_news_article", "wc2026_fixtures", "wc2026_standings", "wc2026_teams", "wc2026_match", "wc2026_team", "wc2026_player", "wc2026_hub",
-            "kqxs_hub", "kqxs_live", "kqxs_results", "kqxs_province"
+            "kqxs_hub", "kqxs_live", "kqxs_results", "kqxs_province",
+            "odds_hub", "odds_match", "livescore_hub"
           ]
         });
       }
@@ -220,6 +223,12 @@ export default {
           return json(await kqxsResults(env, params));
         case "kqxs_province":
           return json(await kqxsProvince(env, params));
+        case "odds_hub":
+          return json(await oddsHub(env, params));
+        case "odds_match":
+          return json(await oddsMatch(env, params));
+        case "livescore_hub":
+          return json(await livescoreHub(env, params));
         default:
           return json({ ok: false, error: "Invalid action: " + action }, 400);
       }

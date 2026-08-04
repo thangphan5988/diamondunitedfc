@@ -7,7 +7,9 @@ const ANALYTICS_EVENT_ORDER = [
   "cta_giao_huu",
   "cta_dat_quang_cao",
   "kqxs_view",
-  "affcup_view"
+  "affcup_view",
+  "odds_view",
+  "livescore_view"
 ];
 
 const ANALYTICS_EVENT_LABELS = {
@@ -17,7 +19,9 @@ const ANALYTICS_EVENT_LABELS = {
   cta_giao_huu: "Giao hữu",
   cta_dat_quang_cao: "Đặt QC",
   kqxs_view: "KQXS",
-  affcup_view: "AFF Cup"
+  affcup_view: "AFF Cup",
+  odds_view: "So kèo (cũ)",
+  livescore_view: "Livescore"
 };
 
 let analyticsLabels = { ...ANALYTICS_EVENT_LABELS };

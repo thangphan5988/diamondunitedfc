@@ -42,6 +42,14 @@ function trackAffcupEvent(kind, meta){
   trackSiteEvent("affcup_view", Object.assign({ kind: String(kind || "view") }, meta || {}));
 }
 
+function trackOddsEvent(kind, meta){
+  trackSiteEvent("odds_view", Object.assign({ kind: String(kind || "view") }, meta || {}));
+}
+
+function trackLivescoreEvent(kind, meta){
+  trackSiteEvent("livescore_view", Object.assign({ kind: String(kind || "view") }, meta || {}));
+}
+
 let siteInteractionTrackingBound = false;
 
 function ensureSiteInteractionTracking(){

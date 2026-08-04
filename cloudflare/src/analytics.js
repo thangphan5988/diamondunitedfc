@@ -7,7 +7,9 @@ export const ANALYTICS_EVENT_TYPES = [
   "cta_giao_huu",
   "cta_dat_quang_cao",
   "kqxs_view",
-  "affcup_view"
+  "affcup_view",
+  "odds_view",
+  "livescore_view"
 ];
 
 const ALLOWED_EVENTS = new Set(ANALYTICS_EVENT_TYPES);
@@ -19,7 +21,9 @@ const EVENT_LABELS = {
   cta_giao_huu: "Giao hữu",
   cta_dat_quang_cao: "Đặt quảng cáo",
   kqxs_view: "KQXS",
-  affcup_view: "AFF Cup"
+  affcup_view: "AFF Cup",
+  odds_view: "So kèo",
+  livescore_view: "Livescore"
 };
 
 function emptyTotals() {

@@ -36,7 +36,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <link rel="stylesheet" href="css/base.css?v=2.6.5">
+  <link rel="stylesheet" href="css/base.css?v=2.6.6">
   <link rel="stylesheet" href="css/theme.css?v=2.7.8">
   <link rel="stylesheet" href="css/lineup.css?v=2.8.5">
   <link rel="stylesheet" href="css/modals.css?v=2.4.16">
@@ -106,7 +106,9 @@
       <span class="themeToggleIcon themeToggleIcon--sun" aria-hidden="true">☀</span>
       <span class="themeToggleIcon themeToggleIcon--moon" aria-hidden="true">☾</span>
     </button>
-    <img class="siteLogo" src="assets/logo.png" width="72" height="72" alt="Logo đội bóng sân 7 Diamond United FC - Diamond Riverside" />
+    <a href="/" class="siteLogoLink" title="Diamond United FC">
+      <img class="siteLogo" src="assets/logo.png" width="72" height="72" alt="Logo đội bóng sân 7 Diamond United FC - Diamond Riverside" />
+    </a>
     <div class="siteBrand">
       <h1>DIAMOND UNITED FC</h1>
       <p class="siteTagline">Đội bóng sân 7 · Diamond Riverside, Bình Phú, TP.HCM · Giao hữu · Quảng cáo</p>
@@ -135,6 +137,10 @@
         </button>
         <div class="mainNavMobileMenu" id="mainNavMobileMenu" role="listbox" hidden></div>
       </div>
+      <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/livescore.html" title="Livescore bóng đá">
+        <span class="friendlyMatchBtnIcon" aria-hidden="true">⏱</span>
+        <span class="friendlyMatchBtnText">Livescore</span>
+      </a>
       <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--mobile" href="/kqxs.html" title="KQXS 3 miền">
         <span class="friendlyMatchBtnIcon" aria-hidden="true">🎱</span>
         <span class="friendlyMatchBtnText">KQXS</span>
@@ -152,6 +158,10 @@
   </div>
 
   <nav class="mainNav" id="mainNav">
+    <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/livescore.html" title="Livescore bóng đá">
+      <span class="friendlyMatchBtnIcon" aria-hidden="true">⏱</span>
+      <span class="friendlyMatchBtnText">Livescore</span>
+    </a>
     <a class="friendlyMatchBtn friendlyMatchBtn--wc mainNavWcBtn mainNavWcBtn--desktop" href="/kqxs.html" title="KQXS 3 miền">
       <span class="friendlyMatchBtnIcon" aria-hidden="true">🎱</span>
       <span class="friendlyMatchBtnText">KQXS</span>
@@ -517,7 +527,7 @@
       <div class="analyticsToolbar">
         <div>
           <h2>Thống kê traffic website</h2>
-          <div class="meta">Traffic · Tương tác · Click quảng cáo · Giao hữu · Đặt quảng cáo</div>
+          <div class="meta">Traffic · Tương tác · Click QC · Giao hữu · Đặt QC · KQXS · AFF Cup · Livescore</div>
         </div>
         <button type="button" style="width:auto;margin:0" onclick="loadAdminAnalytics()">↻ Làm mới</button>
       </div>
@@ -552,6 +562,7 @@
       © Diamond United FC · diamondunitedfc.com · Đội bóng sân 7 Diamond Riverside, TP. Hồ Chí Minh
     </div>
     <nav class="siteFooterSeo" aria-label="Liên kết SEO">
+      <a href="/livescore.html">Livescore bóng đá — tỉ số &amp; kèo trận gần nhất →</a>
       <a href="/aff-cup-2026.html">AFF Cup 2026 — tin tức, lịch thi đấu, kết quả, BXH →</a>
       <a href="/kqxs.html">KQXS 3 miền — kết quả xổ số hôm nay →</a>
       <a href="/giao-huu.html">Đá giao hữu sân 7 tại Diamond Riverside →</a>
@@ -695,7 +706,7 @@
   <script src="js/utils.js?v=2.4.24"></script>
   <script src="js/permissions.js?v=2.8.6"></script>
   <script src="js/api.js?v=2.8.0"></script>
-  <script src="js/analytics.js?v=2.5.0"></script>
+  <script src="js/analytics.js?v=2.5.2"></script>
   <script src="js/match-data.js?v=2.8.9"></script>
   <script src="js/match-result.js?v=2.8.10"></script>
   <script src="js/stats.js?v=2.8.7"></script>
@@ -703,7 +714,7 @@
   <script src="js/roster-admin.js?v=2.8.8"></script>
   <script src="js/sponsors.js?v=2.4.95"></script>
   <script src="js/sponsors-admin.js?v=2.4.87"></script>
-  <script src="js/analytics-admin.js?v=2.5.0"></script>
+  <script src="js/analytics-admin.js?v=2.5.2"></script>
   <script src="js/latest-match.js?v=2.8.0"></script>
   <script src="js/tabs-history.js?v=2.8.8"></script>
   <script src="js/player-quotes.js?v=2.4.67"></script>
