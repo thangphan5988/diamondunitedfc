@@ -162,10 +162,17 @@ html[data-theme="light"] .lsSideTimeBtn.active{color:#fff}
 
 .lsFooter{border-top:1px solid var(--ls-line);padding:14px 0 24px;font-size:12px;color:var(--ls-muted)}
 .lsSeoNote{
-  margin-top:16px;padding:12px 14px;border:1px solid var(--ls-line);border-radius:12px;
+  margin-top:16px;padding:16px 18px;border:1px solid var(--ls-line);border-radius:12px;
   background:rgba(148,163,184,.06)
 }
-.lsSeoNote p{margin:0;font-size:12px;line-height:1.55;color:var(--ls-muted)}
+.lsSeoNote p,.lsSeoNote li{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--ls-muted)}
+.lsSeoNote p:last-child,.lsSeoNote li:last-child{margin-bottom:0}
+.lsSeoNote h2{margin:0 0 10px;font-size:17px;color:var(--ls-text,#e2e8f0)}
+.lsSeoNote h3{margin:16px 0 8px;font-size:14px;color:var(--ls-text,#e2e8f0)}
+.lsSeoNote ul{margin:0 0 10px;padding-left:18px}
+.lsSeoNote a{color:#38bdf8;text-decoration:none}
+.lsSeoNote a:hover{text-decoration:underline}
+.lsSeoNote+.lsSeoNote{margin-top:12px}
 
 .lsBody .adMain{min-height:100vh}
 

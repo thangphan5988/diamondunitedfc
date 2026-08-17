@@ -246,9 +246,15 @@ button,input,select{font:inherit}
 .kqxsHtTable thead th{background:#eaeaea}
 
 .kqxsAbout{
-  margin-top:14px;background:#fff;border:1px solid var(--kq-line);padding:12px;color:#666;font-size:13px
+  margin-top:14px;background:#fff;border:1px solid var(--kq-line);padding:16px 18px;color:#555;font-size:13px
 }
-.kqxsAbout p{margin:0}
+.kqxsAbout p,.kqxsAbout li{margin:0 0 10px;line-height:1.6}
+.kqxsAbout p:last-child,.kqxsAbout li:last-child{margin-bottom:0}
+.kqxsAbout h2{margin:0 0 10px;font-size:17px;color:#222}
+.kqxsAbout h3{margin:16px 0 8px;font-size:14px;color:#333}
+.kqxsAbout ul{margin:0 0 10px;padding-left:18px}
+.kqxsAbout a{color:#d92027;text-decoration:none}
+.kqxsAbout a:hover{text-decoration:underline}
 
 .kqxsFooter{
   background:#333;color:#bbb;padding:14px 0;font-size:12px;margin-top:10px
