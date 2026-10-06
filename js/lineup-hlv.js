@@ -149,7 +149,7 @@ function updateDraggedCardMeta(el, player, assigned){
 }
 
 function benchItemInnerHtml(p){
-  return `<span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}`;
+  return `<span class="benchRating" title="Star">${playerSkill(p)}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}`;
 }
 
 function isPointerOnPitch(team, clientX, clientY){

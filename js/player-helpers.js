@@ -33,6 +33,19 @@ function anonymousLineupRating(){
   return 5;
 }
 
+/** Trình độ 1–10. Dùng chia đội và đội hình Star. */
+function playerSkill(p){
+  const n = Math.round(Number(p?.star));
+  if(!Number.isFinite(n) || n < 1) return 5;
+  return Math.min(10, n);
+}
+
+/** Điểm tham gia (voting). Logic cộng/trừ sau trận giữ nguyên. */
+function playerVoting(p){
+  const n = Number(p?.rating);
+  return Number.isFinite(n) ? n : 5;
+}
+
 function jerseyLabel(jerseyNumber){
   if(jerseyNumber == null || jerseyNumber === "") return "";
   const n = Number(jerseyNumber);

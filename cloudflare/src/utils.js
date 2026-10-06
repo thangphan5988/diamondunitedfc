@@ -66,6 +66,13 @@ export function clampRating(rating) {
   return clampBaseRating(rating);
 }
 
+/** Trình độ thủ công (1–10). Không đổi theo kết quả trận. */
+export function clampStar(star) {
+  const n = Math.round(Number(star));
+  if (!Number.isFinite(n)) return 5;
+  return Math.max(1, Math.min(10, n));
+}
+
 export function effectiveRating(baseRating, penalty) {
   const base = Math.round(Number(baseRating) || 0);
   const cut = Math.max(0, Math.round(Number(penalty) || 0));

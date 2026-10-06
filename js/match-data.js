@@ -234,6 +234,7 @@ function rebuildLastResultFromDetail(historyPlayers, summary){
         main: hp.main_position || "MID",
         secondary: [],
         rating: Number(hp.rating) || 5,
+        star: 5,
         mvp_count: 0,
         avatar: defaultAvatar(hp.player_name),
         side: [],

@@ -6,6 +6,7 @@ import {
   calcRatingDelta,
   clampRating,
   clampBaseRating,
+  clampStar,
   clampStatCount,
   parseJerseyNumber,
   parseBirthDate,
@@ -248,7 +249,7 @@ export default {
 async function getRoster(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
-    `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating,
+    `SELECT name, display_name, position, secondary_positions, preferred_side, rating, base_rating, star,
       mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at,
       COALESCE(is_anonymous, 0) AS is_anonymous
      FROM players ORDER BY name COLLATE NOCASE`
@@ -272,6 +273,7 @@ async function getRoster(db) {
         preferred_side: row.preferred_side,
         rating: 5,
         base_rating: 5,
+        star: clampStar(row.star),
         mvp_count: 0,
         avatar: row.avatar,
         profile_card: row.profile_card || "",
@@ -294,6 +296,7 @@ async function getRoster(db) {
       preferred_side: row.preferred_side,
       rating: meta.rating,
       base_rating: meta.base_rating,
+      star: clampStar(row.star),
       mvp_count: row.mvp_count,
       avatar: row.avatar,
       profile_card: row.profile_card || "",
@@ -321,6 +324,7 @@ function mapPlayerRow(row) {
     secondary_positions: row.secondary_positions || "",
     preferred_side: row.preferred_side || "",
     base_rating: isAnonymous ? 5 : (row.base_rating != null ? row.base_rating : row.rating),
+    star: clampStar(row.star),
     mvp_count: isAnonymous ? 0 : row.mvp_count,
     avatar: row.avatar || "",
     profile_card: row.profile_card || "",
@@ -360,7 +364,7 @@ async function adminListPlayers(db) {
   await applyInactivityDecay(db);
   const rows = await db.prepare(
     `SELECT id, name, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at,
+      rating, base_rating, star, mvp_count, avatar, profile_card, jersey_number, description, birth_date, last_match_at, joined_at,
       COALESCE(is_anonymous, 0) AS is_anonymous
      FROM players ORDER BY name COLLATE NOCASE`
   ).all();
@@ -390,6 +394,7 @@ async function adminSavePlayer(db, payload) {
   const baseRating = isAnonymous
     ? 5
     : clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
+  const star = clampStar(payload.star);
   const mvpCount = isAnonymous ? 0 : Math.max(0, Math.round(Number(payload.mvp_count) || 0));
   const avatar = String(payload.avatar || "").trim();
   const profileCard = String(payload.profile_card || "").trim();
@@ -425,7 +430,7 @@ async function adminSavePlayer(db, payload) {
       UPDATE players SET
         name = ?, name_norm = ?, display_name = ?, position = ?,
         secondary_positions = ?, preferred_side = ?,
-        rating = ?, base_rating = ?, mvp_count = ?, avatar = ?, profile_card = ?,
+        rating = ?, base_rating = ?, star = ?, mvp_count = ?, avatar = ?, profile_card = ?,
         jersey_number = ?, description = ?, birth_date = ?,
         joined_at = CASE WHEN ? != '' THEN ? ELSE joined_at END,
         last_match_at = ?, is_anonymous = ?
@@ -433,7 +438,7 @@ async function adminSavePlayer(db, payload) {
     `).bind(
       name, nameNorm, displayName, position,
       secondaryPositions, preferredSide,
-      baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
+      baseRating, baseRating, star, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
       joinedAt, joinedAt, lastMatchAt, isAnonymous, id
     ).run();
 
@@ -446,12 +451,12 @@ async function adminSavePlayer(db, payload) {
   const result = await db.prepare(`
     INSERT INTO players (
       name, name_norm, display_name, position, secondary_positions, preferred_side,
-      rating, base_rating, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at, is_anonymous
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      rating, base_rating, star, mvp_count, avatar, profile_card, jersey_number, description, birth_date, joined_at, last_match_at, is_anonymous
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     name, nameNorm, displayName, position,
     secondaryPositions, preferredSide,
-    baseRating, baseRating, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
+    baseRating, baseRating, star, mvpCount, avatar, profileCard, jerseyNumber, description, birthDate,
     joinedAt || nowIso, lastMatchAt, isAnonymous
   ).run();
 
@@ -779,13 +784,49 @@ async function getLatestResult(db) {
   return detail;
 }
 
+function preferHistoryStatRow(row, prev) {
+  const rowStarter = boolish(row.starter) ? 1 : 0;
+  const prevStarter = boolish(prev.starter) ? 1 : 0;
+  if (rowStarter !== prevStarter) return rowStarter > prevStarter;
+  return Number(row.id) < Number(prev.id);
+}
+
+/** Một cầu thủ có thể có nhiều dòng trong cùng trận (Chính + Phụ). Chỉ 1 dòng giữ BT/KT. */
+function canonicalHistoryIds(rows) {
+  const best = new Map();
+  for (const row of rows || []) {
+    const key = normalizeName(row.player_name);
+    const prev = best.get(key);
+    if (!prev || preferHistoryStatRow(row, prev)) best.set(key, row);
+  }
+  return new Set([...best.values()].map((row) => row.id));
+}
+
+function dedupeResultPlayers(players) {
+  const map = new Map();
+  for (const player of players || []) {
+    const key = normalizeName(player.player_name);
+    const prev = map.get(key);
+    if (!prev || (boolish(player.starter) && !boolish(prev.starter))) map.set(key, player);
+  }
+  return [...map.values()];
+}
+
 async function getPlayerStats(db) {
   const rows = await db.prepare(
-    `SELECT MAX(h.player_name) AS player_name, SUM(h.goals) AS goals, SUM(h.assists) AS assists
-     FROM match_history h
-     INNER JOIN match_summary s ON s.match_id = h.match_id
-     WHERE h.status = 'completed'
-     GROUP BY h.player_name_norm
+    `SELECT MAX(player_name) AS player_name, SUM(goals) AS goals, SUM(assists) AS assists
+     FROM (
+       SELECT h.match_id,
+              MAX(h.player_name) AS player_name,
+              h.player_name_norm,
+              MAX(h.goals) AS goals,
+              MAX(h.assists) AS assists
+       FROM match_history h
+       INNER JOIN match_summary s ON s.match_id = h.match_id
+       WHERE h.status = 'completed'
+       GROUP BY h.match_id, h.player_name_norm
+     )
+     GROUP BY player_name_norm
      ORDER BY goals DESC, assists DESC, player_name COLLATE NOCASE`
   ).all();
 
@@ -1209,6 +1250,7 @@ async function saveMatchResult(db, payload, session) {
   const savedAt = new Date().toISOString();
   const matchDate = summary.match_date || "";
   const historyRows = await db.prepare("SELECT * FROM match_history WHERE match_id = ?").bind(matchId).all();
+  const statIds = canonicalHistoryIds(historyRows.results || []);
   const playerMap = {};
   players.forEach((p) => { playerMap[normalizeName(p.player_name)] = p; });
 
@@ -1250,13 +1292,17 @@ async function saveMatchResult(db, payload, session) {
     if (!allowed) continue;
     const item = playerMap[normalizeName(row.player_name)];
     if (!item) continue;
+    const keepStats = statIds.has(row.id);
     partialStmts.push(updatePartialHist.bind(
       nextAScore, nextBScore, item.match_score,
-      clampStatCount(item.goals), clampStatCount(item.assists),
+      keepStats ? clampStatCount(item.goals) : 0,
+      keepStats ? clampStatCount(item.assists) : 0,
       item.is_mvp ? 1 : 0,
-      item.goal_video_urls != null || item.goal_video_url != null
-        ? goalVideoUrlsFromPlayer(item, item.goals)
-        : null,
+      keepStats
+        ? (item.goal_video_urls != null || item.goal_video_url != null
+          ? goalVideoUrlsFromPlayer(item, item.goals)
+          : null)
+        : "",
       row.id
     ));
   }
@@ -1337,7 +1383,7 @@ async function saveMatchResult(db, payload, session) {
   }
 
   const finalized = applyTeamMvpRules(mergedPlayers, matchType, { anonymousNorms: anonNorms });
-  const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
+  const mvpNames = [...new Set(finalized.filter((p) => p.is_mvp).map((p) => p.player_name))];
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
 
@@ -1357,12 +1403,14 @@ async function saveMatchResult(db, payload, session) {
   for (const row of historyRows.results || []) {
     const item = playerMapFinal[normalizeName(row.player_name)];
     if (!item) continue;
+    const keepStats = statIds.has(row.id);
     const ratingFields = historyRatingFields(item, anonNorms);
     histStmts.push(updateHist.bind(
       nextAScore, nextBScore, ratingFields.match_score,
-      clampStatCount(item.goals), clampStatCount(item.assists),
+      keepStats ? clampStatCount(item.goals) : 0,
+      keepStats ? clampStatCount(item.assists) : 0,
       ratingFields.is_mvp, ratingFields.rating_before, ratingFields.delta, ratingFields.rating_after, savedAt,
-      item.goal_video_url || "", row.id
+      keepStats ? (item.goal_video_url || "") : "", row.id
     ));
   }
   if (histStmts.length) await db.batch(histStmts);
@@ -1374,7 +1422,7 @@ async function saveMatchResult(db, payload, session) {
     WHERE match_id = ?
   `).bind(mvpNames.join(", "), savedAt, finalizeHighlightVideo, matchId).run();
 
-  await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
+  await updateRosterFromResult(db, dedupeResultPlayers(finalized), matchId, matchDate, savedAt);
 
   return {
     ok: true,
@@ -1423,6 +1471,7 @@ async function editMatchResult(db, payload) {
   const opponentName = payload.opponent_name != null ? String(payload.opponent_name).trim() : summary.opponent_name;
 
   const historyRows = await db.prepare("SELECT * FROM match_history WHERE match_id = ?").bind(matchId).all();
+  const statIds = canonicalHistoryIds(historyRows.results || []);
   const playerMap = {};
   players.forEach((p) => { playerMap[normalizeName(p.player_name)] = p; });
 
@@ -1451,7 +1500,7 @@ async function editMatchResult(db, payload) {
   if (!mergedPlayers.length) throw new Error("Không có cầu thủ để cập nhật.");
 
   const finalized = applyTeamMvpRules(mergedPlayers, matchType, { anonymousNorms: anonNorms });
-  const mvpNames = finalized.filter((p) => p.is_mvp).map((p) => p.player_name);
+  const mvpNames = [...new Set(finalized.filter((p) => p.is_mvp).map((p) => p.player_name))];
   const playerMapFinal = {};
   finalized.forEach((p) => { playerMapFinal[normalizeName(p.player_name)] = p; });
 
@@ -1471,12 +1520,14 @@ async function editMatchResult(db, payload) {
   for (const row of historyRows.results || []) {
     const item = playerMapFinal[normalizeName(row.player_name)];
     if (!item) continue;
+    const keepStats = statIds.has(row.id);
     const ratingFields = historyRatingFields(item, anonNorms);
     histStmts.push(updateHist.bind(
       nextAScore, nextBScore, ratingFields.match_score,
-      clampStatCount(item.goals), clampStatCount(item.assists),
+      keepStats ? clampStatCount(item.goals) : 0,
+      keepStats ? clampStatCount(item.assists) : 0,
       ratingFields.is_mvp, ratingFields.rating_before, ratingFields.delta, ratingFields.rating_after, savedAt,
-      item.goal_video_url || "", row.id
+      keepStats ? (item.goal_video_url || "") : "", row.id
     ));
   }
   if (histStmts.length) await db.batch(histStmts);
@@ -1489,7 +1540,7 @@ async function editMatchResult(db, payload) {
     WHERE match_id = ?
   `).bind(String(nextAScore), String(nextBScore), opponentName || null, mvpNames.join(", "), savedAt, editHighlightVideo, matchId).run();
 
-  await updateRosterFromResult(db, finalized, matchId, matchDate, savedAt);
+  await updateRosterFromResult(db, dedupeResultPlayers(finalized), matchId, matchDate, savedAt);
 
   return {
     ok: true,

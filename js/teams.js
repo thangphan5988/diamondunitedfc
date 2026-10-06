@@ -6,8 +6,8 @@ let teamsStarsFormation = "3-1-2";
 let teamsStatsMap = new Map();
 let teamsStatsLoaded = false;
 
-function teamCardTier(rating){
-  const r = Number(rating) || 5;
+function teamCardTier(star){
+  const r = playerSkill({ star });
   if(r >= 9) return "gold";
   if(r >= 7) return "blue";
   return "silver";
@@ -55,18 +55,20 @@ function teamStatChip(value, icon, extraClass){
 }
 
 function teamCardHtml(p){
-  const tier = teamCardTier(p.rating);
+  const tier = teamCardTier(p.star);
   const tierClass = tier === "gold" ? "gold" : tier === "silver" ? "silver" : "";
   const name = playerDisplayName(p);
   const portrait = profileCardSrc(p.profile_card, p.name, p.avatar);
   const jerseyNum = p.jersey_number != null && p.jersey_number !== "" ? String(Number(p.jersey_number)) : "";
-  const rating = Number.isFinite(Number(p.rating)) ? Number(p.rating) : 5;
+  const voting = playerVoting(p);
+  const star = playerSkill(p);
   const goals = Number(p.total_goals) || 0;
   const assists = Number(p.total_assists) || 0;
   const mvp = Number(p.mvp_count) || 0;
 
   const statItems = [];
-  if(rating > 0) statItems.push(teamStatChip(rating, "⭐"));
+  if(star > 0) statItems.push(teamStatChip(star, "⭐"));
+  if(voting > 0) statItems.push(teamStatChip(voting, "🗳️"));
   if(mvp > 0) statItems.push(teamStatChip(mvp, "🏆", "teamCardInfoItem--mvp"));
   if(goals > 0) statItems.push(teamStatChip(goals, "⚽"));
   if(assists > 0) statItems.push(teamStatChip(assists, "🅰️"));
@@ -97,11 +99,11 @@ function teamCardHtml(p){
 }
 
 function playerExcellenceScore(p){
-  const rating = Number(p.rating) || 5;
+  const star = playerSkill(p);
   const mvp = Number(p.mvp_count) || 0;
   const goals = Number(p.total_goals) || 0;
   const assists = Number(p.total_assists) || 0;
-  return rating * 1000 + mvp * 80 + goals * 12 + assists * 6;
+  return star * 1000 + mvp * 20 + goals * 4 + assists * 2;
 }
 
 function comparePlayersByExcellence(a, b){
@@ -281,7 +283,8 @@ function openTeamPlayerModal(name){
   const display = playerDisplayName(p);
   const portrait = profileCardSrc(p.profile_card, p.name, p.avatar);
   const jersey = p.jersey_number != null && p.jersey_number !== "" ? String(Number(p.jersey_number)) : "—";
-  const rating = Number.isFinite(Number(p.rating)) ? Number(p.rating) : 5;
+  const voting = playerVoting(p);
+  const star = playerSkill(p);
   const mvp = Number(p.mvp_count) || 0;
   const goals = Number(p.total_goals) || 0;
   const assists = Number(p.total_assists) || 0;
@@ -306,7 +309,8 @@ function openTeamPlayerModal(name){
     teamPlayerInfoRow("Số áo", jersey),
     teamPlayerInfoRow("Vị trí", p.main),
     birthDisplay ? teamPlayerInfoRow("Ngày sinh", birthDisplay) : "",
-    teamPlayerInfoRow("Rating", rating),
+    teamPlayerInfoRow("Star", star),
+    teamPlayerInfoRow("Voting", voting),
     mvp > 0 ? teamPlayerInfoRow("MVP", mvp) : "",
     goals > 0 ? teamPlayerInfoRow("Bàn thắng", goals) : "",
     assists > 0 ? teamPlayerInfoRow("Kiến tạo", assists) : ""

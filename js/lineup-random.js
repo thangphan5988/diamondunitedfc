@@ -30,7 +30,7 @@ function captainPickOptionsHtml(selected){
   return selected
     .slice()
     .sort((a, b) => playerDisplayName(a).localeCompare(playerDisplayName(b), "vi"))
-    .map(p => `<option value="${escapeAttr(p.name)}">${escapeHtml(playerDisplayName(p))} · ${escapeHtml(p.main)} · ⭐${Number(p.rating) || 5}</option>`)
+    .map(p => `<option value="${escapeAttr(p.name)}">${escapeHtml(playerDisplayName(p))} · ${escapeHtml(p.main)} · ⭐${playerSkill(p)} · 🗳️${playerVoting(p)}</option>`)
     .join("");
 }
 

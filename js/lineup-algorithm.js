@@ -46,7 +46,7 @@ function sidePriorityScore(playerSide, slotSide){
 }
 
 function assignmentScore(player, slot){
-  const rating = Number(player.rating) || 5;
+  const rating = playerSkill(player);
   const isMain = player.main === slot.pos;
   const isSecondary = player.secondary.includes(slot.pos);
   const sideLevel = sideMatchLevel(player.side, slot.side);
@@ -54,11 +54,11 @@ function assignmentScore(player, slot){
   let tier = 0;
 
   // Luật ưu tiên mới:
-  // 1. Position chính + preferred_side chính -> rating cao thắng.
-  // 2. Position chính + preferred_side phụ -> rating cao thắng.
-  // 3. Position chính + lệch side -> rating cao thắng.
-  // 4. Position phụ -> rating cao thắng.
-  // 5. Trái vị trí -> rating cao thắng.
+  // 1. Position chính + preferred_side chính -> star cao thắng.
+  // 2. Position chính + preferred_side phụ -> star cao thắng.
+  // 3. Position chính + lệch side -> star cao thắng.
+  // 4. Position phụ -> star cao thắng.
+  // 5. Trái vị trí -> star cao thắng.
   if(isMain && sideLevel === "PRIMARY"){
     tier = 5;
   }else if(isMain && sideLevel === "SECONDARY"){
@@ -74,7 +74,7 @@ function assignmentScore(player, slot){
   let score = tier * 100000 + rating * 1000;
 
   // Side chỉ dùng để phân hạng trong cùng position chính.
-  // Với position phụ, rating là yếu tố chính.
+  // Với position phụ, star là yếu tố chính.
   if(isMain){
     if(sideLevel === "SOFT") score += 180;
     if(sideLevel === "BAD") score -= 180;
@@ -91,7 +91,7 @@ function assignmentScore(player, slot){
 }
 
 function starsAssignmentScore(player, slot){
-  const rating = Number(player.rating) || 5;
+  const rating = playerSkill(player);
   if(slot.pos === "GK" && !canCoverPosition(player, "GK")) return -1e15;
 
   let fitTier = 0;
@@ -174,7 +174,7 @@ function lineupFromSlotPicks(team, picks, captainName){
 
   const bench = team
     .filter((_, idx) => !usedIndexes.has(idx))
-    .sort((a, b) => (Number(b.rating) || 5) - (Number(a.rating) || 5));
+    .sort((a, b) => playerSkill(b) - playerSkill(a));
 
   const order = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
   const sideOrder = { LEFT: 0, CENTER: 1, RIGHT: 2 };
@@ -193,7 +193,7 @@ function buildStars(team, formation){
 
   let captain = lineup.starters[0];
   lineup.starters.forEach(p => {
-    if((Number(p.rating) || 5) > (Number(captain.rating) || 5)) captain = p;
+    if(playerSkill(p) > playerSkill(captain)) captain = p;
   });
   const captainKey = captain ? normalizeName(captain.name) : "";
   lineup.starters.forEach(p => {
@@ -621,12 +621,12 @@ function evalSplit(a,b){
   return {teamA, teamB, lineupA:la, lineupB:lb, score:Math.round(s)};
 }
 
-function sumRating(t){return t.reduce((s,p)=>s+(Number(p.rating)||5),0)}
+function sumRating(t){return t.reduce((s,p)=>s+playerSkill(p),0)}
 
 function exactRatingCounts(team){
   const c = {};
   team.forEach(p => {
-    const r = Math.max(1, Math.round(Number(p.rating) || 5));
+    const r = playerSkill(p);
     c[r] = (c[r] || 0) + 1;
   });
   return c;
@@ -670,7 +670,7 @@ function fastSplitScore(teamA, teamB){
 }
 
 function splitByRatingBalanced(list){
-  const sorted = shuffle(list).sort((a,b)=>(Number(b.rating)||5)-(Number(a.rating)||5));
+  const sorted = shuffle(list).sort((a,b)=>playerSkill(b)-playerSkill(a));
   const teamA = [];
   const teamB = [];
 
@@ -714,7 +714,7 @@ function normalizeName(name){
 function randomBest(list){
   let candidateMap = new Map();
 
-  // Bước 1: random danh sách 2 đội dựa trên chất lượng/rating + đủ vị trí.
+  // Bước 1: random danh sách 2 đội dựa trên star (trình độ) + đủ vị trí.
   // Không chạy optimizer đội hình ở bước này để tránh bị stuck.
   for(let i = 0; i < 900; i++){
     const [teamA, teamB] = splitByRatingBalanced(list);
@@ -751,8 +751,8 @@ function randomBest(list){
   }
 
   if(best){
-    console.log("Rating distribution A:", ratingDistributionKey(best.teamA));
-    console.log("Rating distribution B:", ratingDistributionKey(best.teamB));
+    console.log("Star distribution A:", ratingDistributionKey(best.teamA));
+    console.log("Star distribution B:", ratingDistributionKey(best.teamB));
   }
 
   return best;

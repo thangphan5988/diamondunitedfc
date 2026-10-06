@@ -265,7 +265,7 @@ async function deleteHistoryMatch(idx, ev){
   if(!match?.match_id) return;
 
   const label = displayMatchLabel(match);
-  if(!confirm(`Xóa trận "${label}" khỏi lịch sử?\nRating và MVP sẽ được tính lại. Hành động này không thể hoàn tác.`)){
+  if(!confirm(`Xóa trận "${label}" khỏi lịch sử?\nVoting và MVP sẽ được tính lại. Hành động này không thể hoàn tác.`)){
     return;
   }
 

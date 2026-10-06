@@ -14,7 +14,8 @@ const LR_PITCH_MARKINGS = `<div class="halfLine"></div><div class="centerCircle"
 function buildLatestStatMap(historyPlayers){
   const map = new Map();
   (historyPlayers || []).forEach(p => {
-    map.set(normalizeName(p.player_name), {
+    const key = normalizeName(p.player_name);
+    const next = {
       match_score: p.match_score,
       goals: Number(p.goals) || 0,
       assists: Number(p.assists) || 0,
@@ -24,7 +25,20 @@ function buildLatestStatMap(historyPlayers){
       rating_after: p.rating_after,
       goal_video_url: p.goal_video_url || "",
       goal_video_urls: parseGoalVideoUrlsInput(p.goal_video_urls || p.goal_video_url)
-    });
+    };
+    const prev = map.get(key);
+    if(!prev){
+      map.set(key, next);
+      return;
+    }
+    next.goals = Math.max(prev.goals, next.goals);
+    next.assists = Math.max(prev.assists, next.assists);
+    if((!next.goal_video_urls || !next.goal_video_urls.length) && prev.goal_video_urls?.length){
+      next.goal_video_urls = prev.goal_video_urls;
+      next.goal_video_url = prev.goal_video_url;
+    }
+    if(!next.is_mvp) next.is_mvp = prev.is_mvp;
+    map.set(key, next);
   });
   return map;
 }
@@ -47,7 +61,7 @@ function latestResultFormatScore(score){
 function latestResultRatingDeltaCompactHtml(delta){
   if(!Number.isFinite(delta) || delta === 0) return "";
   const sign = delta > 0 ? `+${delta}` : `${delta}`;
-  return `<span class="ratingDelta ${deltaClass(delta)}">⭐${sign}</span>`;
+  return `<span class="ratingDelta ${deltaClass(delta)}">🗳️${sign}</span>`;
 }
 
 function latestResultDeltaHtml(delta){
@@ -68,8 +82,14 @@ function collectTeamGoalVideoUrls(historyPlayers, side, isCap){
     return false;
   });
   filtered.sort((a, b) => (Number(a.lineup_order) || 999) - (Number(b.lineup_order) || 999));
+  const seenPlayers = new Set();
   filtered.forEach(hp => {
-    parseGoalVideoUrlsInput(hp.goal_video_urls || hp.goal_video_url).forEach(url => urls.push(url));
+    const key = normalizeName(hp.player_name);
+    if(seenPlayers.has(key)) return;
+    const rowUrls = parseGoalVideoUrlsInput(hp.goal_video_urls || hp.goal_video_url);
+    if(!rowUrls.length) return;
+    seenPlayers.add(key);
+    rowUrls.forEach(url => urls.push(url));
   });
   return urls;
 }
@@ -270,7 +290,7 @@ function renderPreviewBench(benchId, bench){
     return;
   }
   el.innerHTML = bench.map(p =>
-    `<div class="benchItem"><span class="benchRating">${p.rating || 5}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
+    `<div class="benchItem"><span class="benchRating" title="Star">${playerSkill(p)}</span><img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">${escapeHtml(playerDisplayName(p))} · ${p.main}</div>`
   ).join("");
 }
 

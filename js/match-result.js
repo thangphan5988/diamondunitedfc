@@ -444,13 +444,13 @@ function renderResultForm(){
 
   if(isEditingCompletedResult()){
     document.getElementById("resultHint").innerHTML =
-      `<b>Sửa kết quả trận đã hoàn tất.</b> Rating và MVP sẽ được tính lại từ đầu cho trận này.<br>
-       <b>Rating</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
+      `<b>Sửa kết quả trận đã hoàn tất.</b> Voting và MVP sẽ được tính lại từ đầu cho trận này.<br>
+       <b>Voting</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
        <b>MVP</b>: mỗi đội (hoặc DUFC với trận Cáp) 1 người điểm cao nhất → +1 MVP.` +
       (cap ? `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn · tính bảng Top.` : `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: ghi nhận theo trận · tính bảng Top.`);
   }else if(cap){
     document.getElementById("resultHint").innerHTML =
-      `<b>Rating</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
+      `<b>Voting</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> voting.<br>
        <b>MVP</b>: 1 người điểm cao nhất trong đội DUFC → cộng <b>1 lần MVP</b>.<br>
        <b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn.` +
       (canFinalizeMatch()
@@ -462,8 +462,8 @@ function renderResultForm(){
           : ""));
   }else{
     document.getElementById("resultHint").innerHTML =
-      `<b>Rating</b> (chia đội cân bằng): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> rating.<br>
-       <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng rating.<br>
+      `<b>Voting</b> (xếp hạng tham gia): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> voting.<br>
+       <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng voting.<br>
        <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · tính bảng Top (nội bộ + Cáp).<br>
        <b>📹 Video</b>: link từng bàn thắng + video trận (tùy chọn).` +
       (canFinalizeMatch()
@@ -531,7 +531,7 @@ function renderResultForm(){
         <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
         <div>
           <div class="name">${escapeHtml(playerDisplayName(p))}</div>
-          <div class="meta">${roleMeta} · rating ${ratingBefore}${mvpTotal ? ` · 🏆 ${mvpTotal} MVP` : ""}${lockNote}</div>
+          <div class="meta">${roleMeta} · 🗳️ ${ratingBefore}${mvpTotal ? ` · 🏆 ${mvpTotal} MVP` : ""}${lockNote}</div>
         </div>
         <select ${ratingLocked ? "disabled" : ""} onchange="setPlayerMatchScore(decodeURIComponent('${encodedName}'), this.value)">
           ${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${n===score?"selected":""}>${n}</option>`).join("")}
@@ -703,7 +703,7 @@ async function saveMatchResult(){
     });
 
     const label = displayMatchLabel(editResultState.summary);
-    if(!confirm(`Lưu thay đổi kết quả trận "${label}"?\nRating và MVP sẽ được tính lại.`)){
+    if(!confirm(`Lưu thay đổi kết quả trận "${label}"?\nVoting và MVP sẽ được tính lại.`)){
       return;
     }
 
@@ -877,8 +877,8 @@ async function saveMatchResult(){
     invalidateTeamsStats();
 
     document.getElementById("ocrStatus").innerHTML =
-      `Đã kết thúc trận <b>${data.match_label || displayMatchLabel()}</b>. MVP: <b>${(data.mvp_players || []).join(", ") || "—"}</b>. Rating đã cập nhật.`;
-    showToast("✓ Trận đã kết thúc — rating đã cập nhật", "success", 4200);
+      `Đã kết thúc trận <b>${data.match_label || displayMatchLabel()}</b>. MVP: <b>${(data.mvp_players || []).join(", ") || "—"}</b>. Voting đã cập nhật.`;
+    showToast("✓ Trận đã kết thúc — voting đã cập nhật", "success", 4200);
   }catch(e){
     console.error(e);
     const msg = e.message || "Không lưu được kết quả trận.";
@@ -901,7 +901,7 @@ function statRowHtml(p, rank, mode){
   }else if(mode === "rating"){
     value = Number.isFinite(Number(p.rating)) ? Number(p.rating) : 5;
     badgeClass = "statRating";
-    label = String(value);
+    label = `🗳️ ${value}`;
   }else if(mode === "goals"){
     value = Number(p.total_goals) || 0;
     badgeClass = "statGoals";
