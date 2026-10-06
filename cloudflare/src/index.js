@@ -6,6 +6,7 @@ import {
   calcRatingDelta,
   clampRating,
   clampBaseRating,
+  clampVoting,
   clampStar,
   clampStatCount,
   parseJerseyNumber,
@@ -392,8 +393,8 @@ async function adminSavePlayer(db, payload) {
   const preferredSide = String(payload.preferred_side || "").trim();
   const isAnonymous = payload.is_anonymous === true || payload.is_anonymous === 1 || payload.is_anonymous === "1" ? 1 : 0;
   const baseRating = isAnonymous
-    ? 5
-    : clampBaseRating(payload.base_rating ?? payload.rating ?? 5);
+    ? 0
+    : clampVoting(payload.base_rating ?? payload.rating ?? 0);
   const star = clampStar(payload.star);
   const mvpCount = isAnonymous ? 0 : Math.max(0, Math.round(Number(payload.mvp_count) || 0));
   const avatar = String(payload.avatar || "").trim();
@@ -1178,13 +1179,13 @@ function historyRatingFields(item, anonNorms) {
       is_mvp: 0
     };
   }
-  const ratingBefore = clampRating(item.rating_before);
+  const ratingBefore = clampVoting(item.rating_before);
   const delta = calcRatingDelta(item.match_score);
   return {
     match_score: Number(item.match_score) || 8,
     rating_before: ratingBefore,
     delta,
-    rating_after: clampRating(ratingBefore + delta),
+    rating_after: clampVoting(ratingBefore + delta),
     is_mvp: item.is_mvp ? 1 : 0
   };
 }
@@ -1585,14 +1586,14 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
     // Ẩn danh: luôn rating 5, không cộng/trừ rating, không MVP, không ghi rating_log
     if (isAnonymous) {
       if (roster) {
-        stmts.push(updatePlayer.bind(5, 5, 0, savedAt, roster.id));
+        stmts.push(updatePlayer.bind(0, 0, 0, savedAt, roster.id));
       }
       continue;
     }
 
-    const baseBefore = clampBaseRating(Number(roster?.base_rating ?? roster?.rating ?? p.rating_before) || 5);
+    const baseBefore = clampVoting(roster?.base_rating ?? roster?.rating ?? p.rating_before);
     const delta = calcRatingDelta(p.match_score);
-    const baseAfter = clampBaseRating(baseBefore + delta);
+    const baseAfter = clampVoting(baseBefore + delta);
     const mvpBefore = Math.max(0, Math.round(Number(p.mvp_count_before) || roster?.mvp_count || 0));
     const mvpAfter = mvpBefore + (p.is_mvp ? 1 : 0);
 
@@ -1606,6 +1607,28 @@ async function updateRosterFromResult(db, players, matchId, matchDate, savedAt) 
       mvpBefore, mvpAfter, savedAt
     ));
   }
+  if (stmts.length) await db.batch(stmts);
+  await syncVotingFromHistory(db);
+}
+
+async function syncVotingFromHistory(db) {
+  const rows = await db.prepare(`
+    SELECT player_name_norm, COUNT(DISTINCT match_id) AS matches
+    FROM match_history
+    WHERE status = 'completed'
+    GROUP BY player_name_norm
+  `).all();
+  const counts = new Map(
+    (rows.results || []).map((row) => [row.player_name_norm, Number(row.matches) || 0])
+  );
+  const players = await db.prepare(
+    "SELECT id, name_norm, COALESCE(is_anonymous, 0) AS is_anonymous FROM players"
+  ).all();
+  const update = db.prepare("UPDATE players SET base_rating = ?, rating = ? WHERE id = ?");
+  const stmts = (players.results || []).map((player) => {
+    const matches = Number(player.is_anonymous) === 1 ? 0 : (counts.get(player.name_norm) || 0);
+    return update.bind(matches, matches, player.id);
+  });
   if (stmts.length) await db.batch(stmts);
 }
 
@@ -1639,25 +1662,22 @@ async function recalculateRosterFromLogs(db, removedLogs = []) {
 
     const key = normalizeName(r.name);
     const logs = logsByPlayer[key] || [];
-    let rating;
     let mvpCount;
 
     if (logs.length) {
       const last = logs[logs.length - 1];
-      rating = clampBaseRating(last.rating_after);
       mvpCount = Math.max(0, Math.round(Number(last.mvp_count_after) || 0));
     } else if (removedByPlayer[key]) {
-      rating = clampBaseRating(removedByPlayer[key].rating_before);
       mvpCount = Math.max(0, Math.round(Number(removedByPlayer[key].mvp_count_before) || 0));
     } else {
       continue;
     }
 
-    stmts.push(updatePlayer.bind(rating, rating, mvpCount, r.id));
+    stmts.push(updatePlayer.bind(Number(r.base_rating) || 0, Number(r.rating) || 0, mvpCount, r.id));
   }
 
   if (stmts.length) await db.batch(stmts);
-  await applyInactivityDecay(db);
+  await syncVotingFromHistory(db);
 }
 
 async function deleteCompletedMatch(db, payload) {

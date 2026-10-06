@@ -184,7 +184,7 @@ function rosterFormFieldsHtml(key, p){
     ${rosterLabeledInput(key, "positions", "Vị trí sở trường", "Mục đầu = sở trường · VD: MID, DEF, FWD", `type="text" placeholder="MID, DEF, FWD" value="${escapeAttr(positionChain)}"`)}
     ${rosterLabeledInput(key, "side", "Cánh / khu vực sở trường", "Mục đầu = sở trường · VD: CENTER, RIGHT, LEFT", `type="text" placeholder="CENTER, RIGHT, LEFT" value="${escapeAttr(sideChain)}"`)}
     <div class="rosterAdminFormRow">
-      ${rosterLabeledInput(key, "rating", "Voting", "Điểm tham gia — tự cộng/trừ sau trận", `type="number" min="0" step="1" placeholder="5" value="${escapeAttr(String(data.base_rating ?? data.rating ?? (isNew ? 5 : "")))}"`)}
+      ${rosterLabeledInput(key, "rating", "Voting", "Số trận đã đá — hệ thống cộng 1 mỗi trận, không trừ", `type="number" min="0" step="1" placeholder="0" value="${escapeAttr(String(data.base_rating ?? data.rating ?? (isNew ? 0 : "")))}"`)}
       ${rosterLabeledInput(key, "star", "Star", "Trình độ 1–10 · chia đội & All-Star", `type="number" min="1" max="10" step="1" placeholder="5" value="${escapeAttr(String(data.star ?? (isNew ? 5 : 5)))}"`)}
       ${rosterLabeledInput(key, "jersey_number", "Số áo", "0–99 · để trống nếu chưa gán", `type="number" min="0" max="99" step="1" placeholder="—" value="${escapeAttr(data.jersey_number != null && data.jersey_number !== "" ? String(data.jersey_number) : "")}"`)}
       ${rosterLabeledInput(key, "mvp", "Số MVP", "", `type="number" min="0" step="1" placeholder="0" value="${escapeAttr(String(Number(data.mvp_count) || 0))}"`)}
@@ -311,7 +311,6 @@ function renderAdminPlayerList(){
     const posText = rosterPositionsLabel(p);
     const sideText = rosterSideLabel(p);
     const side = sideText ? ` · ${escapeHtml(sideText)}` : "";
-    const inactive = Number(p.inactivity_penalty) > 0 ? ` · −${p.inactivity_penalty} vắng` : "";
     const jersey = p.jersey_number != null && p.jersey_number !== "" ? ` · #${Number(p.jersey_number)}` : "";
     const birth = birthDateLabel(p.birth_date);
     const birthMeta = birth ? ` · 🎂 ${birth}` : "";
@@ -323,7 +322,7 @@ function renderAdminPlayerList(){
           <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'" alt="">
           <div>
             <b>${escapeHtml(label)}</b>${canonical}${anonMeta}
-            <div class="meta">${escapeHtml(posText)}${side}${jersey}${birthMeta} · 🗳️ ${Number(p.rating) || 5} · ⭐ ${playerSkill(p)}${inactive} · 🏆 ${Number(p.mvp_count) || 0}</div>
+            <div class="meta">${escapeHtml(posText)}${side}${jersey}${birthMeta} · 🗳️ ${playerVoting(p)} · ⭐ ${playerSkill(p)} · 🏆 ${Number(p.mvp_count) || 0}</div>
           </div>
         </div>
         <span class="rosterExpandIcon">${expanded ? "▾" : "▸"}</span>

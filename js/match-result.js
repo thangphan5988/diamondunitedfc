@@ -445,12 +445,12 @@ function renderResultForm(){
   if(isEditingCompletedResult()){
     document.getElementById("resultHint").innerHTML =
       `<b>Sửa kết quả trận đã hoàn tất.</b> Voting và MVP sẽ được tính lại từ đầu cho trận này.<br>
-       <b>Voting</b>: điểm 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b>.<br>
+       <b>Voting</b>: có mặt trong trận thì <b>+1</b>, không trừ.<br>
        <b>MVP</b>: mỗi đội (hoặc DUFC với trận Cáp) 1 người điểm cao nhất → +1 MVP.` +
       (cap ? `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn · tính bảng Top.` : `<br><b>⚽ BT / 🅰️ KT / 📹 Video</b>: ghi nhận theo trận · tính bảng Top.`);
   }else if(cap){
     document.getElementById("resultHint").innerHTML =
-      `<b>Voting</b>: điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> voting.<br>
+      `<b>Voting</b>: có mặt trong trận thì <b>+1</b>, không trừ.<br>
        <b>MVP</b>: 1 người điểm cao nhất trong đội DUFC → cộng <b>1 lần MVP</b>.<br>
        <b>⚽ BT / 🅰️ KT / 📹 Video</b>: bàn thắng, kiến tạo và link video từng bàn.` +
       (canFinalizeMatch()
@@ -462,7 +462,7 @@ function renderResultForm(){
           : ""));
   }else{
     document.getElementById("resultHint").innerHTML =
-      `<b>Voting</b> (xếp hạng tham gia): điểm trận 8–10 <b>+1</b> · 6–7 giữ nguyên · 1–5 <b>-1</b> voting.<br>
+      `<b>Voting</b> (số trận đã đá): có mặt thì <b>+1</b>, không trừ.<br>
        <b>MVP</b> (thống kê cuối năm): mỗi đội 1 người điểm cao nhất → cộng <b>1 lần MVP</b>, không ảnh hưởng voting.<br>
        <b>⚽ BT / 🅰️ KT</b>: ghi nhận theo trận · tính bảng Top (nội bộ + Cáp).<br>
        <b>📹 Video</b>: link từng bàn thắng + video trận (tùy chọn).` +
@@ -911,15 +911,12 @@ function statRowHtml(p, rank, mode){
     badgeClass = "statAssists";
     label = `🅰️ ${value}`;
   }
-  const inactiveNote = mode === "rating" && Number(p.inactivity_penalty) > 0
-    ? ` · −${p.inactivity_penalty} vắng (${Number(p.days_inactive) || 0} ngày)`
-    : "";
   return `<div class="statRow">
     <span class="statRank">#${rank}</span>
     <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
     <div>
       <div class="name">${escapeHtml(playerDisplayName(p))}</div>
-      <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}${inactiveNote}</div>
+      <div class="meta">${p.main}${p.secondary.length ? "/" + p.secondary.join("/") : ""}</div>
     </div>
     <span class="statValue ${badgeClass}">${label}</span>
   </div>`;

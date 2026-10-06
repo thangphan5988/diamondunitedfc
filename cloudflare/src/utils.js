@@ -49,12 +49,15 @@ export function normalizeMatchDate(value) {
   return "";
 }
 
-export function calcRatingDelta(matchScore) {
-  const s = Number(matchScore);
-  if (!Number.isFinite(s)) return 0;
-  if (s >= 8) return 1;
-  if (s <= 5) return -1;
-  return 0;
+/** Mỗi lần có mặt trong trận hoàn tất thì +1. Không trừ theo điểm. */
+export function calcRatingDelta(_matchScore) {
+  return 1;
+}
+
+export function clampVoting(value) {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return n;
 }
 
 export function clampBaseRating(rating) {

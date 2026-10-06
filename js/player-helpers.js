@@ -43,7 +43,8 @@ function playerSkill(p){
 /** Điểm tham gia (voting). Logic cộng/trừ sau trận giữ nguyên. */
 function playerVoting(p){
   const n = Number(p?.rating);
-  return Number.isFinite(n) ? n : 5;
+  if(!Number.isFinite(n) || n < 0) return 0;
+  return n;
 }
 
 function jerseyLabel(jerseyNumber){

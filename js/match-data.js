@@ -1,11 +1,7 @@
 /* Match rebuild, pending restore, formations */
 
-function calcRatingDelta(matchScore){
-  const s = Number(matchScore);
-  if(!Number.isFinite(s)) return 0;
-  if(s >= 8) return 1;
-  if(s <= 5) return -1;
-  return 0;
+function calcRatingDelta(_matchScore){
+  return 1;
 }
 
 function deltaLabel(delta){

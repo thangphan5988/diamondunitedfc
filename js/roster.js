@@ -98,7 +98,7 @@ function renderPlayerPicker(){
     <label class="row">
       <input type="checkbox" ${p.selected?"checked":""} ${pickerLocked?"disabled":""} onchange="players[${i}].selected=this.checked;updateStats()">
       <img src="${escapeAttr(avatarSrc(p.avatar, p.name))}" onerror="this.src='${defaultAvatar(p.name)}'">
-      <div><div class="name">${escapeHtml(playerDisplayName(p))}${isAnonymousPlayer(p) ? ` <span class="metaAnonTag">Ẩn danh</span>` : ""}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${jerseyLabel(p.jersey_number) ? `<span class="metaJersey">${escapeHtml(jerseyLabel(p.jersey_number))} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · 🗳️ ${playerVoting(p)} · ⭐ ${playerSkill(p)}${Number(p.inactivity_penalty) > 0 ? ` (−${p.inactivity_penalty} vắng)` : ""}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}${isAnonymousPlayer(p) ? " · đá ké" : ""}</div></div>
+      <div><div class="name">${escapeHtml(playerDisplayName(p))}${isAnonymousPlayer(p) ? ` <span class="metaAnonTag">Ẩn danh</span>` : ""}</div><div class="meta">${p.display_name && p.display_name !== p.name ? `<span class="metaCanon">@${escapeHtml(p.name)} · </span>` : ""}${jerseyLabel(p.jersey_number) ? `<span class="metaJersey">${escapeHtml(jerseyLabel(p.jersey_number))} · </span>` : ""}${p.main}${p.secondary.length?"/"+p.secondary.join("/"):""}${p.side ? " · " + sideLabel(p.side) : ""} · 🗳️ ${playerVoting(p)} · ⭐ ${playerSkill(p)}${p.mvp_count ? ` · 🏆 ${p.mvp_count} MVP` : ""}${isAnonymousPlayer(p) ? " · đá ké" : ""}</div></div>
       <span class="badge">${p.main}</span>
     </label>`).join("");
 }
